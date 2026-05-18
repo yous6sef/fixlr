@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flix - منصة الخدمات المنزلية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FLIX Design System CSS -->
+    <link rel="stylesheet" href="/css/design-tokens.css">
+    <link rel="stylesheet" href="/css/typography.css">
+    <link rel="stylesheet" href="/css/animations-enhanced.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/responsive-utilities.css">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Cairo', 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            line-height: 1.6;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+        .card-glow {
+            box-shadow: 0 10px 30px rgba(5, 150, 105, 0.1);
+            transition: all 0.3s ease;
+        }
+        .card-glow:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(5, 150, 105, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const App = () => {
+            const [menuOpen, setMenuOpen] = React.useState(false);
+            const [selected, setSelected] = React.useState('');
+            const [location, setLocation] = React.useState('');
+            const [loading, setLoading] = React.useState(false);
+
+            const services = [
+                { id: 'plumbing', name: 'سباكة', icon: '🚰', desc: 'إصلاحات السباكة' },
+                { id: 'electrical', name: 'كهرباء', icon: '⚡', desc: 'أعمال كهربائية' },
+                { id: 'cleaning', name: 'تنظيف', icon: '🧹', desc: 'تنظيف منازل' },
+                { id: 'carpentry', name: 'نجارة', icon: '🔨', desc: 'أعمال نجارة' },
+                { id: 'painting', name: 'دهان', icon: '🎨', desc: 'الدهان والتجديد' },
+                { id: 'moving', name: 'نقل', icon: '📦', desc: 'خدمات النقل' },
+            ];
+
+            const handleBook = () => {
+                if (selected && location.trim()) {
+                    setLoading(true);
+                    setTimeout(() => {
+                        alert(`تم الطلب:\nالخدمة: ${services.find(s => s.id === selected)?.name}\nالموقع: ${location}`);
+                        setLoading(false);
+                        setSelected('');
+                        setLocation('');
+                    }, 2000);
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    {/* Navbar */}
+                    <nav className="sticky top-0 z-40 bg-white shadow-md">
+                        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+                            <h1 className="text-2xl font-bold text-green-600">🚀 Flix</h1>
+                            <div className="hidden md:flex gap-6 items-center">
+                                <a href="#services" className="hover:text-green-600 transition">الخدمات</a>
+                                <a href="#how" className="hover:text-green-600 transition">كيف يعمل</a>
+                                <a href="#tech" className="hover:text-green-600 transition">للفنيين</a>
+                                <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">دخول</button>
+                            </div>
+                            <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-2xl">
+                                {menuOpen ? '✕' : '☰'}
+                            </button>
+                        </div>
+                        
+                        {/* Mobile Menu */}
+                        {menuOpen && (
+                            <div className="md:hidden bg-white border-t p-4 space-y-3">
+                                <a href="#services" className="block hover:text-green-600">الخدمات</a>
+                                <a href="#how" className="block hover:text-green-600">كيف يعمل</a>
+                                <a href="#tech" className="block hover:text-green-600">للفنيين</a>
+                                <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg">دخول</button>
+                            </div>
+                        )}
+                    </nav>
+
+                    {/* Hero Section */}
+                    <section className="hero-gradient text-white py-20 px-4">
+                        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 items-center">
+                            <div>
+                                <h2 className="text-5xl md:text-6xl font-bold mb-4 leading-tight">
+                                    فني في دقائق
+                                </h2>
+                                <p className="text-xl text-green-100 mb-6">
+                                    احصل على أفضل فني محترف في منطقتك وحل مشكلتك فورًا
+                                </p>
+                                <div className="flex gap-4 mb-8">
+                                    <div className="flex items-center gap-2">✅ فنيين موثوقين</div>
+                                    <div className="flex items-center gap-2">⏱️ وصول سريع</div>
+                                </div>
+                            </div>
+
+                            {/* Booking Form */}
+                            <div className="bg-white rounded-3xl p-8 text-right text-gray-900 card-glow">
+                                <h3 className="text-2xl font-bold mb-6">احجز الآن</h3>
+                                
+                                {/* Service Selection */}
+                                <div className="mb-6">
+                                    <label className="block font-bold mb-3">اختر الخدمة</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {services.map(s => (
+                                            <button
+                                                key={s.id}
+                                                onClick={() => setSelected(s.id)}
+                                                className={`p-4 rounded-lg border-2 transition ${
+                                                    selected === s.id 
+                                                        ? 'border-green-600 bg-green-50' 
+                                                        : 'border-gray-200 hover:border-green-300'
+                                                }`}
+                                            >
+                                                <div className="text-2xl mb-2">{s.icon}</div>
+                                                <div className="font-bold text-sm">{s.name}</div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Location Input */}
+                                <div className="mb-6">
+                                    <label className="block font-bold mb-3">موقعك</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={location}
+                                            onChange={(e) => setLocation(e.target.value)}
+                                            placeholder="أدخل عنوانك"
+                                            className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 outline-none"
+                                        />
+                                        <button className="px-4 py-3 bg-gray-100 rounded-lg text-xl hover:bg-gray-200">📍</button>
+                                    </div>
+                                </div>
+
+                                {/* Info */}
+                                {selected && location && (
+                                    <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span>7 فنيين متاحين الآن ⚡</span>
+                                            <span>15-20 دقيقة</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Button */}
+                                <button
+                                    onClick={handleBook}
+                                    disabled={!selected || !location || loading}
+                                    className={`w-full py-4 rounded-lg font-bold text-lg transition ${
+                                        selected && location && !loading
+                                            ? 'bg-green-600 text-white hover:bg-green-700'
+                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    }`}
+                                >
+                                    {loading ? '🔄 جاري البحث...' : '⚡ اطلب الآن'}
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Services Section */}
+                    <section id="services" className="py-20 px-4 bg-white">
+                        <div className="max-w-6xl mx-auto">
+                            <h2 className="text-4xl font-bold text-center mb-12">الخدمات المتوفرة</h2>
+                            <div className="grid md:grid-cols-3 gap-8">
+                                {services.map(service => (
+                                    <div key={service.id} className="card-glow p-6 bg-gray-50 rounded-2xl">
+                                        <div className="text-5xl mb-4">{service.icon}</div>
+                                        <h3 className="text-2xl font-bold mb-2">{service.name}</h3>
+                                        <p className="text-gray-600 mb-4">{service.desc}</p>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-sm">⭐ 4.8</span>
+                                            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-bold">متاح</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* How It Works */}
+                    <section id="how" className="py-20 px-4 bg-gray-50">
+                        <div className="max-w-6xl mx-auto">
+                            <h2 className="text-4xl font-bold text-center mb-12">كيف يعمل؟</h2>
+                            <div className="grid md:grid-cols-3 gap-8">
+                                <div className="text-center">
+                                    <div className="w-16 h-16 bg-green-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">1</div>
+                                    <h3 className="text-xl font-bold mb-2">اطلب الخدمة</h3>
+                                    <p className="text-gray-600">اختر نوع الخدمة وحدد موقعك</p>
+                                </div>
+                                <div className="text-center">
+                                    <div className="w-16 h-16 bg-green-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">2</div>
+                                    <h3 className="text-xl font-bold mb-2">اختر الفني</h3>
+                                    <p className="text-gray-600">شوف الفنيين وأسعارهم</p>
+                                </div>
+                                <div className="text-center">
+                                    <div className="w-16 h-16 bg-green-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">3</div>
+                                    <h3 className="text-xl font-bold mb-2">تمتع بالخدمة</h3>
+                                    <p className="text-gray-600">الفني يوصل ويبدأ الشغل</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* For Technicians */}
+                    <section id="tech" className="py-20 px-4 hero-gradient text-white">
+                        <div className="max-w-6xl mx-auto text-center">
+                            <h2 className="text-4xl font-bold mb-6">هل أنت فني محترف؟</h2>
+                            <p className="text-xl mb-8 text-green-100">انضم لفليكس وكسب دخل إضافي</p>
+                            <div className="grid md:grid-cols-3 gap-8 mb-10">
+                                <div>
+                                    <div className="text-4xl mb-3">💰</div>
+                                    <h3 className="font-bold mb-2">دخل مرن</h3>
+                                    <p className="text-green-100">اشتغل وقت ما تبي</p>
+                                </div>
+                                <div>
+                                    <div className="text-4xl mb-3">👥</div>
+                                    <h3 className="font-bold mb-2">عملاء كتير</h3>
+                                    <p className="text-green-100">وصول لآلاف العملاء</p>
+                                </div>
+                                <div>
+                                    <div className="text-4xl mb-3">🛡️</div>
+                                    <h3 className="font-bold mb-2">دعم كامل</h3>
+                                    <p className="text-green-100">دعم فني 24/7</p>
+                                </div>
+                            </div>
+                            <button className="px-8 py-4 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-100">
+                                سجل كفني الآن 👷
+                            </button>
+                        </div>
+                    </section>
+
+                    {/* Footer */}
+                    <footer className="bg-gray-900 text-white py-12 px-4">
+                        <div className="max-w-6xl mx-auto">
+                            <div className="grid md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-gray-700">
+                                <div>
+                                    <h3 className="text-xl font-bold text-green-400 mb-4">Flix</h3>
+                                    <p className="text-gray-400 text-sm">منصة ربط الفنيين بالعملاء</p>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold mb-3">الخدمات</h4>
+                                    <ul className="space-y-2 text-gray-400 text-sm">
+                                        <li><a href="#" className="hover:text-white">الخدمات</a></li>
+                                        <li><a href="#" className="hover:text-white">كيف يعمل</a></li>
+                                        <li><a href="#" className="hover:text-white">للفنيين</a></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold mb-3">الشركة</h4>
+                                    <ul className="space-y-2 text-gray-400 text-sm">
+                                        <li><a href="#" className="hover:text-white">من نحن</a></li>
+                                        <li><a href="#" className="hover:text-white">الشروط</a></li>
+                                        <li><a href="#" className="hover:text-white">الخصوصية</a></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold mb-3">التواصل</h4>
+                                    <ul className="space-y-2 text-gray-400 text-sm">
+                                        <li><a href="#" className="hover:text-white">الدعم</a></li>
+                                        <li><a href="#" className="hover:text-white">الأسئلة الشائعة</a></li>
+                                        <li><a href="#" className="hover:text-white">تواصل معنا</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div className="text-center text-sm text-gray-400">
+                                <p>© 2024 Flix. جميع الحقوق محفوظة 🇪🇬</p>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        // Render App
+        try {
+            const container = document.getElementById('root');
+            if (container) {
+                const root = ReactDOM.createRoot(container);
+                root.render(<App />);
+                console.log('✅ Landing page rendered successfully');
+            }
+        } catch (error) {
+            console.error('❌ Render error:', error);
+            if (document.getElementById('root')) {
+                document.getElementById('root').innerHTML = `<div style="padding: 40px; text-align: center; color: red; font-size: 18px;">⚠️ Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
