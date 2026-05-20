@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $email = $_POST['email'] ?? '';
     $phone = $_POST['phone'] ?? '';
     $location = $_POST['location'] ?? '';
-    $city = $_POST['city'] ?? '';
+    $city = $_POST['city'] ?? ''; // ستستقبل القيمة العربية المحددة من القائمة
 
     $updateStmt = $conn->prepare("
         UPDATE workers
@@ -60,7 +60,7 @@ $statsStmt->bindParam(':worker_id', $workerId);
 $statsStmt->execute();
 $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
 
-// Get recent reviews (Fixed sr.us_id to sr.user_id)
+// Get recent reviews (Fixed sr.user_id matching your current schema)
 $reviewsStmt = $conn->prepare("
     SELECT rw.rating, rw.comment, rw.created_at, u.name as user_name
     FROM reviews_worker rw
@@ -96,6 +96,14 @@ $recentReviews = $reviewsStmt->fetchAll(PDO::FETCH_ASSOC);
                 <a href="worker_dashboard.php" class="inline-flex items-center justify-center rounded-3xl bg-emerald-500 px-5 py-3 text-white font-semibold hover:bg-emerald-600 transition">لوحة التحكم</a>
             </div>
         </header>
+
+        <div class="mb-6">
+            <nav class="flex space-x-1 bg-slate-100 p-1 rounded-2xl rtl:space-x-reverse">
+                <a href="worker_available_requests.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">الطلبات المتاحة</a>
+                <a href="worker_dashboard.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">لوحة التحكم</a>
+                <a href="worker_profile.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl bg-white text-slate-900 shadow-sm">الملف الشخصي</a>
+            </nav>
+        </div>
 
         <?php if (isset($_GET['success']) && $_GET['success'] === 'profile_updated'): ?>
             <div class="rounded-3xl border border-green-300 bg-green-50 p-6 text-right text-green-800 shadow-sm mb-6">
@@ -211,10 +219,10 @@ $recentReviews = $reviewsStmt->fetchAll(PDO::FETCH_ASSOC);
                                 <label class="block text-sm font-semibold text-slate-900 mb-2">المدينة</label>
                                 <select name="city" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
                                     <option value="">اختر المدينة</option>
-                                    <option value="6 أكتوبر" <?= ($worker['city'] ?? '') === '6 أكتوبر' ? 'selected' : '' ?>>6 أكتوبر</option>
+                                    <option value="اكتوبر السادس" <?= ($worker['city'] ?? '') === 'اكتوبر السادس' ? 'selected' : '' ?>>اكتوبر السادس</option>
                                     <option value="الشيخ زايد" <?= ($worker['city'] ?? '') === 'الشيخ زايد' ? 'selected' : '' ?>>الشيخ زايد</option>
                                 </select>
-                                <p class="text-xs text-slate-500 mt-1">سيتم عرض الطلبات المتاحة في هذه المدينة</p>
+                                <p class="text-xs text-slate-500 mt-1">عند حفظ الاختيار، ستظهر لك الطلبات المخصصة لهذه المدينة فقط.</p>
                             </div>
                         </div>
                         <div>
