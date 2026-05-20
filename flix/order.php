@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/google_ai.php';
@@ -78,7 +78,6 @@ function orderStatusLabel($status) {
     if ($status === 'pending') return 'قيد البحث';
     return 'حالة غير معروفة';
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
