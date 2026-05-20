@@ -73,21 +73,7 @@
             };
 
             return (
-                <div className="min-h-screen bg-gray-50">
-                    {/* Navbar */}
-                    <nav className="sticky top-0 z-40 bg-white shadow-md">
-                        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-                            <h1 className="text-2xl font-bold text-green-600">🚀 Flix</h1>
-                            <div className="hidden md:flex gap-6 items-center">
-                                <a href="#services" className="hover:text-green-600 transition">الخدمات</a>
-                                <a href="#how" className="hover:text-green-600 transition">كيف يعمل</a>
-                                <a href="#tech" className="hover:text-green-600 transition">للفنيين</a>
-                                <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">دخول</button>
-                            </div>
-                            <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-2xl">
-                                {menuOpen ? '✕' : '☰'}
-                            </button>
-                        </div>
+             <div class="hidden md:flex gap-6 items-center"><a href="#services" class="hover:text-green-600 transition">الخدمات</a><a href="#how" class="hover:text-green-600 transition">كيف يعمل</a><a href="#tech" class="hover:text-green-600 transition">للفنيين</a><a href="login.php"><button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">دخول</button></a></div>
                         
                         {/* Mobile Menu */}
                         {menuOpen && (
