@@ -147,7 +147,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $national_id = normalizeText($_POST['national_id'] ?? '');
             $special = normalizeText($_POST['special'] ?? '');
 
-            $stmt = $conn->prepare('INSERT INTO workers (name, email, phone, password_hash, specialization, national_id, id_front_path, id_back_path, certificate_path, cv_path, city, location, approved, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())');
+            // FIXED: Changed password_hash to password in the workers INSERT query
+            $stmt = $conn->prepare('INSERT INTO workers (name, email, phone, password, specialization, national_id, id_front_path, id_back_path, certificate_path, cv_path, city, location, approved, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())');
             $success = $stmt->execute([$name, $email, $phone, $hashedPassword, $special, $national_id, $id_front_path, $id_back_path, $certificate_path, $cv_path, $location, $location, 'pending', 'inactive']);
 
             if ($success) {
