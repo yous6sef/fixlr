@@ -15,7 +15,7 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
 }
 
 $message = '';
-$dbError = ''; // Holds our safety-net error message
+$dbError = ''; 
 
 if (isset($_GET['message'])) {
     $message = $_GET['message'];
@@ -80,9 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// ------------------------------------------------------------------
-// CRASH-PROOF SAFETY NET: Initialize all variables with empty/zero defaults
-// ------------------------------------------------------------------
+// Initialize all variables with empty/zero defaults
 $statsQuery = ['total_revenue' => 0, 'today_revenue' => 0, 'pending_commission' => 0, 'collected_commission' => 0, 'pending_requests' => 0, 'accepted_requests' => 0, 'completed_requests' => 0, 'total_requests' => 0];
 $workersStats = ['total_workers' => 0, 'waiting_approval' => 0, 'active_workers' => 0, 'paused_workers' => 0];
 $pendingWorkers = [];
@@ -97,7 +95,6 @@ $workerPerformance = [];
 $aiInsights = '';
 
 try {
-    // Financial Stats
     $statsQuery = $conn->query("SELECT
         COALESCE(SUM(CASE WHEN status = 'completed' THEN COALESCE(budget, 0) END), 0) AS total_revenue,
         COALESCE(SUM(CASE WHEN status = 'completed' AND DATE(completed_at) = CURRENT_DATE THEN COALESCE(budget, 0) END), 0) AS today_revenue,
@@ -109,7 +106,6 @@ try {
         COUNT(*) AS total_requests
     FROM service_requests")->fetch(PDO::FETCH_ASSOC);
 
-    // Worker Stats
     $workersStats = $conn->query("SELECT
         COUNT(*) AS total_workers,
         COUNT(*) FILTER (WHERE approved = 'pending') AS waiting_approval,
@@ -121,17 +117,16 @@ try {
 
     $pausedWorkers = $conn->query("SELECT id, name, specialization, city, email, phone, unpaid_streak_days, paused FROM workers WHERE paused = 'yes' OR unpaid_streak_days >= 7 ORDER BY unpaid_streak_days DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
 
-    $recentRequests = $conn->query("SELECT sr.id, sr.specialization, sr.city, sr.budget, sr.status, sr.payment_status, sr.created_at, u.name AS user_name, w.name AS worker_name FROM service_requests sr LEFT JOIN users u ON u.id = sr.us_id LEFT JOIN workers w ON w.id::text = sr.worker_id::text ORDER BY sr.created_at DESC LIMIT 15")->fetchAll(PDO::FETCH_ASSOC);
+    // FIXED: Changed sr.us_id to sr.user_id
+    $recentRequests = $conn->query("SELECT sr.id, sr.specialization, sr.city, sr.budget, sr.status, sr.payment_status, sr.created_at, u.name AS user_name, w.name AS worker_name FROM service_requests sr LEFT JOIN users u ON u.id = sr.user_id LEFT JOIN workers w ON w.id::text = sr.worker_id::text ORDER BY sr.created_at DESC LIMIT 15")->fetchAll(PDO::FETCH_ASSOC);
 
     $pendingCommRequests = $conn->query("SELECT id, specialization, city, budget, commission_amount, payment_status, completed_at FROM service_requests WHERE status = 'completed' AND payment_status = 'unpaid' ORDER BY completed_at DESC LIMIT 15")->fetchAll(PDO::FETCH_ASSOC);
 
-    // AI Summary
     if (isset($_GET['use_ai']) && $_GET['use_ai'] === '1') {
         $summaryText = "إجمالي الإيرادات: " . number_format($statsQuery['total_revenue'], 2) . " EGP. إيراد اليوم: " . number_format($statsQuery['today_revenue'], 2) . " EGP. العمولة المعلقة: " . number_format($statsQuery['pending_commission'], 2) . " EGP. عدد الطلبات المكتملة: " . $statsQuery['completed_requests'] . ". عدد الفنيين المعلّقين: " . $workersStats['paused_workers'] . ".";
         $aiInsights = ai_generate_admin_insights($summaryText);
     }
 
-    // Payment History
     $paymentHistory = $conn->query("
         SELECT wp.id, wp.worker_id, w.name AS worker_name, wp.request_id, wp.amount_paid, wp.commission_amount, wp.status AS payment_status, wp.confirmed_at, sr.completed_at, sr.budget, sr.specialization
         FROM worker_payments wp
@@ -140,32 +135,29 @@ try {
         ORDER BY wp.confirmed_at DESC LIMIT 30
     ")->fetchAll(PDO::FETCH_ASSOC);
 
-    // Commission Breakdown
     $commissionBreakdown = $conn->query("
         SELECT payment_status, COUNT(*) AS count, COALESCE(SUM(commission_amount), 0) AS total_commission, COALESCE(AVG(commission_amount), 0) AS avg_commission, MIN(commission_amount) AS min_commission, MAX(commission_amount) AS max_commission
         FROM service_requests WHERE status = 'completed' GROUP BY payment_status
     ")->fetchAll(PDO::FETCH_ASSOC);
 
-    // Users Request Count
+    // FIXED: Changed sr.us_id to sr.user_id
     $usersWithRequestCount = $conn->query("
         SELECT u.id, u.name, u.email, u.phone, u.location, COUNT(sr.id) AS total_requests, COALESCE(SUM(CASE WHEN sr.status = 'completed' THEN 1 ELSE 0 END), 0) AS completed_requests, COALESCE(SUM(CASE WHEN sr.status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_requests, MAX(sr.created_at) AS last_request_date
-        FROM users u LEFT JOIN service_requests sr ON sr.us_id = u.id WHERE u.role = 'user' GROUP BY u.id, u.name, u.email, u.phone, u.location ORDER BY total_requests DESC LIMIT 25
+        FROM users u LEFT JOIN service_requests sr ON sr.user_id = u.id WHERE u.role = 'user' GROUP BY u.id, u.name, u.email, u.phone, u.location ORDER BY total_requests DESC LIMIT 25
     ")->fetchAll(PDO::FETCH_ASSOC);
 
-    // Chat Previews
+    // FIXED: Changed sr.us_id to sr.user_id
     $chatPreviews = $conn->query("
         SELECT cm.id, cm.request_id, sr.specialization, sr.status AS request_status, u.name AS user_name, w.name AS worker_name, cm.sender_type, cm.sender_id, SUBSTRING(cm.message, 1, 80) AS message_preview, cm.created_at, COUNT(*) OVER (PARTITION BY cm.request_id) AS total_request_messages
-        FROM chat_messages cm LEFT JOIN service_requests sr ON sr.id = cm.request_id LEFT JOIN users u ON u.id = sr.us_id LEFT JOIN workers w ON w.id::text = sr.worker_id::text WHERE sr.status IN ('pending', 'accepted', 'completed') ORDER BY cm.created_at DESC LIMIT 40
+        FROM chat_messages cm LEFT JOIN service_requests sr ON sr.id = cm.request_id LEFT JOIN users u ON u.id = sr.user_id LEFT JOIN workers w ON w.id::text = sr.worker_id::text WHERE sr.status IN ('pending', 'accepted', 'completed') ORDER BY cm.created_at DESC LIMIT 40
     ")->fetchAll(PDO::FETCH_ASSOC);
 
-    // Worker Performance
     $workerPerformance = $conn->query("
         SELECT w.id, w.name, w.specialization, w.city, w.approved, w.status, w.total_earnings, COUNT(DISTINCT sr.id) AS total_completed_jobs, COALESCE(COUNT(DISTINCT CASE WHEN rw.rating >= 4 THEN sr.id END), 0) AS high_rated_jobs, COALESCE(AVG(rw.rating), 0) AS avg_rating, COALESCE(COUNT(DISTINCT rw.id), 0) AS review_count, COALESCE(SUM(CASE WHEN sr.payment_status = 'paid' THEN sr.budget ELSE 0 END), 0) AS paid_earnings, COALESCE(SUM(CASE WHEN sr.payment_status = 'unpaid' THEN sr.budget ELSE 0 END), 0) AS unpaid_earnings, MAX(sr.completed_at) AS last_completed_job
         FROM workers w LEFT JOIN service_requests sr ON sr.worker_id::text = w.id::text AND sr.status = 'completed' LEFT JOIN reviews_worker rw ON rw.worker_id::text = w.id::text AND rw.request_id = sr.id WHERE w.approved = 'yes' GROUP BY w.id, w.name, w.specialization, w.city, w.approved, w.status, w.total_earnings ORDER BY total_completed_jobs DESC, avg_rating DESC LIMIT 30
     ")->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
-    // If ANY query fails because of a missing table/column, it stops the crash and shows the error safely here.
     $dbError = "عذراً، يوجد خطأ في هيكل قاعدة البيانات. يرجى تشغيل أوامر SQL في Neon لتحديث الجداول. <br><br> التفاصيل: " . $e->getMessage();
 }
 ?>
@@ -180,66 +172,18 @@ try {
     <style>
         body { font-family: 'Cairo', sans-serif; background: #f8fafc; color: #1f2937; }
         .glass-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
-        .tab-btn {
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        .tab-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        .tab-btn.inactive {
-            background: rgba(255, 255, 255, 0.1);
-            color: #64748b;
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-        .tab-btn.inactive:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: #475569;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        details {
-            margin-bottom: 12px;
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(10px);
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        details:hover {
-            background: rgba(255, 255, 255, 0.7);
-            border-color: rgba(102, 126, 234, 0.5);
-        }
-        summary {
-            font-weight: 600;
-            color: #1f2937;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            outline: none;
-        }
+        .tab-btn { padding: 12px 24px; border-radius: 12px; font-weight: 600; transition: all 0.3s ease; border: 2px solid transparent; }
+        .tab-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        .tab-btn.inactive { background: rgba(255, 255, 255, 0.1); color: #64748b; border-color: rgba(255, 255, 255, 0.2); }
+        .tab-btn.inactive:hover { background: rgba(255, 255, 255, 0.2); color: #475569; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        details { margin-bottom: 12px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.3); cursor: pointer; transition: all 0.3s ease; }
+        details:hover { background: rgba(255, 255, 255, 0.7); border-color: rgba(102, 126, 234, 0.5); }
+        summary { font-weight: 600; color: #1f2937; display: flex; justify-content: space-between; align-items: center; outline: none; }
         summary::marker { color: #667eea; }
-        .detail-content {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(0, 0, 0, 0.1);
-        }
+        .detail-content { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0, 0, 0, 0.1); }
     </style>
 </head>
 <body class="min-h-screen">
@@ -438,6 +382,8 @@ try {
                                 <p><strong>الاسم:</strong> <?= htmlspecialchars($worker['name']) ?></p>
                                 <p><strong>التخصص:</strong> <?= htmlspecialchars($worker['specialization']) ?></p>
                                 <p><strong>المدينة:</strong> <?= htmlspecialchars($worker['city']) ?></p>
+                                <p><strong>البريد الإلكتروني:</strong> <?= htmlspecialchars($worker['email']) ?></p>
+                                <p><strong>الهاتف:</strong> <?= htmlspecialchars($worker['phone']) ?></p>
                                 <p><strong>أيام غير مدفوعة:</strong> <?= $worker['unpaid_streak_days'] ?></p>
                                 <p><strong>موقوف:</strong> <?= $worker['paused'] === 'yes' ? 'نعم' : 'لا' ?></p>
                             </div>
