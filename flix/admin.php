@@ -75,9 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// FIXED: Changed worker_price to budget
 $statsQuery = $conn->query("SELECT
-    COALESCE(SUM(CASE WHEN status = 'completed' THEN COALESCE(worker_price, 0) END), 0) AS total_revenue,
-    COALESCE(SUM(CASE WHEN status = 'completed' AND DATE(completed_at) = CURRENT_DATE THEN COALESCE(worker_price, 0) END), 0) AS today_revenue,
+    COALESCE(SUM(CASE WHEN status = 'completed' THEN COALESCE(budget, 0) END), 0) AS total_revenue,
+    COALESCE(SUM(CASE WHEN status = 'completed' AND DATE(completed_at) = CURRENT_DATE THEN COALESCE(budget, 0) END), 0) AS today_revenue,
     COALESCE(SUM(CASE WHEN status = 'completed' AND payment_status = 'unpaid' THEN COALESCE(commission_amount, 0) END), 0) AS pending_commission,
     COALESCE(SUM(CASE WHEN status = 'completed' AND payment_status = 'paid' THEN COALESCE(commission_amount, 0) END), 0) AS collected_commission,
     COUNT(*) FILTER (WHERE status = 'pending') AS pending_requests,
@@ -205,6 +206,7 @@ $chatPreviews->execute();
 $chatPreviews = $chatPreviews->fetchAll(PDO::FETCH_ASSOC);
 
 // Worker Performance - Detailed performance metrics
+// FIXED: Changed worker_price to budget
 $workerPerformance = $conn->prepare("
     SELECT 
         w.id,
@@ -218,8 +220,8 @@ $workerPerformance = $conn->prepare("
         COALESCE(COUNT(DISTINCT CASE WHEN rw.rating >= 4 THEN sr.id END), 0) AS high_rated_jobs,
         COALESCE(AVG(rw.rating), 0) AS avg_rating,
         COALESCE(COUNT(DISTINCT rw.id), 0) AS review_count,
-        COALESCE(SUM(CASE WHEN sr.payment_status = 'paid' THEN sr.worker_price ELSE 0 END), 0) AS paid_earnings,
-        COALESCE(SUM(CASE WHEN sr.payment_status = 'unpaid' THEN sr.worker_price ELSE 0 END), 0) AS unpaid_earnings,
+        COALESCE(SUM(CASE WHEN sr.payment_status = 'paid' THEN sr.budget ELSE 0 END), 0) AS paid_earnings,
+        COALESCE(SUM(CASE WHEN sr.payment_status = 'unpaid' THEN sr.budget ELSE 0 END), 0) AS unpaid_earnings,
         MAX(sr.completed_at) AS last_completed_job
     FROM workers w
     LEFT JOIN service_requests sr ON sr.worker_id::text = w.id::text AND sr.status = 'completed'
@@ -324,18 +326,15 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
             <div class="rounded-3xl border border-green-200 bg-emerald-50 text-emerald-800 p-5 font-semibold"><?= htmlspecialchars($message) ?></div>
         <?php endif; ?>
 
-        <!-- Tab Navigation -->
         <div class="flex flex-wrap gap-4 mb-8">
             <button class="tab-btn active" onclick="showTab('financial')">المالية</button>
             <button class="tab-btn inactive" onclick="showTab('support')">الدعم</button>
             <button class="tab-btn inactive" onclick="showTab('acceptance')">القبول</button>
         </div>
 
-        <!-- Financial Tab -->
         <div id="financial" class="tab-content active">
             <h2 class="text-2xl font-bold mb-6">المالية والمعاملات</h2>
 
-            <!-- Financial Stats -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="glass-card p-6 rounded-3xl shadow">
                     <h3 class="text-lg font-semibold text-slate-700">إجمالي الإيرادات</h3>
@@ -355,7 +354,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
 
-            <!-- Commission Breakdown -->
             <div class="glass-card p-6 rounded-3xl shadow mb-8">
                 <h3 class="text-xl font-bold mb-4">تفصيل العمولات</h3>
                 <div class="overflow-x-auto">
@@ -386,7 +384,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
 
-            <!-- Payment History -->
             <div class="glass-card p-6 rounded-3xl shadow">
                 <h3 class="text-xl font-bold mb-4">تاريخ الدفعات</h3>
                 <div class="space-y-4">
@@ -401,7 +398,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                                 <p><strong>المبلغ المدفوع:</strong> <?= number_format($payment['amount_paid'], 2) ?> EGP</p>
                                 <p><strong>العمولة:</strong> <?= number_format($payment['commission_amount'], 2) ?> EGP</p>
                                 <p><strong>تاريخ الإتمام:</strong> <?= htmlspecialchars($payment['completed_at']) ?></p>
-                                <!-- Placeholder for uploads/images -->
                                 <p><strong>الرفقات:</strong> لا توجد رفات حالياً (يمكن إضافة صور أو ملفات هنا)</p>
                             </div>
                         </details>
@@ -410,11 +406,9 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
-        <!-- Support Tab -->
         <div id="support" class="tab-content">
             <h2 class="text-2xl font-bold mb-6">الدعم والطلبات</h2>
 
-            <!-- Recent Requests -->
             <div class="glass-card p-6 rounded-3xl shadow mb-8">
                 <h3 class="text-xl font-bold mb-4">الطلبات الأخيرة</h3>
                 <div class="space-y-4">
@@ -430,7 +424,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                                 <p><strong>المدينة:</strong> <?= htmlspecialchars($request['city']) ?></p>
                                 <p><strong>الميزانية:</strong> <?= htmlspecialchars($request['budget']) ?> EGP</p>
                                 <p><strong>الحالة:</strong> <?= htmlspecialchars($request['status']) ?> / <?= htmlspecialchars($request['payment_status']) ?></p>
-                                <!-- Placeholder for media -->
                                 <p><strong>الرفقات:</strong> لا توجد رفات حالياً</p>
                             </div>
                         </details>
@@ -438,7 +431,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
 
-            <!-- Chat Previews -->
             <div class="glass-card p-6 rounded-3xl shadow">
                 <h3 class="text-xl font-bold mb-4">معاينة الدردشات</h3>
                 <div class="space-y-4">
@@ -454,7 +446,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                                 <p><strong>المرسل:</strong> <?= htmlspecialchars($chat['sender_type']) ?></p>
                                 <p><strong>الرسالة الكاملة:</strong> <?= htmlspecialchars($chat['message_preview']) ?>...</p>
                                 <p><strong>إجمالي الرسائل في الطلب:</strong> <?= $chat['total_request_messages'] ?></p>
-                                <!-- Placeholder for media -->
                                 <p><strong>الرفقات:</strong> لا توجد رفات حالياً</p>
                             </div>
                         </details>
@@ -463,11 +454,9 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
-        <!-- Acceptance Tab -->
         <div id="acceptance" class="tab-content">
             <h2 class="text-2xl font-bold mb-6">قبول الفنيين</h2>
 
-            <!-- Pending Workers -->
             <div class="glass-card p-6 rounded-3xl shadow mb-8">
                 <h3 class="text-xl font-bold mb-4">الفنيون في انتظار الموافقة</h3>
                 <div class="space-y-4">
@@ -483,7 +472,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                                 <p><strong>المدينة:</strong> <?= htmlspecialchars($worker['city']) ?></p>
                                 <p><strong>البريد الإلكتروني:</strong> <?= htmlspecialchars($worker['email']) ?></p>
                                 <p><strong>الهاتف:</strong> <?= htmlspecialchars($worker['phone']) ?></p>
-                                <!-- Media Attachments -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <?php if (!empty($worker['id_front_path'])): ?>
                                         <div>
@@ -533,7 +521,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
 
-            <!-- Paused Workers -->
             <div class="glass-card p-6 rounded-3xl shadow">
                 <h3 class="text-xl font-bold mb-4">الفنيون الموقوفون</h3>
                 <div class="space-y-4">
@@ -550,7 +537,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                                 <p><strong>الهاتف:</strong> <?= htmlspecialchars($worker['phone']) ?></p>
                                 <p><strong>أيام غير مدفوعة:</strong> <?= $worker['unpaid_streak_days'] ?></p>
                                 <p><strong>موقوف:</strong> <?= $worker['paused'] === 'yes' ? 'نعم' : 'لا' ?></p>
-                                <!-- Placeholder for media -->
                                 <p><strong>الرفقات:</strong> لا توجد رفات حالياً</p>
                             </div>
                         </details>
@@ -559,7 +545,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
-        <!-- AI Insights -->
         <?php if ($aiInsights): ?>
             <div class="glass-card p-6 rounded-3xl shadow">
                 <h3 class="text-xl font-bold mb-4">رؤى AI</h3>
