@@ -1,7 +1,4 @@
 [build]
+buildCommand = "npm ci --include=dev && npx webpack --mode production"
 
 [deploy]
-
-[deploy.variables]
-RAILPACK_INSTALL_CMD = "npm ci --include=dev"
-RAILPACK_BUILD_CMD = "npx webpack --mode production"
