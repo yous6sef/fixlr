@@ -5,84 +5,66 @@
 session_start();
 include('db.php');
 
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'worker') {
     header('Location: login.php');
     exit();
 }
 
 $userId = $_SESSION['user_id'];
 
-// Verify user is a worker
-$userStmt = $conn->prepare("SELECT user_type, city FROM users WHERE id = ? AND user_type = 'worker'");
+// 1. Verify user is a worker from the CORRECT table (workers) and use ::text for UUIDs
+$userStmt = $conn->prepare("SELECT city FROM workers WHERE id::text = ?");
 $userStmt->execute([$userId]);
 $worker = $userStmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$worker) {
-    echo "You are not a worker";
+    echo "You are not a worker or account not found.";
     exit();
 }
 
-// Get available requests in worker's city
+// 2. Get available requests in worker's city (Fixed Joins to match actual DB schema)
 $stmt = $conn->prepare("
     SELECT 
         sr.id,
         sr.status,
         sr.created_at,
-        sr.problem_description,
-        sr.checking_fee,
-        sr.google_maps_link,
-        st.name_ar as service_type,
-        c.name_ar as city,
-        d.name_ar as device,
-        u.name as user_name,
-        u.total_rating,
-        u.total_reviews
+        sr.description AS problem_description,
+        sr.budget AS checking_fee,
+        sr.address AS google_maps_link,
+        sr.specialization AS service_type,
+        sr.city AS city,
+        u.name AS user_name,
+        5 AS total_rating, -- Mocked rating until reviews table is connected
+        1 AS total_reviews -- Mocked reviews count
     FROM service_requests sr
-    JOIN service_types st ON sr.service_type_id = st.id
-    JOIN cities c ON sr.city_id = c.id
-    LEFT JOIN devices d ON sr.device_id = d.id
-    JOIN users u ON sr.user_id = u.id
+    LEFT JOIN users u ON sr.user_id = u.id
     WHERE sr.status = 'pending' 
-    AND sr.city_id = (SELECT id FROM cities WHERE name_ar = ? OR name_en = ? LIMIT 1)
-    AND sr.id NOT IN (SELECT service_request_id FROM service_requests sr2 WHERE sr2.worker_id = ? AND sr2.user_id = sr.user_id)
+    AND sr.city = ?
     ORDER BY sr.created_at DESC
 ");
 
-$stmt->execute([$worker['city'], $worker['city'], $userId]);
+$stmt->execute([$worker['city']]);
 $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Handle accept request
+// 3. Handle accept request
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'accept') {
     $requestId = $_POST['request_id'] ?? null;
     
     if ($requestId) {
         try {
-            $conn->beginTransaction();
-            
-            // Update request status
+            // Update request status directly
             $updateStmt = $conn->prepare("
                 UPDATE service_requests 
-                SET status = 'accepted', worker_id = ?, accepted_at = NOW()
+                SET status = 'accepted', worker_id = ?
                 WHERE id = ? AND status = 'pending'
             ");
             $updateStmt->execute([$userId, $requestId]);
-            
-            // Create status history
-            $historyStmt = $conn->prepare("
-                INSERT INTO request_status_history 
-                (service_request_id, old_status, new_status, changed_by)
-                VALUES (?, 'pending', 'accepted', ?)
-            ");
-            $historyStmt->execute([$requestId, $userId]);
-            
-            $conn->commit();
             
             // Refresh page
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit();
         } catch (Exception $e) {
-            $conn->rollBack();
-            $error = $e->getMessage();
+            $error = "حدث خطأ أثناء قبول الطلب: " . $e->getMessage();
         }
     }
 }
@@ -309,15 +291,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             background: #5568d3;
         }
 
-        .btn-maps {
-            background: #ff6f00;
-            color: white;
-        }
-
-        .btn-maps:hover {
-            background: #e65100;
-        }
-
         .empty-state {
             background: white;
             border-radius: 12px;
@@ -390,11 +363,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     <div class="stat-label">طلب متاح</div>
                 </div>
                 <div class="nav-buttons">
-                    <a href="worker_dashboard.php" class="nav-btn">لوحتي</a>
-                    <a href="worker_payment_submit.php" class="nav-btn">الدفع</a>
+                    <a href="worker_dashboard.php" class="nav-btn" style="color: #667eea; border-color: #667eea;">لوحتي</a>
                 </div>
             </div>
         </div>
+
+        <?php if (!empty($error)): ?>
+            <div class="alert"><?php echo htmlspecialchars($error); ?></div>
+        <?php endif; ?>
 
         <?php if (empty($requests)): ?>
             <div class="empty-state">
@@ -408,37 +384,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         <div>
                             <div class="request-title">
                                 🔨 <?php echo htmlspecialchars($request['service_type']); ?>
-                                <?php if ($request['device']): ?>
-                                    <small>(<?php echo htmlspecialchars($request['device']); ?>)</small>
-                                <?php endif; ?>
                             </div>
                             <div class="request-id">#<?php echo $request['id']; ?></div>
                         </div>
                         <div class="price-badge">
-                            💰 <?php echo $request['checking_fee']; ?> ج.م
+                            💰 الميزانية: <?php echo htmlspecialchars($request['checking_fee']); ?> ج.م
                         </div>
                     </div>
 
                     <div class="user-card">
-                        👤 <span class="user-name"><?php echo htmlspecialchars($request['user_name']); ?></span>
-                        <span class="user-rating">⭐ <?php echo round($request['total_rating'], 1); ?>/5 (<?php echo $request['total_reviews']; ?> تقييم)</span>
+                        👤 <span class="user-name"><?php echo htmlspecialchars($request['user_name'] ?? 'عميل'); ?></span>
+                        <span class="user-rating">⭐ <?php echo round($request['total_rating'] ?? 0, 1); ?>/5 (<?php echo $request['total_reviews'] ?? 0; ?> تقييم)</span>
                     </div>
 
                     <div class="info-item">
-                        <span class="info-label">📍 المدينة:</span>
-                        <span class="info-value"><?php echo htmlspecialchars($request['city']); ?></span>
+                        <span class="info-label">📍 العنوان:</span>
+                        <span class="info-value"><?php echo htmlspecialchars($request['google_maps_link'] ?? $request['city']); ?></span>
                     </div>
 
                     <div class="description-box">
-                        <strong>📋 المشكلة:</strong><br>
-                        <?php echo htmlspecialchars($request['problem_description']); ?>
+                        <strong>📋 وصف المشكلة:</strong><br>
+                        <?php echo nl2br(htmlspecialchars($request['problem_description'])); ?>
                     </div>
-
-                    <?php if ($request['google_maps_link']): ?>
-                        <a href="<?php echo htmlspecialchars($request['google_maps_link']); ?>" target="_blank" class="maps-link">
-                            📍 فتح الموقع في جوجل مابس
-                        </a>
-                    <?php endif; ?>
 
                     <div class="request-footer">
                         <div class="time-ago">
@@ -452,9 +419,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                             ?>
                         </div>
                         <div class="action-buttons">
-                            <a href="request_detail.php?id=<?php echo $request['id']; ?>" class="btn btn-view">
-                                👀 عرض التفاصيل
-                            </a>
                             <form method="POST" style="display: inline;">
                                 <input type="hidden" name="action" value="accept">
                                 <input type="hidden" name="request_id" value="<?php echo $request['id']; ?>">
