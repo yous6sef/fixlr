@@ -50,7 +50,7 @@ $statsStmt = $conn->prepare("
     SELECT
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_services,
         COUNT(CASE WHEN status = 'accepted' THEN 1 END) as active_services,
-        COALESCE(SUM(CASE WHEN status = 'completed' THEN worker_price END), 0) as total_earnings,
+        COALESCE(SUM(CASE WHEN status = 'completed' THEN budget END), 0) as total_earnings,
         AVG(CASE WHEN status = 'completed' THEN rw.rating END) as avg_rating
     FROM service_requests sr
     LEFT JOIN reviews_worker rw ON rw.request_id = sr.id
@@ -60,12 +60,12 @@ $statsStmt->bindParam(':worker_id', $workerId);
 $statsStmt->execute();
 $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
 
-// Get recent reviews
+// Get recent reviews (Fixed sr.us_id to sr.user_id)
 $reviewsStmt = $conn->prepare("
     SELECT rw.rating, rw.comment, rw.created_at, u.name as user_name
     FROM reviews_worker rw
     LEFT JOIN service_requests sr ON sr.id = rw.request_id
-    LEFT JOIN users u ON u.id::text = sr.us_id::text
+    LEFT JOIN users u ON u.id = sr.user_id
     WHERE rw.worker_id::text = :worker_id
     ORDER BY rw.created_at DESC
     LIMIT 5
@@ -92,21 +92,10 @@ $recentReviews = $reviewsStmt->fetchAll(PDO::FETCH_ASSOC);
                 <h1 class="text-3xl font-black text-slate-900">الملف الشخصي</h1>
             </div>
             <div class="flex gap-3">
-                <a href="worker_orders.php" class="inline-flex items-center justify-center rounded-3xl bg-blue-500 px-5 py-3 text-white font-semibold hover:bg-blue-600 transition">الطلبات</a>
-                <a href="worker_payments.php" class="inline-flex items-center justify-center rounded-3xl bg-emerald-500 px-5 py-3 text-white font-semibold hover:bg-emerald-600 transition">المدفوعات</a>
+                <a href="worker_available_requests.php" class="inline-flex items-center justify-center rounded-3xl bg-blue-500 px-5 py-3 text-white font-semibold hover:bg-blue-600 transition">الطلبات المتاحة</a>
+                <a href="worker_dashboard.php" class="inline-flex items-center justify-center rounded-3xl bg-emerald-500 px-5 py-3 text-white font-semibold hover:bg-emerald-600 transition">لوحة التحكم</a>
             </div>
         </header>
-
-        <!-- Navigation Tabs -->
-        <div class="mb-6">
-            <nav class="flex space-x-1 bg-slate-100 p-1 rounded-2xl rtl:space-x-reverse">
-                <a href="worker_orders.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">الطلبات</a>
-                <a href="worker_track.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">تتبع الخدمة</a>
-                <a href="worker_receipt.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">الإيصالات</a>
-                <a href="worker_payments.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">المدفوعات</a>
-                <a href="worker_profile.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl bg-white text-slate-900 shadow-sm">الملف الشخصي</a>
-            </nav>
-        </div>
 
         <?php if (isset($_GET['success']) && $_GET['success'] === 'profile_updated'): ?>
             <div class="rounded-3xl border border-green-300 bg-green-50 p-6 text-right text-green-800 shadow-sm mb-6">
@@ -115,7 +104,6 @@ $recentReviews = $reviewsStmt->fetchAll(PDO::FETCH_ASSOC);
         <?php endif; ?>
 
         <div class="grid gap-6 lg:grid-cols-3">
-            <!-- Profile Statistics -->
             <div class="space-y-6">
                 <div class="rounded-[2rem] bg-white p-6 shadow-xl border border-slate-200">
                     <h3 class="text-lg font-black text-slate-900 mb-4">الإحصائيات</h3>
@@ -152,7 +140,6 @@ $recentReviews = $reviewsStmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
 
-                <!-- Account Status -->
                 <div class="rounded-[2rem] bg-white p-6 shadow-xl border border-slate-200">
                     <h3 class="text-lg font-black text-slate-900 mb-4">حالة الحساب</h3>
                     <div class="space-y-3">
@@ -195,14 +182,13 @@ $recentReviews = $reviewsStmt->fetchAll(PDO::FETCH_ASSOC);
                             <span class="font-semibold text-slate-900"><?= htmlspecialchars($worker['specialization'] ?? 'غير محدد') ?></span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-slate-600">المدينة:</span>
+                            <span class="text-slate-600">المدينة الحالية:</span>
                             <span class="font-semibold text-slate-900"><?= htmlspecialchars($worker['city'] ?? 'غير محدد') ?></span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Profile Form -->
             <div class="lg:col-span-2 space-y-6">
                 <div class="rounded-[2rem] bg-white p-6 shadow-xl border border-slate-200">
                     <h3 class="text-lg font-black text-slate-900 mb-6">تحديث البيانات الشخصية</h3>
@@ -225,9 +211,10 @@ $recentReviews = $reviewsStmt->fetchAll(PDO::FETCH_ASSOC);
                                 <label class="block text-sm font-semibold text-slate-900 mb-2">المدينة</label>
                                 <select name="city" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
                                     <option value="">اختر المدينة</option>
-                                    <option value="october" <?= ($worker['city'] ?? '') === 'october' ? 'selected' : '' ?>>6 أكتوبر</option>
-                                    <option value="zayed" <?= ($worker['city'] ?? '') === 'zayed' ? 'selected' : '' ?>>الشيخ زايد</option>
+                                    <option value="6 أكتوبر" <?= ($worker['city'] ?? '') === '6 أكتوبر' ? 'selected' : '' ?>>6 أكتوبر</option>
+                                    <option value="الشيخ زايد" <?= ($worker['city'] ?? '') === 'الشيخ زايد' ? 'selected' : '' ?>>الشيخ زايد</option>
                                 </select>
+                                <p class="text-xs text-slate-500 mt-1">سيتم عرض الطلبات المتاحة في هذه المدينة</p>
                             </div>
                         </div>
                         <div>
@@ -240,7 +227,6 @@ $recentReviews = $reviewsStmt->fetchAll(PDO::FETCH_ASSOC);
                     </form>
                 </div>
 
-                <!-- Recent Reviews -->
                 <?php if (!empty($recentReviews)): ?>
                     <div class="rounded-[2rem] bg-white p-6 shadow-xl border border-slate-200">
                         <h3 class="text-lg font-black text-slate-900 mb-4">آخر التقييمات</h3>
@@ -264,7 +250,6 @@ $recentReviews = $reviewsStmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 <?php endif; ?>
 
-                <!-- Documents Status -->
                 <div class="rounded-[2rem] bg-white p-6 shadow-xl border border-slate-200">
                     <h3 class="text-lg font-black text-slate-900 mb-4">الوثائق والملفات</h3>
                     <div class="space-y-3">
