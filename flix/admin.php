@@ -15,224 +15,159 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
 }
 
 $message = '';
+$dbError = ''; // Holds our safety-net error message
 
 if (isset($_GET['message'])) {
     $message = $_GET['message'];
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['approve_worker']) && !empty($_POST['worker_id'])) {
-        $workerId = $_POST['worker_id'];
-        $stmt = $conn->prepare("UPDATE workers SET approved = 'yes', status = 'active', paused = 'no', unpaid_streak_days = 0, updated_at = NOW() WHERE id::text = :id");
-        $stmt->bindParam(':id', $workerId, PDO::PARAM_STR);
-        $stmt->execute();
-        $message = 'تمت الموافقة على حساب الفني بنجاح.';
-        header("Location: " . $_SERVER['PHP_SELF'] . "?message=" . urlencode($message));
-        exit();
-    }
-
-    if (isset($_POST['decline_worker']) && !empty($_POST['worker_id'])) {
-        $workerId = $_POST['worker_id'];
-        $stmt = $conn->prepare("UPDATE workers SET approved = 'no', status = 'inactive', updated_at = NOW() WHERE id::text = :id");
-        $stmt->bindParam(':id', $workerId, PDO::PARAM_STR);
-        $stmt->execute();
-        $message = 'تم رفض حساب الفني.';
-        header("Location: " . $_SERVER['PHP_SELF'] . "?message=" . urlencode($message));
-        exit();
-    }
-
-    if (isset($_POST['pause_worker']) && !empty($_POST['worker_id'])) {
-        $workerId = $_POST['worker_id'];
-        $stmt = $conn->prepare("UPDATE workers SET paused = 'yes', updated_at = NOW() WHERE id::text = :id");
-        $stmt->bindParam(':id', $workerId, PDO::PARAM_STR);
-        $stmt->execute();
-        $message = 'تم إيقاف حساب الفني مؤقتًا حتى يتم حل مشكلة الدفع.';
-        header("Location: " . $_SERVER['PHP_SELF'] . "?message=" . urlencode($message));
-        exit();
-    }
-
-    if (isset($_POST['confirm_payment']) && is_numeric($_POST['request_id'])) {
-        $requestId = (int)$_POST['request_id'];
-        $stmt = $conn->prepare("UPDATE service_requests SET payment_status = 'paid', payment_confirmed_at = NOW() WHERE id = :id");
-        $stmt->bindParam(':id', $requestId, PDO::PARAM_INT);
-        $stmt->execute();
-
-        $stmt2 = $conn->prepare("SELECT worker_id FROM service_requests WHERE id = :id LIMIT 1");
-        $stmt2->bindParam(':id', $requestId, PDO::PARAM_INT);
-        $stmt2->execute();
-        $request = $stmt2->fetch(PDO::FETCH_ASSOC);
-
-        if ($request && !empty($request['worker_id'])) {
-            $workerId = $request['worker_id'];
-            $stmt3 = $conn->prepare("UPDATE workers SET unpaid_streak_days = 0, paused = 'no', last_payment_confirmation_at = NOW() WHERE id::text = :id");
-            $stmt3->bindParam(':id', $workerId, PDO::PARAM_STR);
-            $stmt3->execute();
+    try {
+        if (isset($_POST['approve_worker']) && !empty($_POST['worker_id'])) {
+            $workerId = $_POST['worker_id'];
+            $stmt = $conn->prepare("UPDATE workers SET approved = 'yes', status = 'active', paused = 'no', unpaid_streak_days = 0, updated_at = NOW() WHERE id::text = :id");
+            $stmt->bindParam(':id', $workerId, PDO::PARAM_STR);
+            $stmt->execute();
+            $message = 'تمت الموافقة على حساب الفني بنجاح.';
+            header("Location: " . $_SERVER['PHP_SELF'] . "?message=" . urlencode($message));
+            exit();
         }
 
-        $message = 'تم تأكيد استلام الدفع وتحديث حالة الفاتورة.';
-        header("Location: " . $_SERVER['PHP_SELF'] . "?message=" . urlencode($message));
-        exit();
+        if (isset($_POST['decline_worker']) && !empty($_POST['worker_id'])) {
+            $workerId = $_POST['worker_id'];
+            $stmt = $conn->prepare("UPDATE workers SET approved = 'no', status = 'inactive', updated_at = NOW() WHERE id::text = :id");
+            $stmt->bindParam(':id', $workerId, PDO::PARAM_STR);
+            $stmt->execute();
+            $message = 'تم رفض حساب الفني.';
+            header("Location: " . $_SERVER['PHP_SELF'] . "?message=" . urlencode($message));
+            exit();
+        }
+
+        if (isset($_POST['pause_worker']) && !empty($_POST['worker_id'])) {
+            $workerId = $_POST['worker_id'];
+            $stmt = $conn->prepare("UPDATE workers SET paused = 'yes', updated_at = NOW() WHERE id::text = :id");
+            $stmt->bindParam(':id', $workerId, PDO::PARAM_STR);
+            $stmt->execute();
+            $message = 'تم إيقاف حساب الفني مؤقتًا حتى يتم حل مشكلة الدفع.';
+            header("Location: " . $_SERVER['PHP_SELF'] . "?message=" . urlencode($message));
+            exit();
+        }
+
+        if (isset($_POST['confirm_payment']) && is_numeric($_POST['request_id'])) {
+            $requestId = (int)$_POST['request_id'];
+            $stmt = $conn->prepare("UPDATE service_requests SET payment_status = 'paid', payment_confirmed_at = NOW() WHERE id = :id");
+            $stmt->bindParam(':id', $requestId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $stmt2 = $conn->prepare("SELECT worker_id FROM service_requests WHERE id = :id LIMIT 1");
+            $stmt2->bindParam(':id', $requestId, PDO::PARAM_INT);
+            $stmt2->execute();
+            $request = $stmt2->fetch(PDO::FETCH_ASSOC);
+
+            if ($request && !empty($request['worker_id'])) {
+                $workerId = $request['worker_id'];
+                $stmt3 = $conn->prepare("UPDATE workers SET unpaid_streak_days = 0, paused = 'no', last_payment_confirmation_at = NOW() WHERE id::text = :id");
+                $stmt3->bindParam(':id', $workerId, PDO::PARAM_STR);
+                $stmt3->execute();
+            }
+
+            $message = 'تم تأكيد استلام الدفع وتحديث حالة الفاتورة.';
+            header("Location: " . $_SERVER['PHP_SELF'] . "?message=" . urlencode($message));
+            exit();
+        }
+    } catch (PDOException $e) {
+        $dbError = "خطأ في قاعدة البيانات أثناء التحديث: " . $e->getMessage();
     }
 }
 
-// FIXED: Changed worker_price to budget
-$statsQuery = $conn->query("SELECT
-    COALESCE(SUM(CASE WHEN status = 'completed' THEN COALESCE(budget, 0) END), 0) AS total_revenue,
-    COALESCE(SUM(CASE WHEN status = 'completed' AND DATE(completed_at) = CURRENT_DATE THEN COALESCE(budget, 0) END), 0) AS today_revenue,
-    COALESCE(SUM(CASE WHEN status = 'completed' AND payment_status = 'unpaid' THEN COALESCE(commission_amount, 0) END), 0) AS pending_commission,
-    COALESCE(SUM(CASE WHEN status = 'completed' AND payment_status = 'paid' THEN COALESCE(commission_amount, 0) END), 0) AS collected_commission,
-    COUNT(*) FILTER (WHERE status = 'pending') AS pending_requests,
-    COUNT(*) FILTER (WHERE status = 'accepted') AS accepted_requests,
-    COUNT(*) FILTER (WHERE status = 'completed') AS completed_requests,
-    COUNT(*) AS total_requests
-FROM service_requests")->fetch(PDO::FETCH_ASSOC);
-
-$workersStats = $conn->query("SELECT
-    COUNT(*) AS total_workers,
-    COUNT(*) FILTER (WHERE approved = 'pending') AS waiting_approval,
-    COUNT(*) FILTER (WHERE approved = 'yes' AND status = 'active' AND paused != 'yes') AS active_workers,
-    COUNT(*) FILTER (WHERE paused = 'yes' OR unpaid_streak_days >= 7) AS paused_workers
-FROM workers")->fetch(PDO::FETCH_ASSOC);
-
-$pendingWorkers = $conn->prepare("SELECT id, name, specialization, city, email, phone, created_at, id_front_path, id_back_path, certificate_path, cv_path, national_id FROM workers WHERE approved = 'pending' ORDER BY created_at DESC LIMIT 10");
-$pendingWorkers->execute();
-$pendingWorkers = $pendingWorkers->fetchAll(PDO::FETCH_ASSOC);
-
-$pausedWorkers = $conn->prepare("SELECT id, name, specialization, city, email, phone, unpaid_streak_days, paused FROM workers WHERE paused = 'yes' OR unpaid_streak_days >= 7 ORDER BY unpaid_streak_days DESC LIMIT 10");
-$pausedWorkers->execute();
-$pausedWorkers = $pausedWorkers->fetchAll(PDO::FETCH_ASSOC);
-
-$recentRequests = $conn->prepare("SELECT sr.id, sr.specialization, sr.city, sr.budget, sr.status, sr.payment_status, sr.created_at, u.name AS user_name, w.name AS worker_name
-FROM service_requests sr
-LEFT JOIN users u ON u.id = sr.us_id
-LEFT JOIN workers w ON w.id::text = sr.worker_id::text
-ORDER BY sr.created_at DESC
-LIMIT 15");
-$recentRequests->execute();
-$recentRequests = $recentRequests->fetchAll(PDO::FETCH_ASSOC);
-
-$pendingCommRequests = $conn->prepare("SELECT id, specialization, city, budget, commission_amount, payment_status, completed_at FROM service_requests WHERE status = 'completed' AND payment_status = 'unpaid' ORDER BY completed_at DESC LIMIT 15");
-$pendingCommRequests->execute();
-$pendingCommRequests = $pendingCommRequests->fetchAll(PDO::FETCH_ASSOC);
-
+// ------------------------------------------------------------------
+// CRASH-PROOF SAFETY NET: Initialize all variables with empty/zero defaults
+// ------------------------------------------------------------------
+$statsQuery = ['total_revenue' => 0, 'today_revenue' => 0, 'pending_commission' => 0, 'collected_commission' => 0, 'pending_requests' => 0, 'accepted_requests' => 0, 'completed_requests' => 0, 'total_requests' => 0];
+$workersStats = ['total_workers' => 0, 'waiting_approval' => 0, 'active_workers' => 0, 'paused_workers' => 0];
+$pendingWorkers = [];
+$pausedWorkers = [];
+$recentRequests = [];
+$pendingCommRequests = [];
+$paymentHistory = [];
+$commissionBreakdown = [];
+$usersWithRequestCount = [];
+$chatPreviews = [];
+$workerPerformance = [];
 $aiInsights = '';
-if (isset($_GET['use_ai']) && $_GET['use_ai'] === '1') {
-    $summaryText = "إجمالي الإيرادات: " . number_format($statsQuery['total_revenue'], 2) . " EGP. إيراد اليوم: " . number_format($statsQuery['today_revenue'], 2) . " EGP. العمولة المعلقة: " . number_format($statsQuery['pending_commission'], 2) . " EGP. عدد الطلبات المكتملة: " . $statsQuery['completed_requests'] . ". عدد الفنيين المعلّقين: " . $workersStats['paused_workers'] . ".";
-    $aiInsights = ai_generate_admin_insights($summaryText);
+
+try {
+    // Financial Stats
+    $statsQuery = $conn->query("SELECT
+        COALESCE(SUM(CASE WHEN status = 'completed' THEN COALESCE(budget, 0) END), 0) AS total_revenue,
+        COALESCE(SUM(CASE WHEN status = 'completed' AND DATE(completed_at) = CURRENT_DATE THEN COALESCE(budget, 0) END), 0) AS today_revenue,
+        COALESCE(SUM(CASE WHEN status = 'completed' AND payment_status = 'unpaid' THEN COALESCE(commission_amount, 0) END), 0) AS pending_commission,
+        COALESCE(SUM(CASE WHEN status = 'completed' AND payment_status = 'paid' THEN COALESCE(commission_amount, 0) END), 0) AS collected_commission,
+        COUNT(*) FILTER (WHERE status = 'pending') AS pending_requests,
+        COUNT(*) FILTER (WHERE status = 'accepted') AS accepted_requests,
+        COUNT(*) FILTER (WHERE status = 'completed') AS completed_requests,
+        COUNT(*) AS total_requests
+    FROM service_requests")->fetch(PDO::FETCH_ASSOC);
+
+    // Worker Stats
+    $workersStats = $conn->query("SELECT
+        COUNT(*) AS total_workers,
+        COUNT(*) FILTER (WHERE approved = 'pending') AS waiting_approval,
+        COUNT(*) FILTER (WHERE approved = 'yes' AND status = 'active' AND paused != 'yes') AS active_workers,
+        COUNT(*) FILTER (WHERE paused = 'yes' OR unpaid_streak_days >= 7) AS paused_workers
+    FROM workers")->fetch(PDO::FETCH_ASSOC);
+
+    $pendingWorkers = $conn->query("SELECT id, name, specialization, city, email, phone, created_at, id_front_path, id_back_path, certificate_path, cv_path, national_id FROM workers WHERE approved = 'pending' ORDER BY created_at DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
+
+    $pausedWorkers = $conn->query("SELECT id, name, specialization, city, email, phone, unpaid_streak_days, paused FROM workers WHERE paused = 'yes' OR unpaid_streak_days >= 7 ORDER BY unpaid_streak_days DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
+
+    $recentRequests = $conn->query("SELECT sr.id, sr.specialization, sr.city, sr.budget, sr.status, sr.payment_status, sr.created_at, u.name AS user_name, w.name AS worker_name FROM service_requests sr LEFT JOIN users u ON u.id = sr.us_id LEFT JOIN workers w ON w.id::text = sr.worker_id::text ORDER BY sr.created_at DESC LIMIT 15")->fetchAll(PDO::FETCH_ASSOC);
+
+    $pendingCommRequests = $conn->query("SELECT id, specialization, city, budget, commission_amount, payment_status, completed_at FROM service_requests WHERE status = 'completed' AND payment_status = 'unpaid' ORDER BY completed_at DESC LIMIT 15")->fetchAll(PDO::FETCH_ASSOC);
+
+    // AI Summary
+    if (isset($_GET['use_ai']) && $_GET['use_ai'] === '1') {
+        $summaryText = "إجمالي الإيرادات: " . number_format($statsQuery['total_revenue'], 2) . " EGP. إيراد اليوم: " . number_format($statsQuery['today_revenue'], 2) . " EGP. العمولة المعلقة: " . number_format($statsQuery['pending_commission'], 2) . " EGP. عدد الطلبات المكتملة: " . $statsQuery['completed_requests'] . ". عدد الفنيين المعلّقين: " . $workersStats['paused_workers'] . ".";
+        $aiInsights = ai_generate_admin_insights($summaryText);
+    }
+
+    // Payment History
+    $paymentHistory = $conn->query("
+        SELECT wp.id, wp.worker_id, w.name AS worker_name, wp.request_id, wp.amount_paid, wp.commission_amount, wp.status AS payment_status, wp.confirmed_at, sr.completed_at, sr.budget, sr.specialization
+        FROM worker_payments wp
+        LEFT JOIN workers w ON w.id::text = wp.worker_id::text
+        LEFT JOIN service_requests sr ON sr.id = wp.request_id
+        ORDER BY wp.confirmed_at DESC LIMIT 30
+    ")->fetchAll(PDO::FETCH_ASSOC);
+
+    // Commission Breakdown
+    $commissionBreakdown = $conn->query("
+        SELECT payment_status, COUNT(*) AS count, COALESCE(SUM(commission_amount), 0) AS total_commission, COALESCE(AVG(commission_amount), 0) AS avg_commission, MIN(commission_amount) AS min_commission, MAX(commission_amount) AS max_commission
+        FROM service_requests WHERE status = 'completed' GROUP BY payment_status
+    ")->fetchAll(PDO::FETCH_ASSOC);
+
+    // Users Request Count
+    $usersWithRequestCount = $conn->query("
+        SELECT u.id, u.name, u.email, u.phone, u.location, COUNT(sr.id) AS total_requests, COALESCE(SUM(CASE WHEN sr.status = 'completed' THEN 1 ELSE 0 END), 0) AS completed_requests, COALESCE(SUM(CASE WHEN sr.status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_requests, MAX(sr.created_at) AS last_request_date
+        FROM users u LEFT JOIN service_requests sr ON sr.us_id = u.id WHERE u.role = 'user' GROUP BY u.id, u.name, u.email, u.phone, u.location ORDER BY total_requests DESC LIMIT 25
+    ")->fetchAll(PDO::FETCH_ASSOC);
+
+    // Chat Previews
+    $chatPreviews = $conn->query("
+        SELECT cm.id, cm.request_id, sr.specialization, sr.status AS request_status, u.name AS user_name, w.name AS worker_name, cm.sender_type, cm.sender_id, SUBSTRING(cm.message, 1, 80) AS message_preview, cm.created_at, COUNT(*) OVER (PARTITION BY cm.request_id) AS total_request_messages
+        FROM chat_messages cm LEFT JOIN service_requests sr ON sr.id = cm.request_id LEFT JOIN users u ON u.id = sr.us_id LEFT JOIN workers w ON w.id::text = sr.worker_id::text WHERE sr.status IN ('pending', 'accepted', 'completed') ORDER BY cm.created_at DESC LIMIT 40
+    ")->fetchAll(PDO::FETCH_ASSOC);
+
+    // Worker Performance
+    $workerPerformance = $conn->query("
+        SELECT w.id, w.name, w.specialization, w.city, w.approved, w.status, w.total_earnings, COUNT(DISTINCT sr.id) AS total_completed_jobs, COALESCE(COUNT(DISTINCT CASE WHEN rw.rating >= 4 THEN sr.id END), 0) AS high_rated_jobs, COALESCE(AVG(rw.rating), 0) AS avg_rating, COALESCE(COUNT(DISTINCT rw.id), 0) AS review_count, COALESCE(SUM(CASE WHEN sr.payment_status = 'paid' THEN sr.budget ELSE 0 END), 0) AS paid_earnings, COALESCE(SUM(CASE WHEN sr.payment_status = 'unpaid' THEN sr.budget ELSE 0 END), 0) AS unpaid_earnings, MAX(sr.completed_at) AS last_completed_job
+        FROM workers w LEFT JOIN service_requests sr ON sr.worker_id::text = w.id::text AND sr.status = 'completed' LEFT JOIN reviews_worker rw ON rw.worker_id::text = w.id::text AND rw.request_id = sr.id WHERE w.approved = 'yes' GROUP BY w.id, w.name, w.specialization, w.city, w.approved, w.status, w.total_earnings ORDER BY total_completed_jobs DESC, avg_rating DESC LIMIT 30
+    ")->fetchAll(PDO::FETCH_ASSOC);
+
+} catch (PDOException $e) {
+    // If ANY query fails because of a missing table/column, it stops the crash and shows the error safely here.
+    $dbError = "عذراً، يوجد خطأ في هيكل قاعدة البيانات. يرجى تشغيل أوامر SQL في Neon لتحديث الجداول. <br><br> التفاصيل: " . $e->getMessage();
 }
-
-// Payment History - Detailed transaction records
-$paymentHistory = $conn->prepare("
-    SELECT
-        wp.id,
-        wp.worker_id,
-        w.name AS worker_name,
-        wp.request_id,
-        wp.amount_paid,
-        wp.commission_amount,
-        wp.status AS payment_status,
-        wp.confirmed_at,
-        sr.completed_at,
-        sr.budget,
-        sr.specialization
-    FROM worker_payments wp
-    LEFT JOIN workers w ON w.id::text = wp.worker_id::text
-    LEFT JOIN service_requests sr ON sr.id = wp.request_id
-    ORDER BY wp.confirmed_at DESC
-    LIMIT 30
-");
-$paymentHistory->execute();
-$paymentHistory = $paymentHistory->fetchAll(PDO::FETCH_ASSOC);
-
-// Commission Breakdown - Breakdown by payment status
-$commissionBreakdown = $conn->query("
-    SELECT 
-        payment_status,
-        COUNT(*) AS count,
-        COALESCE(SUM(commission_amount), 0) AS total_commission,
-        COALESCE(AVG(commission_amount), 0) AS avg_commission,
-        MIN(commission_amount) AS min_commission,
-        MAX(commission_amount) AS max_commission
-    FROM service_requests
-    WHERE status = 'completed'
-    GROUP BY payment_status
-")->fetchAll(PDO::FETCH_ASSOC);
-
-// Users with Request Count - Active users and their request history
-$usersWithRequestCount = $conn->prepare("
-    SELECT 
-        u.id,
-        u.name,
-        u.email,
-        u.phone,
-        u.location,
-        COUNT(sr.id) AS total_requests,
-        COALESCE(SUM(CASE WHEN sr.status = 'completed' THEN 1 ELSE 0 END), 0) AS completed_requests,
-        COALESCE(SUM(CASE WHEN sr.status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_requests,
-        MAX(sr.created_at) AS last_request_date
-    FROM users u
-    LEFT JOIN service_requests sr ON sr.us_id = u.id
-    WHERE u.role = 'user'
-    GROUP BY u.id, u.name, u.email, u.phone, u.location
-    ORDER BY total_requests DESC
-    LIMIT 25
-");
-$usersWithRequestCount->execute();
-$usersWithRequestCount = $usersWithRequestCount->fetchAll(PDO::FETCH_ASSOC);
-
-// Chat Previews - Recent chat messages for active requests
-$chatPreviews = $conn->prepare("
-    SELECT
-        cm.id,
-        cm.request_id,
-        sr.specialization,
-        sr.status AS request_status,
-        u.name AS user_name,
-        w.name AS worker_name,
-        cm.sender_type,
-        cm.sender_id,
-        SUBSTRING(cm.message, 1, 80) AS message_preview,
-        cm.created_at,
-        COUNT(*) OVER (PARTITION BY cm.request_id) AS total_request_messages
-    FROM chat_messages cm
-    LEFT JOIN service_requests sr ON sr.id = cm.request_id
-    LEFT JOIN users u ON u.id = sr.us_id
-    LEFT JOIN workers w ON w.id::text = sr.worker_id::text
-    WHERE sr.status IN ('pending', 'accepted', 'completed')
-    ORDER BY cm.created_at DESC
-    LIMIT 40
-");
-$chatPreviews->execute();
-$chatPreviews = $chatPreviews->fetchAll(PDO::FETCH_ASSOC);
-
-// Worker Performance - Detailed performance metrics
-// FIXED: Changed worker_price to budget
-$workerPerformance = $conn->prepare("
-    SELECT 
-        w.id,
-        w.name,
-        w.specialization,
-        w.city,
-        w.approved,
-        w.status,
-        w.total_earnings,
-        COUNT(DISTINCT sr.id) AS total_completed_jobs,
-        COALESCE(COUNT(DISTINCT CASE WHEN rw.rating >= 4 THEN sr.id END), 0) AS high_rated_jobs,
-        COALESCE(AVG(rw.rating), 0) AS avg_rating,
-        COALESCE(COUNT(DISTINCT rw.id), 0) AS review_count,
-        COALESCE(SUM(CASE WHEN sr.payment_status = 'paid' THEN sr.budget ELSE 0 END), 0) AS paid_earnings,
-        COALESCE(SUM(CASE WHEN sr.payment_status = 'unpaid' THEN sr.budget ELSE 0 END), 0) AS unpaid_earnings,
-        MAX(sr.completed_at) AS last_completed_job
-    FROM workers w
-    LEFT JOIN service_requests sr ON sr.worker_id::text = w.id::text AND sr.status = 'completed'
-    LEFT JOIN reviews_worker rw ON rw.worker_id::text = w.id::text AND rw.request_id = sr.id
-    WHERE w.approved = 'yes'
-    GROUP BY w.id, w.name, w.specialization, w.city, w.approved, w.status, w.total_earnings
-    ORDER BY total_completed_jobs DESC, avg_rating DESC
-    LIMIT 30
-");
-$workerPerformance->execute();
-$workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -322,6 +257,16 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+        <?php if ($dbError): ?>
+            <div class="rounded-3xl border border-red-300 bg-red-50 text-red-800 p-6 font-semibold shadow-sm">
+                <div class="flex items-center gap-3 mb-2">
+                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <span class="text-xl">تنبيه قاعدة البيانات</span>
+                </div>
+                <p><?= $dbError ?></p>
+            </div>
+        <?php endif; ?>
+
         <?php if ($message): ?>
             <div class="rounded-3xl border border-green-200 bg-emerald-50 text-emerald-800 p-5 font-semibold"><?= htmlspecialchars($message) ?></div>
         <?php endif; ?>
@@ -338,19 +283,19 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="glass-card p-6 rounded-3xl shadow">
                     <h3 class="text-lg font-semibold text-slate-700">إجمالي الإيرادات</h3>
-                    <p class="text-3xl font-bold text-green-600 mt-2"><?= number_format($statsQuery['total_revenue'], 2) ?> EGP</p>
+                    <p class="text-3xl font-bold text-green-600 mt-2"><?= number_format($statsQuery['total_revenue'] ?? 0, 2) ?> EGP</p>
                 </div>
                 <div class="glass-card p-6 rounded-3xl shadow">
                     <h3 class="text-lg font-semibold text-slate-700">إيراد اليوم</h3>
-                    <p class="text-3xl font-bold text-blue-600 mt-2"><?= number_format($statsQuery['today_revenue'], 2) ?> EGP</p>
+                    <p class="text-3xl font-bold text-blue-600 mt-2"><?= number_format($statsQuery['today_revenue'] ?? 0, 2) ?> EGP</p>
                 </div>
                 <div class="glass-card p-6 rounded-3xl shadow">
                     <h3 class="text-lg font-semibold text-slate-700">العمولة المعلقة</h3>
-                    <p class="text-3xl font-bold text-orange-600 mt-2"><?= number_format($statsQuery['pending_commission'], 2) ?> EGP</p>
+                    <p class="text-3xl font-bold text-orange-600 mt-2"><?= number_format($statsQuery['pending_commission'] ?? 0, 2) ?> EGP</p>
                 </div>
                 <div class="glass-card p-6 rounded-3xl shadow">
                     <h3 class="text-lg font-semibold text-slate-700">العمولة المجمعة</h3>
-                    <p class="text-3xl font-bold text-purple-600 mt-2"><?= number_format($statsQuery['collected_commission'], 2) ?> EGP</p>
+                    <p class="text-3xl font-bold text-purple-600 mt-2"><?= number_format($statsQuery['collected_commission'] ?? 0, 2) ?> EGP</p>
                 </div>
             </div>
 
@@ -398,7 +343,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                                 <p><strong>المبلغ المدفوع:</strong> <?= number_format($payment['amount_paid'], 2) ?> EGP</p>
                                 <p><strong>العمولة:</strong> <?= number_format($payment['commission_amount'], 2) ?> EGP</p>
                                 <p><strong>تاريخ الإتمام:</strong> <?= htmlspecialchars($payment['completed_at']) ?></p>
-                                <p><strong>الرفقات:</strong> لا توجد رفات حالياً (يمكن إضافة صور أو ملفات هنا)</p>
                             </div>
                         </details>
                     <?php endforeach; ?>
@@ -424,7 +368,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                                 <p><strong>المدينة:</strong> <?= htmlspecialchars($request['city']) ?></p>
                                 <p><strong>الميزانية:</strong> <?= htmlspecialchars($request['budget']) ?> EGP</p>
                                 <p><strong>الحالة:</strong> <?= htmlspecialchars($request['status']) ?> / <?= htmlspecialchars($request['payment_status']) ?></p>
-                                <p><strong>الرفقات:</strong> لا توجد رفات حالياً</p>
                             </div>
                         </details>
                     <?php endforeach; ?>
@@ -446,7 +389,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                                 <p><strong>المرسل:</strong> <?= htmlspecialchars($chat['sender_type']) ?></p>
                                 <p><strong>الرسالة الكاملة:</strong> <?= htmlspecialchars($chat['message_preview']) ?>...</p>
                                 <p><strong>إجمالي الرسائل في الطلب:</strong> <?= $chat['total_request_messages'] ?></p>
-                                <p><strong>الرفقات:</strong> لا توجد رفات حالياً</p>
                             </div>
                         </details>
                     <?php endforeach; ?>
@@ -472,44 +414,7 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                                 <p><strong>المدينة:</strong> <?= htmlspecialchars($worker['city']) ?></p>
                                 <p><strong>البريد الإلكتروني:</strong> <?= htmlspecialchars($worker['email']) ?></p>
                                 <p><strong>الهاتف:</strong> <?= htmlspecialchars($worker['phone']) ?></p>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <?php if (!empty($worker['id_front_path'])): ?>
-                                        <div>
-                                            <p class="text-sm font-semibold">صورة الهوية - أمامية</p>
-                                            <a href="<?= htmlspecialchars($worker['id_front_path']) ?>" target="_blank" class="block mt-2">
-                                                <img src="<?= htmlspecialchars($worker['id_front_path']) ?>" alt="ID Front" class="w-40 h-auto rounded shadow" />
-                                            </a>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <?php if (!empty($worker['id_back_path'])): ?>
-                                        <div>
-                                            <p class="text-sm font-semibold">صورة الهوية - خلفية</p>
-                                            <a href="<?= htmlspecialchars($worker['id_back_path']) ?>" target="_blank" class="block mt-2">
-                                                <img src="<?= htmlspecialchars($worker['id_back_path']) ?>" alt="ID Back" class="w-40 h-auto rounded shadow" />
-                                            </a>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <?php if (!empty($worker['certificate_path'])): ?>
-                                        <div>
-                                            <p class="text-sm font-semibold">الشهادة / مستند</p>
-                                            <a href="<?= htmlspecialchars($worker['certificate_path']) ?>" target="_blank" class="block mt-2 text-indigo-600 hover:underline">فتح الشهادة</a>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <?php if (!empty($worker['cv_path'])): ?>
-                                        <div>
-                                            <p class="text-sm font-semibold">السيرة الذاتية</p>
-                                            <a href="<?= htmlspecialchars($worker['cv_path']) ?>" target="_blank" class="block mt-2 text-indigo-600 hover:underline">تحميل السيرة الذاتية</a>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <?php if (empty($worker['id_front_path']) && empty($worker['id_back_path']) && empty($worker['certificate_path']) && empty($worker['cv_path'])): ?>
-                                        <div class="col-span-full text-sm text-slate-500">لا توجد مرفقات حالياً</div>
-                                    <?php endif; ?>
-                                </div>
-
+                                
                                 <form method="post" class="mt-4 flex gap-2">
                                     <input type="hidden" name="worker_id" value="<?= htmlspecialchars($worker['id']) ?>">
                                     <button type="submit" name="approve_worker" class="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700">موافقة</button>
@@ -533,11 +438,8 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                                 <p><strong>الاسم:</strong> <?= htmlspecialchars($worker['name']) ?></p>
                                 <p><strong>التخصص:</strong> <?= htmlspecialchars($worker['specialization']) ?></p>
                                 <p><strong>المدينة:</strong> <?= htmlspecialchars($worker['city']) ?></p>
-                                <p><strong>البريد الإلكتروني:</strong> <?= htmlspecialchars($worker['email']) ?></p>
-                                <p><strong>الهاتف:</strong> <?= htmlspecialchars($worker['phone']) ?></p>
                                 <p><strong>أيام غير مدفوعة:</strong> <?= $worker['unpaid_streak_days'] ?></p>
                                 <p><strong>موقوف:</strong> <?= $worker['paused'] === 'yes' ? 'نعم' : 'لا' ?></p>
-                                <p><strong>الرفقات:</strong> لا توجد رفات حالياً</p>
                             </div>
                         </details>
                     <?php endforeach; ?>
@@ -551,7 +453,6 @@ $workerPerformance = $workerPerformance->fetchAll(PDO::FETCH_ASSOC);
                 <p class="text-slate-700 leading-relaxed"><?= htmlspecialchars($aiInsights) ?></p>
             </div>
         <?php endif; ?>
-    </main>
     </main>
 
     <script>
