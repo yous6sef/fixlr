@@ -5,63 +5,63 @@
 session_start();
 include('db.php');
 
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'worker') {
     header('Location: login.php');
     exit();
 }
 
 $userId = $_SESSION['user_id'];
 
-// Verify user is a worker
-$userStmt = $conn->prepare("SELECT * FROM users WHERE id = ? AND user_type = 'worker'");
+// 1. Verify user is a worker from the CORRECT table (workers)
+$userStmt = $conn->prepare("SELECT * FROM workers WHERE id::text = ?");
 $userStmt->execute([$userId]);
 $worker = $userStmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$worker) {
-    echo "You are not a worker";
+    echo "You are not a worker or account not found.";
     exit();
 }
 
-// Get worker's tasks statistics
+// 2. Get worker's tasks statistics
 $statsStmt = $conn->prepare("
     SELECT 
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_tasks,
         COUNT(CASE WHEN status = 'accepted' THEN 1 END) as active_tasks,
         COUNT(CASE WHEN status IN ('pending') THEN 1 END) as pending_tasks,
-        SUM(CASE WHEN status = 'completed' THEN checking_fee + COALESCE(fixing_price, 0) ELSE 0 END) as total_earnings
+        SUM(CASE WHEN status = 'completed' THEN COALESCE(budget, 0) ELSE 0 END) as total_earnings
     FROM service_requests
-    WHERE worker_id = ?
+    WHERE worker_id::text = ?
 ");
 $statsStmt->execute([$userId]);
 $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
 
-// Get active requests
+// 3. Get active requests (Fixed Joins to match actual DB schema)
 $activeStmt = $conn->prepare("
     SELECT 
         sr.id,
         sr.status,
         sr.created_at,
-        sr.checking_fee,
-        sr.fixing_price,
-        st.name_ar as service_type,
-        u.name as user_name,
-        c.name_ar as city
+        sr.budget AS checking_fee,
+        sr.worker_price AS fixing_price,
+        sr.specialization AS service_type,
+        u.name AS user_name,
+        sr.city AS city
     FROM service_requests sr
-    JOIN service_types st ON sr.service_type_id = st.id
-    JOIN users u ON sr.user_id = u.id
-    JOIN cities c ON sr.city_id = c.id
-    WHERE sr.worker_id = ? AND sr.status NOT IN ('completed', 'cancelled', 'rejected')
+    LEFT JOIN users u ON sr.user_id = u.id
+    WHERE sr.worker_id::text = ? AND sr.status NOT IN ('completed', 'cancelled', 'rejected')
     ORDER BY sr.created_at DESC
     LIMIT 5
 ");
 $activeStmt->execute([$userId]);
 $activeTasks = $activeStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get today's earnings
+// 4. Get today's earnings directly from service_requests
 $todayEarningsStmt = $conn->prepare("
-    SELECT COALESCE(SUM(total_revenue), 0) as today_earnings 
-    FROM worker_daily_revenue
-    WHERE worker_id = ? AND date_of_revenue = CURRENT_DATE
+    SELECT COALESCE(SUM(budget), 0) as today_earnings 
+    FROM service_requests
+    WHERE worker_id::text = ? 
+    AND DATE(completed_at) = CURRENT_DATE 
+    AND status = 'completed'
 ");
 $todayEarningsStmt->execute([$userId]);
 $todayEarnings = $todayEarningsStmt->fetch(PDO::FETCH_ASSOC);
@@ -190,21 +190,10 @@ $statusColors = [
             font-weight: 600;
         }
 
-        .stat-card:nth-child(1) {
-            border-color: #4caf50;
-        }
-
-        .stat-card:nth-child(2) {
-            border-color: #ff9800;
-        }
-
-        .stat-card:nth-child(3) {
-            border-color: #2196f3;
-        }
-
-        .stat-card:nth-child(4) {
-            border-color: #f44336;
-        }
+        .stat-card:nth-child(1) { border-color: #4caf50; }
+        .stat-card:nth-child(2) { border-color: #ff9800; }
+        .stat-card:nth-child(3) { border-color: #2196f3; }
+        .stat-card:nth-child(4) { border-color: #f44336; }
 
         .section {
             background: white;
@@ -235,9 +224,7 @@ $statusColors = [
             align-items: center;
         }
 
-        .task-info {
-            flex: 1;
-        }
+        .task-info { flex: 1; }
 
         .task-title {
             font-weight: 600;
@@ -280,9 +267,7 @@ $statusColors = [
             transition: all 0.3s;
         }
 
-        .btn-small:hover {
-            background: #5568d3;
-        }
+        .btn-small:hover { background: #5568d3; }
 
         .empty-state {
             text-align: center;
@@ -325,9 +310,7 @@ $statusColors = [
             align-items: center;
         }
 
-        .profile-info {
-            flex: 1;
-        }
+        .profile-info { flex: 1; }
 
         .profile-name {
             font-size: 20px;
@@ -335,9 +318,7 @@ $statusColors = [
             margin-bottom: 8px;
         }
 
-        .profile-rating {
-            font-size: 16px;
-        }
+        .profile-rating { font-size: 16px; }
 
         .profile-city {
             font-size: 14px;
@@ -361,9 +342,7 @@ $statusColors = [
             transition: all 0.3s;
         }
 
-        .profile-action:hover {
-            background: rgba(255,255,255,0.3);
-        }
+        .profile-action:hover { background: rgba(255,255,255,0.3); }
     </style>
 </head>
 <body>
@@ -377,11 +356,10 @@ $statusColors = [
             </div>
         </div>
 
-        <!-- PROFILE SUMMARY -->
         <div class="profile-summary">
             <div class="profile-info">
                 <div class="profile-name">👋 مرحباً، <?php echo htmlspecialchars($worker['name']); ?></div>
-                <div class="profile-rating">⭐ التقييم: <?php echo round($worker['total_rating'], 1); ?>/5 (<?php echo $worker['total_reviews']; ?> تقييم)</div>
+                <div class="profile-rating">⭐ التقييم: <?php echo round($worker['total_rating'] ?? 0, 1); ?>/5 (<?php echo $worker['total_reviews'] ?? 0; ?> تقييم)</div>
                 <div class="profile-city">📍 <?php echo htmlspecialchars($worker['city']); ?></div>
             </div>
             <div class="profile-actions">
@@ -390,7 +368,6 @@ $statusColors = [
             </div>
         </div>
 
-        <!-- STATISTICS -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon">✅</div>
@@ -404,7 +381,7 @@ $statusColors = [
             </div>
             <div class="stat-card">
                 <div class="stat-icon">💰</div>
-                <div class="stat-number"><?php echo number_format($todayEarnings['today_earnings'], 2); ?> ج.م</div>
+                <div class="stat-number"><?php echo number_format($todayEarnings['today_earnings'] ?? 0, 2); ?> ج.م</div>
                 <div class="stat-label">أرباح اليوم</div>
             </div>
             <div class="stat-card">
@@ -414,7 +391,6 @@ $statusColors = [
             </div>
         </div>
 
-        <!-- ACTIVE TASKS -->
         <div class="section">
             <div class="section-title">
                 🚀 المهام النشطة
@@ -431,7 +407,7 @@ $statusColors = [
                         <div class="task-info">
                             <div class="task-title"><?php echo htmlspecialchars($task['service_type']); ?></div>
                             <div class="task-details">
-                                <span>👤 <?php echo htmlspecialchars($task['user_name']); ?></span>
+                                <span>👤 <?php echo htmlspecialchars($task['user_name'] ?? 'عميل'); ?></span>
                                 <span>📍 <?php echo htmlspecialchars($task['city']); ?></span>
                                 <span>💰 <?php echo $task['checking_fee']; ?> ج.م</span>
                                 <span>📅 منذ <?php 
@@ -454,7 +430,6 @@ $statusColors = [
             <?php endif; ?>
         </div>
 
-        <!-- QUICK ACTIONS -->
         <div class="section">
             <div class="section-title">
                 ⚡ إجراءات سريعة
