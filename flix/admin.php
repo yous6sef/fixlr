@@ -117,7 +117,6 @@ try {
 
     $pausedWorkers = $conn->query("SELECT id, name, specialization, city, email, phone, unpaid_streak_days, paused FROM workers WHERE paused = 'yes' OR unpaid_streak_days >= 7 ORDER BY unpaid_streak_days DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
 
-    // FIXED: Changed sr.us_id to sr.user_id
     $recentRequests = $conn->query("SELECT sr.id, sr.specialization, sr.city, sr.budget, sr.status, sr.payment_status, sr.created_at, u.name AS user_name, w.name AS worker_name FROM service_requests sr LEFT JOIN users u ON u.id = sr.user_id LEFT JOIN workers w ON w.id::text = sr.worker_id::text ORDER BY sr.created_at DESC LIMIT 15")->fetchAll(PDO::FETCH_ASSOC);
 
     $pendingCommRequests = $conn->query("SELECT id, specialization, city, budget, commission_amount, payment_status, completed_at FROM service_requests WHERE status = 'completed' AND payment_status = 'unpaid' ORDER BY completed_at DESC LIMIT 15")->fetchAll(PDO::FETCH_ASSOC);
@@ -140,13 +139,12 @@ try {
         FROM service_requests WHERE status = 'completed' GROUP BY payment_status
     ")->fetchAll(PDO::FETCH_ASSOC);
 
-    // FIXED: Changed sr.us_id to sr.user_id
+    // FIXED: Changed u.location to u.city AND u.role to u.user_type
     $usersWithRequestCount = $conn->query("
-        SELECT u.id, u.name, u.email, u.phone, u.location, COUNT(sr.id) AS total_requests, COALESCE(SUM(CASE WHEN sr.status = 'completed' THEN 1 ELSE 0 END), 0) AS completed_requests, COALESCE(SUM(CASE WHEN sr.status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_requests, MAX(sr.created_at) AS last_request_date
-        FROM users u LEFT JOIN service_requests sr ON sr.user_id = u.id WHERE u.role = 'user' GROUP BY u.id, u.name, u.email, u.phone, u.location ORDER BY total_requests DESC LIMIT 25
+        SELECT u.id, u.name, u.email, u.phone, u.city, COUNT(sr.id) AS total_requests, COALESCE(SUM(CASE WHEN sr.status = 'completed' THEN 1 ELSE 0 END), 0) AS completed_requests, COALESCE(SUM(CASE WHEN sr.status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_requests, MAX(sr.created_at) AS last_request_date
+        FROM users u LEFT JOIN service_requests sr ON sr.user_id = u.id WHERE u.user_type = 'user' GROUP BY u.id, u.name, u.email, u.phone, u.city ORDER BY total_requests DESC LIMIT 25
     ")->fetchAll(PDO::FETCH_ASSOC);
 
-    // FIXED: Changed sr.us_id to sr.user_id
     $chatPreviews = $conn->query("
         SELECT cm.id, cm.request_id, sr.specialization, sr.status AS request_status, u.name AS user_name, w.name AS worker_name, cm.sender_type, cm.sender_id, SUBSTRING(cm.message, 1, 80) AS message_preview, cm.created_at, COUNT(*) OVER (PARTITION BY cm.request_id) AS total_request_messages
         FROM chat_messages cm LEFT JOIN service_requests sr ON sr.id = cm.request_id LEFT JOIN users u ON u.id = sr.user_id LEFT JOIN workers w ON w.id::text = sr.worker_id::text WHERE sr.status IN ('pending', 'accepted', 'completed') ORDER BY cm.created_at DESC LIMIT 40
