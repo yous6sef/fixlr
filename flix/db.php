@@ -1,44 +1,31 @@
 <?php
-// Railway-compatible database connection
-// Reads DATABASE_URL from Railway environment or falls back to .env values
+// 1. Get the Neon URL from Railway's environment variables
+$databaseUrl = getenv('DATABASE_URL');
 
-$database_url = $_ENV['DATABASE_URL'] ?? getenv('DATABASE_URL');
-
-if ($database_url) {
-    // Parse DATABASE_URL (Railway format: postgresql://user:password@host:port/dbname)
-    $url = parse_url($database_url);
-    $host = $url['host'] ?? 'localhost';
-    $port = $url['port'] ?? 5432;
-    $dbname = ltrim($url['path'] ?? '/', '/');
-    $user = $url['user'] ?? 'postgres';
-    $password = $url['pass'] ?? '';
-    $ssl = true; // Railway uses SSL
-    
-    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=require";
-} else {
-    // Fallback to individual environment variables (for local development)
-    $host = $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?? 'localhost';
-    $port = $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?? '5432';
-    $dbname = $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?? 'flix';
-    $user = $_ENV['DB_USER'] ?? getenv('DB_USER') ?? 'postgres';
-    $password = $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?? '';
-    
-    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=disable";
+if (!$databaseUrl) {
+    die("❌ Connection failed: DATABASE_URL environment variable is missing.");
 }
 
+// 2. Break the URL down into pieces PHP can use
+$dbopts = parse_url($databaseUrl);
+
+$host = $dbopts["host"];
+$port = $dbopts["port"] ?? 5432; // Default to 5432 if no port is specified
+$user = $dbopts["user"];
+$pass = $dbopts["pass"];
+$dbname = ltrim($dbopts["path"], '/'); // Removes the starting slash from the DB name
+
+// 3. Build the specific DSN string that PHP's PDO requires (Neon requires sslmode)
+$dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode=require";
+
+// 4. Connect
 try {
-    $conn = new PDO($dsn, $user, $password, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-    ]);
+    $conn = new PDO($dsn, $user, $pass);
     
-    // Connection successful
-    // Uncomment for debugging:
-    // echo "✅ Database connection successful!";
+    // Set PDO to throw exceptions on errors
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo "❌ Connection failed: " . $e->getMessage();
-    exit;
+    die("❌ Connection failed: " . $e->getMessage());
 }
 ?>
