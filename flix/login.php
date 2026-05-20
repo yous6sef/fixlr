@@ -14,20 +14,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'يرجى إدخال البريد الإلكتروني أو رقم الهاتف وكلمة المرور.';
     } else {
         if ($role === 'admin') {
-            $stmt = $conn->prepare('SELECT id, password_hash FROM admins WHERE email = ? OR phone = ? LIMIT 1');
+            // FIXED: Pulling 'password' but aliasing it as 'password_hash' for the admins table
+            $stmt = $conn->prepare('SELECT id, password AS password_hash FROM admins WHERE email = ? OR phone = ? LIMIT 1');
             $stmt->execute([$loginInput, $loginInput]);
         } elseif ($role === 'worker') {
-            // FIXED: Pulling 'password' but aliasing it as 'password_hash' so the rest of the script works
             $stmt = $conn->prepare('SELECT id, name, password AS password_hash, approved, status FROM workers WHERE (email = ? OR phone = ?) LIMIT 1');
             $stmt->execute([$loginInput, $loginInput]);
         } else {
+            // Note: If you ever get this same error for normal users, change this to "password AS password_hash" too!
             $stmt = $conn->prepare('SELECT id, name, password_hash, account_status FROM users WHERE (email = ? OR phone = ?) AND user_type = ? LIMIT 1');
             $stmt->execute([$loginInput, $loginInput, $role]);
         }
         
         $account = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // FIXED: Added ?? '' so it never passes a pure null to password_verify
         if ($account && password_verify($password, $account['password_hash'] ?? '')) {
             if ($role === 'admin') {
                 $_SESSION['admin_id'] = $account['id'];
