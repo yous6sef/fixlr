@@ -17,16 +17,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare('SELECT id, password_hash FROM admins WHERE email = ? OR phone = ? LIMIT 1');
             $stmt->execute([$loginInput, $loginInput]);
         } elseif ($role === 'worker') {
-            // Authenticate against workers table
-            $stmt = $conn->prepare('SELECT id, name, password_hash, approved, status FROM workers WHERE (email = ? OR phone = ?) LIMIT 1');
+            // FIXED: Pulling 'password' but aliasing it as 'password_hash' so the rest of the script works
+            $stmt = $conn->prepare('SELECT id, name, password AS password_hash, approved, status FROM workers WHERE (email = ? OR phone = ?) LIMIT 1');
             $stmt->execute([$loginInput, $loginInput]);
         } else {
             $stmt = $conn->prepare('SELECT id, name, password_hash, account_status FROM users WHERE (email = ? OR phone = ?) AND user_type = ? LIMIT 1');
             $stmt->execute([$loginInput, $loginInput, $role]);
         }
+        
         $account = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($account && password_verify($password, $account['password_hash'])) {
+        // FIXED: Added ?? '' so it never passes a pure null to password_verify
+        if ($account && password_verify($password, $account['password_hash'] ?? '')) {
             if ($role === 'admin') {
                 $_SESSION['admin_id'] = $account['id'];
                 $_SESSION['user_role'] = 'admin';
@@ -50,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Workers must be approved by admin before becoming active
                 $approved = $account['approved'] ?? 'pending';
                 $status = $account['status'] ?? 'inactive';
+                
                 if ($approved !== 'yes') {
                     $error = 'حسابك قيد المراجعة من قبل الإدارة. سيتم إعلامك عند الموافقة.';
                 } elseif ($status !== 'active') {
@@ -62,9 +65,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     exit();
                 }
             }
+        } else {
+            $error = 'بيانات الدخول غير صحيحة، يرجى المراجعة.';
         }
-
-        $error = 'بيانات الدخول غير صحيحة، يرجى المراجعة.';
     }
 }
 
