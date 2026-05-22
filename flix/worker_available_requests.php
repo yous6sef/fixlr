@@ -1,6 +1,7 @@
 <?php
 /**
  * Worker Available Requests - طلبات الفنيين المتاحة
+ * Fixed: Shows only requests matching worker's specialization AND city
  */
 session_start();
 include('db.php');
@@ -12,8 +13,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'worker') {
 
 $userId = $_SESSION['user_id'];
 
-// 1. Verify user is a worker from the CORRECT table (workers) and use ::text for UUIDs
-$userStmt = $conn->prepare("SELECT city FROM workers WHERE id::text = ?");
+// 1. Get worker's specialization and city
+$userStmt = $conn->prepare("SELECT specialization, city FROM workers WHERE id::text = ?");
 $userStmt->execute([$userId]);
 $worker = $userStmt->fetch(PDO::FETCH_ASSOC);
 
@@ -22,7 +23,7 @@ if (!$worker) {
     exit();
 }
 
-// 2. Get available requests in worker's city (Fixed Joins to match actual DB schema)
+// 2. Get available requests matching BOTH specialization AND city
 $stmt = $conn->prepare("
     SELECT 
         sr.id,
@@ -40,10 +41,11 @@ $stmt = $conn->prepare("
     LEFT JOIN users u ON sr.user_id = u.id
     WHERE sr.status = 'pending' 
     AND sr.city = ?
+    AND sr.specialization = ?
     ORDER BY sr.created_at DESC
 ");
 
-$stmt->execute([$worker['city']]);
+$stmt->execute([$worker['city'], $worker['specialization']]);
 $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 3. Handle accept request
@@ -345,6 +347,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             border-radius: 8px;
             font-size: 13px;
             margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .match-badge {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -354,7 +368,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             <div>
                 <h1>🔧 الطلبات المتاحة</h1>
                 <div class="filter-info">
-                    📍 الطلبات في مدينتك: <?php echo htmlspecialchars($worker['city']); ?>
+                    📍 المدينة: <?php echo htmlspecialchars($worker['city']); ?><br>
+                    🔨 التخصص: <?php echo htmlspecialchars($worker['specialization']); ?>
+                    <div class="match-badge">✅ طلبات مطابقة</div>
                 </div>
             </div>
             <div class="header-stats">
@@ -375,7 +391,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         <?php if (empty($requests)): ?>
             <div class="empty-state">
                 <h2>لا توجد طلبات متاحة حالياً</h2>
-                <p>سيظهر هنا الطلبات الجديدة القادمة من العملاء في مدينتك</p>
+                <p>لا توجد طلبات جديدة تطابق تخصصك (<?php echo htmlspecialchars($worker['specialization']); ?>) في مدينتك (<?php echo htmlspecialchars($worker['city']); ?>)</p>
+                <p style="margin-top: 20px; color: #666; font-size: 14px;">سيظهر هنا الطلبات الجديدة القادمة من العملاء في نفس التخصص والمدينة</p>
             </div>
         <?php else: ?>
             <?php foreach ($requests as $request): ?>
