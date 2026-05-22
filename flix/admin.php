@@ -113,50 +113,47 @@ try {
         COUNT(*) FILTER (WHERE paused = 'yes' OR unpaid_streak_days >= 7) AS paused_workers
     FROM workers")->fetch(PDO::FETCH_ASSOC);
 
-    $pendingWorkers = $conn->query("SELECT id, name, specialization, city, email, phone, created_at, id_front_path, id_back_path, certificate_path, cv_path, national_id FROM workers WHERE approved = 'pending' ORDER BY created_at DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
+    $pendingWorkers = $conn->query("SELECT id, name, specialization, city, email, phone, created_at FROM workers WHERE approved = 'pending' ORDER BY created_at DESC LIMIT 20")->fetchAll(PDO::FETCH_ASSOC);
 
-    $pausedWorkers = $conn->query("SELECT id, name, specialization, city, email, phone, unpaid_streak_days, paused FROM workers WHERE paused = 'yes' OR unpaid_streak_days >= 7 ORDER BY unpaid_streak_days DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
+    $pausedWorkers = $conn->query("SELECT id, name, specialization, city, email, phone, unpaid_streak_days, paused FROM workers WHERE paused = 'yes' OR unpaid_streak_days >= 7 ORDER BY unpaid_streak_days DESC LIMIT 20")->fetchAll(PDO::FETCH_ASSOC);
 
-    $recentRequests = $conn->query("SELECT sr.id, sr.specialization, sr.city, sr.budget, sr.status, sr.payment_status, sr.created_at, u.name AS user_name, w.name AS worker_name FROM service_requests sr LEFT JOIN users u ON u.id = sr.user_id LEFT JOIN workers w ON w.id::text = sr.worker_id::text ORDER BY sr.created_at DESC LIMIT 15")->fetchAll(PDO::FETCH_ASSOC);
+    $recentRequests = $conn->query("SELECT sr.id, sr.specialization, sr.city, sr.budget, sr.status, sr.payment_status, sr.created_at, u.name AS user_name, w.name AS worker_name FROM service_requests sr LEFT JOIN users u ON sr.user_id = u.id LEFT JOIN workers w ON sr.worker_id::text = w.id::text ORDER BY sr.created_at DESC LIMIT 15")->fetchAll(PDO::FETCH_ASSOC);
 
-    $pendingCommRequests = $conn->query("SELECT id, specialization, city, budget, commission_amount, payment_status, completed_at FROM service_requests WHERE status = 'completed' AND payment_status = 'unpaid' ORDER BY completed_at DESC LIMIT 15")->fetchAll(PDO::FETCH_ASSOC);
+    $pendingCommRequests = $conn->query("SELECT id, specialization, city, budget, commission_amount, payment_status, completed_at FROM service_requests WHERE status = 'completed' AND payment_status = 'unpaid' ORDER BY completed_at DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
 
     if (isset($_GET['use_ai']) && $_GET['use_ai'] === '1') {
-        $summaryText = "إجمالي الإيرادات: " . number_format($statsQuery['total_revenue'], 2) . " EGP. إيراد اليوم: " . number_format($statsQuery['today_revenue'], 2) . " EGP. العمولة المعلقة: " . number_format($statsQuery['pending_commission'], 2) . " EGP. عدد الطلبات المكتملة: " . $statsQuery['completed_requests'] . ". عدد الفنيين المعلّقين: " . $workersStats['paused_workers'] . ".";
+        $summaryText = "إجمالي الإيرادات: " . number_format($statsQuery['total_revenue'] ?? 0, 2) . " EGP. إيراد اليوم: " . number_format($statsQuery['today_revenue'] ?? 0, 2) . " EGP. عدد الطلبات المعلقة: " . ($statsQuery['pending_requests'] ?? 0) . ".";
         $aiInsights = ai_generate_admin_insights($summaryText);
     }
 
     $paymentHistory = $conn->query("
-        SELECT wp.id, wp.worker_id, w.name AS worker_name, wp.request_id, wp.amount_paid, wp.commission_amount, wp.status AS payment_status, wp.confirmed_at, sr.completed_at, sr.budget, sr.specialization
-        FROM worker_payments wp
-        LEFT JOIN workers w ON w.id::text = wp.worker_id::text
-        LEFT JOIN service_requests sr ON sr.id = wp.request_id
-        ORDER BY wp.confirmed_at DESC LIMIT 30
+        SELECT id, worker_id, amount_paid, commission_amount, status AS payment_status, confirmed_at
+        FROM worker_payments
+        ORDER BY confirmed_at DESC LIMIT 30
     ")->fetchAll(PDO::FETCH_ASSOC);
 
     $commissionBreakdown = $conn->query("
-        SELECT payment_status, COUNT(*) AS count, COALESCE(SUM(commission_amount), 0) AS total_commission, COALESCE(AVG(commission_amount), 0) AS avg_commission, MIN(commission_amount) AS min_commission, MAX(commission_amount) AS max_commission
+        SELECT payment_status, COUNT(*) AS count, COALESCE(SUM(commission_amount), 0) AS total_commission, COALESCE(AVG(commission_amount), 0) AS avg_commission, COALESCE(MIN(commission_amount), 0) AS min_commission, COALESCE(MAX(commission_amount), 0) AS max_commission
         FROM service_requests WHERE status = 'completed' GROUP BY payment_status
     ")->fetchAll(PDO::FETCH_ASSOC);
 
-    // FIXED: Changed u.location to u.city AND u.role to u.user_type
     $usersWithRequestCount = $conn->query("
-        SELECT u.id, u.name, u.email, u.phone, u.city, COUNT(sr.id) AS total_requests, COALESCE(SUM(CASE WHEN sr.status = 'completed' THEN 1 ELSE 0 END), 0) AS completed_requests, COALESCE(SUM(CASE WHEN sr.status = 'pending' THEN 1 ELSE 0 END), 0) AS pending_requests, MAX(sr.created_at) AS last_request_date
+        SELECT u.id, u.name, u.email, u.phone, u.city, COUNT(sr.id) AS total_requests, COALESCE(SUM(CASE WHEN sr.status = 'completed' THEN 1 ELSE 0 END), 0) AS completed_requests
         FROM users u LEFT JOIN service_requests sr ON sr.user_id = u.id WHERE u.user_type = 'user' GROUP BY u.id, u.name, u.email, u.phone, u.city ORDER BY total_requests DESC LIMIT 25
     ")->fetchAll(PDO::FETCH_ASSOC);
 
     $chatPreviews = $conn->query("
         SELECT cm.id, cm.request_id, sr.specialization, sr.status AS request_status, u.name AS user_name, w.name AS worker_name, cm.sender_type, cm.sender_id, SUBSTRING(cm.message, 1, 80) AS message_preview, cm.created_at, COUNT(*) OVER (PARTITION BY cm.request_id) AS total_request_messages
-        FROM chat_messages cm LEFT JOIN service_requests sr ON sr.id = cm.request_id LEFT JOIN users u ON u.id = sr.user_id LEFT JOIN workers w ON w.id::text = sr.worker_id::text WHERE sr.status IN ('pending', 'accepted', 'completed') ORDER BY cm.created_at DESC LIMIT 40
+        FROM chat_messages cm LEFT JOIN service_requests sr ON sr.id = cm.request_id LEFT JOIN users u ON u.id = sr.user_id LEFT JOIN workers w ON w.id::text = sr.worker_id::text WHERE sr.status IN ('accepted', 'checking_completed') ORDER BY cm.created_at DESC LIMIT 12
     ")->fetchAll(PDO::FETCH_ASSOC);
 
     $workerPerformance = $conn->query("
-        SELECT w.id, w.name, w.specialization, w.city, w.approved, w.status, w.total_earnings, COUNT(DISTINCT sr.id) AS total_completed_jobs, COALESCE(COUNT(DISTINCT CASE WHEN rw.rating >= 4 THEN sr.id END), 0) AS high_rated_jobs, COALESCE(AVG(rw.rating), 0) AS avg_rating, COALESCE(COUNT(DISTINCT rw.id), 0) AS review_count, COALESCE(SUM(CASE WHEN sr.payment_status = 'paid' THEN sr.budget ELSE 0 END), 0) AS paid_earnings, COALESCE(SUM(CASE WHEN sr.payment_status = 'unpaid' THEN sr.budget ELSE 0 END), 0) AS unpaid_earnings, MAX(sr.completed_at) AS last_completed_job
-        FROM workers w LEFT JOIN service_requests sr ON sr.worker_id::text = w.id::text AND sr.status = 'completed' LEFT JOIN reviews_worker rw ON rw.worker_id::text = w.id::text AND rw.request_id = sr.id WHERE w.approved = 'yes' GROUP BY w.id, w.name, w.specialization, w.city, w.approved, w.status, w.total_earnings ORDER BY total_completed_jobs DESC, avg_rating DESC LIMIT 30
+        SELECT w.id, w.name, w.specialization, w.city, w.approved, w.status, COUNT(DISTINCT sr.id) AS total_completed_jobs
+        FROM workers w LEFT JOIN service_requests sr ON sr.worker_id::text = w.id::text AND sr.status = 'completed' GROUP BY w.id, w.name, w.specialization, w.city, w.approved, w.status ORDER BY total_completed_jobs DESC LIMIT 20
     ")->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
-    $dbError = "عذراً، يوجد خطأ في هيكل قاعدة البيانات. يرجى تشغيل أوامر SQL في Neon لتحديث الجداول. <br><br> التفاصيل: " . $e->getMessage();
+    $dbError = "عذراً، يوجد خطأ في هيكل قاعدة البيانات. يرجى تشغيل أوامر SQL في Neon لتحديث الجداول. <br><br> التفاصيل: " . htmlspecialchars($e->getMessage());
 }
 ?>
 <!DOCTYPE html>
@@ -177,7 +174,7 @@ try {
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        details { margin-bottom: 12px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.3); cursor: pointer; transition: all 0.3s ease; }
+        details { margin-bottom: 12px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.3); cursor: pointer; }
         details:hover { background: rgba(255, 255, 255, 0.7); border-color: rgba(102, 126, 234, 0.5); }
         summary { font-weight: 600; color: #1f2937; display: flex; justify-content: space-between; align-items: center; outline: none; }
         summary::marker { color: #667eea; }
@@ -210,7 +207,7 @@ try {
         <?php endif; ?>
 
         <?php if ($message): ?>
-            <div class="rounded-3xl border border-green-200 bg-emerald-50 text-emerald-800 p-5 font-semibold"><?= htmlspecialchars($message) ?></div>
+            <div class="rounded-3xl border border-green-200 bg-emerald-50 text-emerald-800 p-5 font-semibold"><?= htmlspecialchars($message ?? '') ?></div>
         <?php endif; ?>
 
         <div class="flex flex-wrap gap-4 mb-8">
@@ -258,12 +255,12 @@ try {
                         <tbody>
                             <?php foreach ($commissionBreakdown as $cb): ?>
                                 <tr class="border-b">
-                                    <td class="p-2"><?= htmlspecialchars($cb['payment_status']) ?></td>
-                                    <td class="p-2"><?= $cb['count'] ?></td>
-                                    <td class="p-2"><?= number_format($cb['total_commission'], 2) ?> EGP</td>
-                                    <td class="p-2"><?= number_format($cb['avg_commission'], 2) ?> EGP</td>
-                                    <td class="p-2"><?= number_format($cb['min_commission'], 2) ?> EGP</td>
-                                    <td class="p-2"><?= number_format($cb['max_commission'], 2) ?> EGP</td>
+                                    <td class="p-2"><?= htmlspecialchars($cb['payment_status'] ?? 'N/A') ?></td>
+                                    <td class="p-2"><?= $cb['count'] ?? 0 ?></td>
+                                    <td class="p-2"><?= number_format($cb['total_commission'] ?? 0, 2) ?> EGP</td>
+                                    <td class="p-2"><?= number_format($cb['avg_commission'] ?? 0, 2) ?> EGP</td>
+                                    <td class="p-2"><?= number_format($cb['min_commission'] ?? 0, 2) ?> EGP</td>
+                                    <td class="p-2"><?= number_format($cb['max_commission'] ?? 0, 2) ?> EGP</td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -277,14 +274,13 @@ try {
                     <?php foreach ($paymentHistory as $payment): ?>
                         <details>
                             <summary>
-                                <span>دفعة لـ <?= htmlspecialchars($payment['worker_name']) ?> - <?= number_format($payment['amount_paid'], 2) ?> EGP</span>
-                                <span class="text-sm text-slate-500"><?= htmlspecialchars($payment['confirmed_at']) ?></span>
+                                <span>دفعة - <?= number_format($payment['amount_paid'] ?? 0, 2) ?> EGP</span>
+                                <span class="text-sm text-slate-500"><?= htmlspecialchars($payment['confirmed_at'] ?? 'N/A') ?></span>
                             </summary>
                             <div class="detail-content">
-                                <p><strong>الخدمة:</strong> <?= htmlspecialchars($payment['specialization']) ?></p>
-                                <p><strong>المبلغ المدفوع:</strong> <?= number_format($payment['amount_paid'], 2) ?> EGP</p>
-                                <p><strong>العمولة:</strong> <?= number_format($payment['commission_amount'], 2) ?> EGP</p>
-                                <p><strong>تاريخ الإتمام:</strong> <?= htmlspecialchars($payment['completed_at']) ?></p>
+                                <p><strong>المبلغ المدفوع:</strong> <?= number_format($payment['amount_paid'] ?? 0, 2) ?> EGP</p>
+                                <p><strong>العمولة:</strong> <?= number_format($payment['commission_amount'] ?? 0, 2) ?> EGP</p>
+                                <p><strong>الحالة:</strong> <?= htmlspecialchars($payment['payment_status'] ?? 'pending') ?></p>
                             </div>
                         </details>
                     <?php endforeach; ?>
@@ -301,15 +297,15 @@ try {
                     <?php foreach ($recentRequests as $request): ?>
                         <details>
                             <summary>
-                                <span>طلب <?= htmlspecialchars($request['specialization']) ?> - <?= htmlspecialchars($request['user_name']) ?></span>
-                                <span class="text-sm text-slate-500"><?= htmlspecialchars($request['created_at']) ?></span>
+                                <span>طلب <?= htmlspecialchars($request['specialization'] ?? 'N/A') ?> - <?= htmlspecialchars($request['user_name'] ?? 'عميل') ?></span>
+                                <span class="text-sm text-slate-500"><?= htmlspecialchars($request['created_at'] ?? 'N/A') ?></span>
                             </summary>
                             <div class="detail-content">
-                                <p><strong>العميل:</strong> <?= htmlspecialchars($request['user_name']) ?></p>
+                                <p><strong>العميل:</strong> <?= htmlspecialchars($request['user_name'] ?? 'عميل') ?></p>
                                 <p><strong>الفني:</strong> <?= htmlspecialchars($request['worker_name'] ?? 'غير محدد') ?></p>
-                                <p><strong>المدينة:</strong> <?= htmlspecialchars($request['city']) ?></p>
-                                <p><strong>الميزانية:</strong> <?= htmlspecialchars($request['budget']) ?> EGP</p>
-                                <p><strong>الحالة:</strong> <?= htmlspecialchars($request['status']) ?> / <?= htmlspecialchars($request['payment_status']) ?></p>
+                                <p><strong>المدينة:</strong> <?= htmlspecialchars($request['city'] ?? 'N/A') ?></p>
+                                <p><strong>الميزانية:</strong> <?= number_format($request['budget'] ?? 0, 2) ?> EGP</p>
+                                <p><strong>الحالة:</strong> <?= htmlspecialchars($request['status'] ?? 'N/A') ?> / <?= htmlspecialchars($request['payment_status'] ?? 'N/A') ?></p>
                             </div>
                         </details>
                     <?php endforeach; ?>
@@ -322,15 +318,15 @@ try {
                     <?php foreach ($chatPreviews as $chat): ?>
                         <details>
                             <summary>
-                                <span>دردشة في طلب <?= htmlspecialchars($chat['specialization']) ?> - <?= htmlspecialchars($chat['message_preview']) ?>...</span>
-                                <span class="text-sm text-slate-500"><?= htmlspecialchars($chat['created_at']) ?></span>
+                                <span>دردشة في طلب <?= htmlspecialchars($chat['specialization'] ?? 'N/A') ?></span>
+                                <span class="text-sm text-slate-500"><?= htmlspecialchars($chat['created_at'] ?? 'N/A') ?></span>
                             </summary>
                             <div class="detail-content">
-                                <p><strong>العميل:</strong> <?= htmlspecialchars($chat['user_name']) ?></p>
+                                <p><strong>العميل:</strong> <?= htmlspecialchars($chat['user_name'] ?? 'عميل') ?></p>
                                 <p><strong>الفني:</strong> <?= htmlspecialchars($chat['worker_name'] ?? 'غير محدد') ?></p>
-                                <p><strong>المرسل:</strong> <?= htmlspecialchars($chat['sender_type']) ?></p>
-                                <p><strong>الرسالة الكاملة:</strong> <?= htmlspecialchars($chat['message_preview']) ?>...</p>
-                                <p><strong>إجمالي الرسائل في الطلب:</strong> <?= $chat['total_request_messages'] ?></p>
+                                <p><strong>المرسل:</strong> <?= htmlspecialchars($chat['sender_type'] ?? 'N/A') ?></p>
+                                <p><strong>الرسالة:</strong> <?= htmlspecialchars($chat['message_preview'] ?? 'لا توجد رسائل') ?></p>
+                                <p><strong>إجمالي الرسائل:</strong> <?= $chat['total_request_messages'] ?? 0 ?></p>
                             </div>
                         </details>
                     <?php endforeach; ?>
@@ -347,18 +343,18 @@ try {
                     <?php foreach ($pendingWorkers as $worker): ?>
                         <details>
                             <summary>
-                                <span>فني: <?= htmlspecialchars($worker['name']) ?> - <?= htmlspecialchars($worker['specialization']) ?></span>
-                                <span class="text-sm text-slate-500"><?= htmlspecialchars($worker['created_at']) ?></span>
+                                <span>فني: <?= htmlspecialchars($worker['name'] ?? 'N/A') ?> - <?= htmlspecialchars($worker['specialization'] ?? 'N/A') ?></span>
+                                <span class="text-sm text-slate-500"><?= htmlspecialchars($worker['created_at'] ?? 'N/A') ?></span>
                             </summary>
                             <div class="detail-content">
-                                <p><strong>الاسم:</strong> <?= htmlspecialchars($worker['name']) ?></p>
-                                <p><strong>التخصص:</strong> <?= htmlspecialchars($worker['specialization']) ?></p>
-                                <p><strong>المدينة:</strong> <?= htmlspecialchars($worker['city']) ?></p>
-                                <p><strong>البريد الإلكتروني:</strong> <?= htmlspecialchars($worker['email']) ?></p>
-                                <p><strong>الهاتف:</strong> <?= htmlspecialchars($worker['phone']) ?></p>
+                                <p><strong>الاسم:</strong> <?= htmlspecialchars($worker['name'] ?? 'N/A') ?></p>
+                                <p><strong>التخصص:</strong> <?= htmlspecialchars($worker['specialization'] ?? 'N/A') ?></p>
+                                <p><strong>المدينة:</strong> <?= htmlspecialchars($worker['city'] ?? 'N/A') ?></p>
+                                <p><strong>البريد الإلكتروني:</strong> <?= htmlspecialchars($worker['email'] ?? 'N/A') ?></p>
+                                <p><strong>الهاتف:</strong> <?= htmlspecialchars($worker['phone'] ?? 'N/A') ?></p>
                                 
                                 <form method="post" class="mt-4 flex gap-2">
-                                    <input type="hidden" name="worker_id" value="<?= htmlspecialchars($worker['id']) ?>">
+                                    <input type="hidden" name="worker_id" value="<?= htmlspecialchars($worker['id'] ?? '') ?>">
                                     <button type="submit" name="approve_worker" class="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700">موافقة</button>
                                     <button type="submit" name="decline_worker" class="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700">رفض</button>
                                 </form>
@@ -374,16 +370,16 @@ try {
                     <?php foreach ($pausedWorkers as $worker): ?>
                         <details>
                             <summary>
-                                <span>فني: <?= htmlspecialchars($worker['name']) ?> - أيام غير مدفوعة: <?= $worker['unpaid_streak_days'] ?></span>
+                                <span>فني: <?= htmlspecialchars($worker['name'] ?? 'N/A') ?> - أيام غير مدفوعة: <?= $worker['unpaid_streak_days'] ?? 0 ?></span>
                             </summary>
                             <div class="detail-content">
-                                <p><strong>الاسم:</strong> <?= htmlspecialchars($worker['name']) ?></p>
-                                <p><strong>التخصص:</strong> <?= htmlspecialchars($worker['specialization']) ?></p>
-                                <p><strong>المدينة:</strong> <?= htmlspecialchars($worker['city']) ?></p>
-                                <p><strong>البريد الإلكتروني:</strong> <?= htmlspecialchars($worker['email']) ?></p>
-                                <p><strong>الهاتف:</strong> <?= htmlspecialchars($worker['phone']) ?></p>
-                                <p><strong>أيام غير مدفوعة:</strong> <?= $worker['unpaid_streak_days'] ?></p>
-                                <p><strong>موقوف:</strong> <?= $worker['paused'] === 'yes' ? 'نعم' : 'لا' ?></p>
+                                <p><strong>الاسم:</strong> <?= htmlspecialchars($worker['name'] ?? 'N/A') ?></p>
+                                <p><strong>التخصص:</strong> <?= htmlspecialchars($worker['specialization'] ?? 'N/A') ?></p>
+                                <p><strong>المدينة:</strong> <?= htmlspecialchars($worker['city'] ?? 'N/A') ?></p>
+                                <p><strong>البريد الإلكتروني:</strong> <?= htmlspecialchars($worker['email'] ?? 'N/A') ?></p>
+                                <p><strong>الهاتف:</strong> <?= htmlspecialchars($worker['phone'] ?? 'N/A') ?></p>
+                                <p><strong>أيام غير مدفوعة:</strong> <?= $worker['unpaid_streak_days'] ?? 0 ?></p>
+                                <p><strong>موقوف:</strong> <?= ($worker['paused'] ?? 'no') === 'yes' ? 'نعم' : 'لا' ?></p>
                             </div>
                         </details>
                     <?php endforeach; ?>
@@ -394,7 +390,7 @@ try {
         <?php if ($aiInsights): ?>
             <div class="glass-card p-6 rounded-3xl shadow">
                 <h3 class="text-xl font-bold mb-4">رؤى AI</h3>
-                <p class="text-slate-700 leading-relaxed"><?= htmlspecialchars($aiInsights) ?></p>
+                <p class="text-slate-700 leading-relaxed"><?= htmlspecialchars($aiInsights ?? '') ?></p>
             </div>
         <?php endif; ?>
     </main>
