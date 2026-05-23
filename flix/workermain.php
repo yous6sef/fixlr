@@ -162,9 +162,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $aaa = $conn->prepare("INSERT INTO tasks (worker_id, us_id, request_id, start_time, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW(), NOW())");
                     $aaa->execute([$id, $usid, $order_id]);
 
-                    $aa = $conn->prepare("UPDATE service_requests SET status = 'accepted', worker_id = :worker_id, negotiation_state = 'accepted', negotiation_started_at = COALESCE(negotiation_started_at, NOW()), negotiation_ended_at = NOW() WHERE id = :id AND status = 'pending'");
+                    $aa = $conn->prepare("UPDATE service_requests SET status = 'accepted', worker_id = :worker_id, negotiation_state = 'accepted', negotiation_started_at = COALESCE(negotiation_started_at, NOW()), negotiation_ended_at = NOW() WHERE id = :id AND status = 'pending' AND specialization = :specialization AND city = :city");
                     $aa->bindParam(':id', $order_id, PDO::PARAM_INT);
                     $aa->bindParam(':worker_id', $id, PDO::PARAM_STR);
+                    $aa->bindParam(':specialization', $specialization, PDO::PARAM_STR);
+                    $aa->bindParam(':city', $city, PDO::PARAM_STR);
                     $aa->execute();
                     if ($aa->rowCount() > 0) {
                         $success = 'تم قبول الطلب بنجاح.';

@@ -20,11 +20,12 @@ $dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode=require";
 
 // 4. Connect
 try {
-    $conn = new PDO($dsn, $user, $pass);
-    
-    // Set PDO to throw exceptions on errors
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
+    $conn = new PDO($dsn, $user, $pass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]);
+    $conn->exec("SET NAMES 'utf8'");
 } catch (PDOException $e) {
     die("❌ Connection failed: " . $e->getMessage());
 }

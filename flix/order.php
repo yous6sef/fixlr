@@ -67,6 +67,27 @@ $ordersStmt->bindParam(':id', $id, PDO::PARAM_STR);
 $ordersStmt->execute();
 $userOrders = $ordersStmt->fetchAll(PDO::FETCH_ASSOC);
 
+$specializationOptions = [];
+$cityOptions = [];
+try {
+    $cityStmt = $conn->prepare("SELECT DISTINCT city FROM workers WHERE city IS NOT NULL AND city <> '' ORDER BY city");
+    $cityStmt->execute();
+    $cityOptions = $cityStmt->fetchAll(PDO::FETCH_COLUMN);
+
+    $specialStmt = $conn->prepare("SELECT DISTINCT specialization FROM workers WHERE specialization IS NOT NULL AND specialization <> '' ORDER BY specialization");
+    $specialStmt->execute();
+    $specializationOptions = $specialStmt->fetchAll(PDO::FETCH_COLUMN);
+} catch (Exception $e) {
+    // Ignore if metadata lookup fails and use defaults below.
+}
+
+if (empty($specializationOptions)) {
+    $specializationOptions = ['سباك', 'كهربائي', 'نجار', 'دهان', 'تنظيف', 'صيانة عامة'];
+}
+if (empty($cityOptions)) {
+    $cityOptions = ['الجيزة', 'القاهرة', 'الإسكندرية', 'المنصورة'];
+}
+
 $activeOrderStmt = $conn->prepare("SELECT status FROM service_requests WHERE us_id::text = :id AND status IN ('pending','accepted') ORDER BY created_at DESC LIMIT 1");
 $activeOrderStmt->bindParam(':id', $id, PDO::PARAM_STR);
 $activeOrderStmt->execute();
@@ -115,12 +136,9 @@ function orderStatusLabel($status) {
                         <label class="block text-gray-700 font-semibold mb-2">نوع الخدمة</label>
                         <select name="special" class="w-full rounded-2xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
                             <option value="">اختر نوع الخدمة</option>
-                            <option value="سباك" <?= (isset($_POST['special']) && $_POST['special'] === 'سباك') ? 'selected' : '' ?>>سباك</option>
-                            <option value="كهربائي" <?= (isset($_POST['special']) && $_POST['special'] === 'كهربائي') ? 'selected' : '' ?>>كهربائي</option>
-                            <option value="نجار" <?= (isset($_POST['special']) && $_POST['special'] === 'نجار') ? 'selected' : '' ?>>نجار</option>
-                            <option value="دهان" <?= (isset($_POST['special']) && $_POST['special'] === 'دهان') ? 'selected' : '' ?>>دهان</option>
-                            <option value="تنظيف" <?= (isset($_POST['special']) && $_POST['special'] === 'تنظيف') ? 'selected' : '' ?>>تنظيف</option>
-                            <option value="صيانة عامة" <?= (isset($_POST['special']) && $_POST['special'] === 'صيانة عامة') ? 'selected' : '' ?>>صيانة عامة</option>
+                            <?php foreach ($specializationOptions as $option): ?>
+                                <option value="<?= htmlspecialchars($option) ?>" <?= (isset($_POST['special']) && $_POST['special'] === $option) ? 'selected' : '' ?>><?= htmlspecialchars($option) ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div>
@@ -129,7 +147,12 @@ function orderStatusLabel($status) {
                     </div>
                     <div>
                         <label class="block text-gray-700 font-semibold mb-2">المدينة</label>
-                        <input type="text" name="city" value="<?= htmlspecialchars($_POST['city'] ?? '') ?>" required class="w-full rounded-2xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        <select name="city" class="w-full rounded-2xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                            <option value="">اختر المدينة</option>
+                            <?php foreach ($cityOptions as $cityOption): ?>
+                                <option value="<?= htmlspecialchars($cityOption) ?>" <?= (isset($_POST['city']) && $_POST['city'] === $cityOption) ? 'selected' : '' ?>><?= htmlspecialchars($cityOption) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 font-semibold mb-2">وصف الخدمة</label>

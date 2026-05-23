@@ -10,13 +10,9 @@ header("Pragma: no-cache");
 header("Expires: 0");
 
 if (!isset($_SESSION['user_id'])) { 
-
   header("Location: login.php");
-
   exit();
-
 }
-
 
 $id = (string) $_SESSION['user_id'];
 
@@ -32,29 +28,8 @@ if (!$user) {
     exit();
 }
 
-$stageStmt = $conn->prepare("SELECT status FROM service_requests WHERE us_id::text = :id ORDER BY created_at DESC LIMIT 1");
-$stageStmt->bindParam(':id', $id, PDO::PARAM_STR);
-$stageStmt->execute();
-$latestOrder = $stageStmt->fetch(PDO::FETCH_ASSOC);
-if ($latestOrder) {
-    if (in_array($latestOrder['status'], ['pending', 'accepted'], true)) {
-        header('Location: track.php');
-        exit();
-    }
-    if ($latestOrder['status'] === 'completed') {
-        header('Location: receipt.php');
-        exit();
-    }
-}
-
-header('Location: order.php');
-exit();
-if (!$user) {
-    session_unset();
-    session_destroy();
-    header('Location: login.php');
-    exit();
-}
+// FIXED: Removed duplicate logic - now just display the dashboard directly
+// Don't redirect, render the dashboard
 
 $userRatingStmt = $conn->prepare("SELECT COALESCE(AVG(rating), 0) AS avg_rating, COALESCE(COUNT(id), 0) AS review_count FROM reviews_user WHERE user_id::text = :id");
 $userRatingStmt->bindParam(':id', $id, PDO::PARAM_STR);

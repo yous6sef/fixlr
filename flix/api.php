@@ -380,9 +380,7 @@ function getWorkerStats($conn, $userId) {
 
         // Incoming orders
         $stmt = $conn->prepare("SELECT COUNT(*) as count FROM service_requests WHERE status = 'pending' AND worker_id IS NULL");
-        $stmt->bindParam(':user_id', $userId, PDO::PARAM_STR);
-        $stmt->execute();
-        $stats['incoming'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+
 
         // Active orders
         $stmt = $conn->prepare("SELECT COUNT(*) as count FROM service_requests WHERE worker_id = :user_id AND status = 'accepted'");
