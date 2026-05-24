@@ -1,6 +1,12 @@
 # Multi-stage build for Flix Platform
 FROM php:8.0-apache
 
+# Install required system dependencies for SQLite
+RUN apt-get update && apt-get install -y \
+    sqlite3 \
+    libsqlite3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # Enable required PHP extensions
 RUN docker-php-ext-install pdo pdo_sqlite
 
