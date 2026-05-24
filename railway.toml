@@ -4,3 +4,4 @@ dockerfile = "Dockerfile"
 
 [deploy]
 startCommand = "apache2-foreground"
+port = 8080
