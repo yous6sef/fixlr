@@ -5,14 +5,16 @@ FROM php:8.0-apache
 RUN apt-get update && apt-get install -y \
     sqlite3 \
     libsqlite3-dev \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install required PHP extensions
 RUN docker-php-ext-install pdo pdo_sqlite
 
-# Enable Apache modules (rewrite, headers only - avoid MPM conflicts)
-RUN a2enmod rewrite headers
+# Disable conflicting MPM modules and enable only prefork
+RUN a2dismod mpm_event || true && \
+    a2dismod mpm_worker || true && \
+    a2enmod mpm_prefork && \
+    a2enmod rewrite
 
 # Set working directory
 WORKDIR /var/www/html
@@ -33,9 +35,6 @@ RUN chown -R www-data:www-data /var/www/html && \
     chmod -R 755 /var/www/html && \
     chmod -R 777 /var/www/html/uploads
 
-# Enable PHP error logging to stdout
-RUN echo "error_log = /proc/self/fd/2" >> /usr/local/etc/php/conf.d/docker-php.ini
-
 # Configure Apache logging to stdout/stderr
 RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log && \
     ln -sf /proc/self/fd/2 /var/log/apache2/error.log
@@ -48,6 +47,10 @@ ENV APACHE_RUN_USER=www-data \
     APACHE_PID_FILE=/var/run/apache2/apache2.pid
 
 # Expose port 8080 (Railway requirement)
+EXPOSE 8080
+
+# Start Apache in foreground
+CMD ["apache2-foreground"]
 EXPOSE 8080
 
 # Start Apache in foreground
