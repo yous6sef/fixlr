@@ -10,12 +10,18 @@ RUN apt-get update && apt-get install -y \
 # Install required PHP extensions
 RUN docker-php-ext-install pdo pdo_sqlite
 
-# Fix Apache MPM conflict: directly manage module symlinks
-# Remove all conflicting MPM module symlinks, keep only mpm_prefork
-RUN rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf && \
-    ln -sf ../mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load && \
-    ln -sf ../mods-available/mpm_prefork.conf /etc/apache2/mods-enabled/mpm_prefork.conf && \
-    a2enmod rewrite
+# Fix Apache MPM conflict - follow Gemini's recommended approach
+# First, disable the conflicting event and worker MPMs (if they exist)
+RUN a2dismod mpm_event mpm_worker || true
+
+# Then explicitly enable only prefork MPM
+RUN a2enmod mpm_prefork
+
+# Enable rewrite module for clean URLs
+RUN a2enmod rewrite
+
+# Verify only one MPM is loaded
+RUN ls -l /etc/apache2/mods-enabled/ | grep mpm || echo "MPM modules configured"
 
 # Set working directory
 WORKDIR /var/www/html
