@@ -19,12 +19,21 @@ WORKDIR /var/www/html
 # Copy all application files
 COPY flix/ /var/www/html/
 
-# Configure Apache to use proper document root
-RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html|g' /etc/apache2/sites-available/000-default.conf
+# Configure Apache to use proper document root and enable required modules
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html|g' /etc/apache2/sites-available/000-default.conf && \
+    a2enmod rewrite && \
+    a2enmod headers
 
 # Set proper file permissions
 RUN chown -R www-data:www-data /var/www/html && \
     chmod -R 755 /var/www/html
+
+# Configure Apache environment variables for production
+ENV APACHE_RUN_USER=www-data \
+    APACHE_RUN_GROUP=www-data \
+    APACHE_LOG_DIR=/var/log/apache2 \
+    APACHE_LOCK_DIR=/var/run/apache2 \
+    APACHE_PID_FILE=/var/run/apache2/apache2.pid
 
 # Expose port 8080 (Railway requirement)
 EXPOSE 8080

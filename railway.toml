@@ -4,5 +4,3 @@ dockerfile = "Dockerfile"
 
 [deploy]
 startCommand = "apache2-foreground"
-healthcheckPath = "/landing.html"
-healthcheckTimeout = 5
