@@ -1,4 +1,4 @@
 [build]
-buildCommand = "npm ci --include=dev && npx webpack --mode production"
 
 [deploy]
+startCommand = "apache2-foreground"

@@ -1,5 +1,8 @@
 [build]
 builder = "dockerfile"
+dockerfile = "Dockerfile"
 
 [deploy]
-startCommand = "bash start.sh"
+startCommand = "apache2-foreground"
+healthcheckPath = "/landing.html"
+healthcheckTimeout = 5
