@@ -1,27 +1,19 @@
-# Build for Flix Platform
-FROM php:8.0-apache
+# Build for Flix Platform - Using Nginx + PHP-FPM (eliminates Apache MPM issues entirely)
+FROM php:8.0-fpm-alpine
 
-# Install required system dependencies for SQLite
-RUN apt-get update && apt-get install -y \
-    sqlite3 \
-    libsqlite3-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Install required system dependencies including Nginx
+RUN apk add --no-cache \
+    nginx \
+    sqlite \
+    sqlite-dev \
+    supervisor \
+    curl
 
 # Install required PHP extensions
 RUN docker-php-ext-install pdo pdo_sqlite
 
-# Fix Apache MPM conflict - follow Gemini's recommended approach
-# First, disable the conflicting event and worker MPMs (if they exist)
-RUN a2dismod mpm_event mpm_worker || true
-
-# Then explicitly enable only prefork MPM
-RUN a2enmod mpm_prefork
-
-# Enable rewrite module for clean URLs
-RUN a2enmod rewrite
-
-# Verify only one MPM is loaded
-RUN ls -l /etc/apache2/mods-enabled/ | grep mpm || echo "MPM modules configured"
+# Create PHP-FPM config for production
+RUN echo '[www]\nuser = nobody\ngroup = nobody\nlisten = 127.0.0.1:9000\npm.max_children = 20\npm.start_servers = 5\npm.min_spare_servers = 3\npm.max_spare_servers = 10' > /usr/local/etc/php-fpm.d/www.conf
 
 # Set working directory
 WORKDIR /var/www/html
@@ -31,33 +23,113 @@ COPY flix/ /var/www/html/
 
 # Create required directories with proper permissions
 RUN mkdir -p /var/www/html/uploads/workers && \
-    mkdir -p /var/www/html/uploads/db
-
-# Configure Apache for port 8080
-RUN sed -i 's/Listen 80/Listen 8080/g' /etc/apache2/ports.conf && \
-    sed -i 's/:80/:8080/g' /etc/apache2/sites-available/000-default.conf
-
-# Set proper file permissions
-RUN chown -R www-data:www-data /var/www/html && \
+    mkdir -p /var/www/html/uploads/db && \
+    chown -R nobody:nobody /var/www/html && \
     chmod -R 755 /var/www/html && \
     chmod -R 777 /var/www/html/uploads
 
-# Configure Apache logging to stdout/stderr
-RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log && \
-    ln -sf /proc/self/fd/2 /var/log/apache2/error.log
+# Create Nginx configuration
+RUN mkdir -p /etc/nginx/conf.d && \
+    cat > /etc/nginx/nginx.conf << 'EOF'
+user nobody;
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
 
-# Set environment variables
-ENV APACHE_RUN_USER=www-data \
-    APACHE_RUN_GROUP=www-data \
-    APACHE_LOG_DIR=/var/log/apache2 \
-    APACHE_LOCK_DIR=/var/run/apache2 \
-    APACHE_PID_FILE=/var/run/apache2/apache2.pid
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log /var/log/nginx/access.log main;
+    sendfile on;
+    keepalive_timeout 65;
+    gzip on;
+    
+    server {
+        listen 8080 default_server;
+        server_name _;
+        root /var/www/html;
+        index index.php index.html;
+
+        # Security headers
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        server_tokens off;
+
+        # URL rewriting for clean URLs
+        location / {
+            try_files $uri $uri/ /index.php?$query_string;
+        }
+
+        # PHP-FPM routing
+        location ~ \.php$ {
+            fastcgi_pass 127.0.0.1:9000;
+            fastcgi_index index.php;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+            include fastcgi_params;
+            fastcgi_buffer_size 128k;
+            fastcgi_buffers 4 256k;
+            fastcgi_busy_buffers_size 256k;
+        }
+
+        # Health check
+        location = /status.php {
+            access_log off;
+            fastcgi_pass 127.0.0.1:9000;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+            include fastcgi_params;
+        }
+    }
+}
+EOF
+
+# Create supervisord config to manage both nginx and php-fpm
+RUN mkdir -p /etc/supervisor/conf.d && \
+    cat > /etc/supervisor/conf.d/services.conf << 'EOF'
+[supervisord]
+nodaemon=true
+logfile=/var/log/supervisord.log
+
+[program:php-fpm]
+command=php-fpm -F
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:nginx]
+command=nginx -g "daemon off;"
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+EOF
+
+# Create status.php for health checks
+RUN echo '<?php header("Content-Type: text/plain"); echo "OK"; ?>' > /var/www/html/status.php
 
 # Expose port 8080 (Railway requirement)
 EXPOSE 8080
 
-# Start Apache in foreground
-CMD ["apache2-foreground"]
+# Health check
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:8080/status.php || exit 1
+
+# Start both services via supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/services.conf"]
 
 # Start Apache in foreground
 CMD ["apache2-foreground"]
