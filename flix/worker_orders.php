@@ -7,11 +7,11 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-$workerId = (string) $_SESSION['user_id'];
+$workerId = $_SESSION['user_id'];
 
 // Get worker data
-$stmt = $conn->prepare("SELECT * FROM workers WHERE id::text = :id");
-$stmt->bindParam(':id', $workerId, PDO::PARAM_STR);
+$stmt = $conn->prepare("SELECT * FROM workers WHERE id = :id");
+$stmt->bindParam(':id', $workerId, PDO::PARAM_INT);
 $stmt->execute();
 $worker = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -29,17 +29,17 @@ $notApproved = !isset($worker['approved']) || $worker['approved'] !== 'yes';
 $isPaused = ($worker['unpaid_streak_days'] ?? 0) >= 7;
 
 // Check if worker has active task
-$activeTaskStmt = $conn->prepare("SELECT sr.*, u.name AS user_name, u.email AS user_email, u.phone AS user_phone FROM service_requests sr LEFT JOIN users u ON u.id::text = sr.us_id::text WHERE sr.worker_id::text = :id AND sr.status = 'accepted' ORDER BY sr.created_at DESC LIMIT 1");
-$activeTaskStmt->bindParam(':id', $workerId, PDO::PARAM_STR);
+$activeTaskStmt = $conn->prepare("SELECT sr.*, u.name AS user_name, u.email AS user_email, u.phone AS user_phone FROM service_requests sr LEFT JOIN users u ON u.id = sr.user_id WHERE sr.worker_id = :id AND sr.status = 'accepted' ORDER BY sr.created_at DESC LIMIT 1");
+$activeTaskStmt->bindParam(':id', $workerId, PDO::PARAM_INT);
 $activeTaskStmt->execute();
 $activeTask = $activeTaskStmt->fetch(PDO::FETCH_ASSOC);
 
 // Handle status toggle
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'status') {
     $newStatus = ($isActive === "active") ? "no" : "active";
-    $stm = $conn->prepare("UPDATE workers SET status = :status WHERE id::text = :id");
+    $stm = $conn->prepare("UPDATE workers SET status = :status WHERE id = :id");
     $stm->bindParam(':status', $newStatus);
-    $stm->bindParam(':id', $workerId);
+    $stm->bindParam(':id', $workerId, PDO::PARAM_INT);
     $stm->execute();
     header("Location: " . $_SERVER['PHP_SELF']);
     exit();
@@ -48,9 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // Handle city update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['places'])) {
     $newCity = $_POST['places'];
-    $st = $conn->prepare("UPDATE workers SET city = :city WHERE id::text = :id");
+    $st = $conn->prepare("UPDATE workers SET city = :city WHERE id = :id");
     $st->bindParam(':city', $newCity);
-    $st->bindParam(':id', $workerId);
+    $st->bindParam(':id', $workerId, PDO::PARAM_INT);
     $st->execute();
     header("Location: " . $_SERVER['PHP_SELF']);
     exit();
@@ -121,11 +121,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Get pending orders for this worker (only if no active task)
 $pendingOrders = [];
 if (!$activeTask) {
-    $pendingStmt = $conn->prepare('SELECT * FROM service_requests WHERE specialization = :specialization AND city = :city AND status = :status AND refusers < :limit ORDER BY created_at ASC');
+    // Query matching requests by service type and city
+    $pendingStmt = $conn->prepare('
+        SELECT sr.* FROM service_requests sr
+        JOIN service_types st ON sr.service_type_id = st.id
+        JOIN cities c ON sr.city_id = c.id
+        WHERE st.name_ar = :specialization 
+        AND c.name_ar = :city 
+        AND sr.status = :status 
+        ORDER BY sr.created_at ASC
+        LIMIT 5
+    ');
     $pendingStmt->bindParam(':specialization', $specialization, PDO::PARAM_STR);
     $pendingStmt->bindParam(':city', $city, PDO::PARAM_STR);
     $pendingStmt->bindValue(':status', 'pending', PDO::PARAM_STR);
-    $pendingStmt->bindValue(':limit', 3, PDO::PARAM_INT);
     $pendingStmt->execute();
     $pendingOrders = $pendingStmt->fetchAll(PDO::FETCH_ASSOC);
 }
@@ -134,7 +143,6 @@ $canAccept = !$notApproved && $isActive === 'active' && !$isPaused && !$activeTa
 
 $statusLabel = $isActive === 'active' ? 'متاح لاستقبال الطلبات' : 'غير متاح لاستقبال الطلبات';
 $statusButton = $isActive === 'active' ? 'تبديل إلى غير متاح' : 'تبديل إلى متاح';
-?>
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">

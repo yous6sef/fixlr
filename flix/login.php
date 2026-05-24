@@ -14,14 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'يرجى إدخال البريد الإلكتروني أو رقم الهاتف وكلمة المرور.';
     } else {
         if ($role === 'admin') {
-            // FIXED: Pulling 'password' but aliasing it as 'password_hash' for the admins table
-            $stmt = $conn->prepare('SELECT id, password AS password_hash FROM admins WHERE email = ? OR phone = ? LIMIT 1');
+            $stmt = $conn->prepare('SELECT id, password_hash FROM admins WHERE email = ? OR phone = ? LIMIT 1');
             $stmt->execute([$loginInput, $loginInput]);
         } elseif ($role === 'worker') {
-            $stmt = $conn->prepare('SELECT id, name, password AS password_hash, approved, status FROM workers WHERE (email = ? OR phone = ?) LIMIT 1');
+            $stmt = $conn->prepare('SELECT id, name, password_hash, approved, status FROM workers WHERE (email = ? OR phone = ?) LIMIT 1');
             $stmt->execute([$loginInput, $loginInput]);
         } else {
-            // Note: If you ever get this same error for normal users, change this to "password AS password_hash" too!
             $stmt = $conn->prepare('SELECT id, name, password_hash, account_status FROM users WHERE (email = ? OR phone = ?) AND user_type = ? LIMIT 1');
             $stmt->execute([$loginInput, $loginInput, $role]);
         }
@@ -49,7 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($role === 'worker') {
-                // Workers must be approved by admin before becoming active
                 $approved = $account['approved'] ?? 'pending';
                 $status = $account['status'] ?? 'inactive';
                 
@@ -80,74 +77,287 @@ if (isset($_GET['registered'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فليكس - تسجيل الدخول</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>تسجيل الدخول - Flix | منصة الخدمات المنزلية</title>
+    <link rel="stylesheet" href="/css/premium-ui.css">
     <style>
         body {
-            font-family: 'Cairo', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-2xl);
+            padding: var(--spacing-2xl);
+            animation: slideUp 0.5s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--spacing-2xl);
+        }
+        
+        .login-header h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .login-header p {
+            color: var(--neutral-600);
+            font-size: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+            color: var(--neutral-700);
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 2px solid var(--neutral-200);
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color var(--transition-base);
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+        
+        .role-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .role-option {
+            position: relative;
+        }
+        
+        .role-option input {
+            display: none;
+        }
+        
+        .role-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-md);
+            border: 2px solid var(--neutral-200);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition-base);
+            text-align: center;
+        }
+        
+        .role-option input:checked + .role-label {
+            border-color: var(--primary);
+            background-color: rgba(14, 165, 233, 0.1);
+            color: var(--primary);
+        }
+        
+        .form-group.error input {
+            border-color: var(--error);
+        }
+        
+        .error-message {
+            color: var(--error);
+            font-size: 0.875rem;
+            margin-top: var(--spacing-sm);
+            padding: var(--spacing-md);
+            background-color: rgba(239, 68, 68, 0.1);
+            border-radius: var(--radius-lg);
+            border-right: 3px solid var(--error);
+        }
+        
+        .success-message {
+            color: var(--success);
+            font-size: 0.875rem;
+            margin-bottom: var(--spacing-md);
+            padding: var(--spacing-md);
+            background-color: rgba(16, 185, 129, 0.1);
+            border-radius: var(--radius-lg);
+            border-right: 3px solid var(--success);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: var(--spacing-md);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .divider {
+            text-align: center;
+            margin: var(--spacing-xl) 0;
+            color: var(--neutral-400);
+            font-size: 0.875rem;
+        }
+        
+        .signup-link {
+            text-align: center;
+            color: var(--neutral-600);
+            font-size: 0.875rem;
+            margin-top: var(--spacing-lg);
+        }
+        
+        .signup-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color var(--transition-base);
+        }
+        
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .back-home {
+            text-align: center;
+            margin-top: var(--spacing-lg);
+        }
+        
+        .back-home a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color var(--transition-base);
+        }
+        
+        .back-home a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <div class="min-h-screen flex items-center justify-center px-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8">
-            <div class="text-center mb-8">
-                <h1 class="text-4xl font-bold text-indigo-600">فليكس</h1>
-                <p class="text-gray-600 mt-2">تسجيل الدخول إلى حسابك</p>
-            </div>
-
-            <?php if ($error): ?>
-                <div class="mb-4 text-right bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl">
-                    <?= htmlspecialchars($error) ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if ($success): ?>
-                <div class="mb-4 text-right bg-green-50 border border-green-200 text-green-700 p-4 rounded-xl">
-                    <?= htmlspecialchars($success) ?>
-                </div>
-            <?php endif; ?>
-
-            <form method="post" class="space-y-4">
-                <div>
-                    <label class="block text-gray-700 font-semibold mb-2">البريد الإلكتروني أو الهاتف</label>
-                    <input type="text" name="login-input" placeholder="email أو phone" value="<?= htmlspecialchars($_POST['login-input'] ?? '') ?>"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-                </div>
-
-                <div>
-                    <label class="block text-gray-700 font-semibold mb-2">كلمة المرور</label>
-                    <input type="password" name="login-password" placeholder="••••••••"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-                </div>
-
-                <div class="flex items-center justify-between gap-4 text-gray-700">
-                    <label class="inline-flex items-center gap-2">
-                        <input type="radio" name="role" value="user" <?= (!isset($_POST['role']) || $_POST['role'] === 'user') ? 'checked' : '' ?> class="w-4 h-4">
-                        عميل
-                    </label>
-                    <label class="inline-flex items-center gap-2">
-                        <input type="radio" name="role" value="worker" <?= (isset($_POST['role']) && $_POST['role'] === 'worker') ? 'checked' : '' ?> class="w-4 h-4">
-                        فني
-                    </label>
-                    <label class="inline-flex items-center gap-2">
-                        <input type="radio" name="role" value="admin" <?= (isset($_POST['role']) && $_POST['role'] === 'admin') ? 'checked' : '' ?> class="w-4 h-4">
-                        مدير
-                    </label>
-                </div>
-
-                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition">تسجيل الدخول</button>
-            </form>
-
-            <div class="mt-6 text-center text-sm text-gray-600">
-                ليس لديك حساب؟ <a href="signup.php" class="text-indigo-600 font-semibold hover:underline">إنشاء حساب</a>
-            </div>
-
-            <p class="text-center text-gray-500 text-xs mt-6">© فليكس - منصة الخدمات المنزلية</p>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>Flix</h1>
+            <p>تسجيل الدخول إلى حسابك</p>
         </div>
+
+        <?php if ($error): ?>
+            <div class="error-message">
+                ❌ <?= htmlspecialchars($error) ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($success): ?>
+            <div class="success-message">
+                ✅ <?= htmlspecialchars($success) ?>
+            </div>
+        <?php endif; ?>
+
+        <form method="post">
+            <div class="form-group">
+                <label>نوع الحساب</label>
+                <div class="role-selector">
+                    <div class="role-option">
+                        <input type="radio" name="role" value="user" id="role-user" <?= (!isset($_POST['role']) || $_POST['role'] === 'user') ? 'checked' : '' ?>>
+                        <label for="role-user" class="role-label">👤 عميل</label>
+                    </div>
+                    <div class="role-option">
+                        <input type="radio" name="role" value="worker" id="role-worker" <?= (isset($_POST['role']) && $_POST['role'] === 'worker') ? 'checked' : '' ?>>
+                        <label for="role-worker" class="role-label">👷 فني</label>
+                    </div>
+                    <div class="role-option">
+                        <input type="radio" name="role" value="admin" id="role-admin" <?= (isset($_POST['role']) && $_POST['role'] === 'admin') ? 'checked' : '' ?>>
+                        <label for="role-admin" class="role-label">⚙️ مدير</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="login-input">البريد الإلكتروني أو رقم الهاتف</label>
+                <input 
+                    type="text" 
+                    id="login-input"
+                    name="login-input" 
+                    placeholder="أدخل بريدك أو رقمك" 
+                    value="<?= htmlspecialchars($_POST['login-input'] ?? '') ?>"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label for="login-password">كلمة المرور</label>
+                <input 
+                    type="password" 
+                    id="login-password"
+                    name="login-password" 
+                    placeholder="••••••••"
+                    required>
+            </div>
+
+            <button type="submit" class="submit-btn">🔓 دخول الآن</button>
+        </form>
+
+        <div class="divider">────────────────</div>
+
+        <div class="signup-link">
+            ليس لديك حساب؟ 
+            <a href="signup.php">إنشاء حساب جديد</a>
+        </div>
+
+        <div class="back-home">
+            <a href="landing.html">← العودة للصفحة الرئيسية</a>
+        </div>
+
+        <p style="text-align: center; color: var(--neutral-400); font-size: 0.75rem; margin-top: var(--spacing-xl);">
+            © 2024-2026 Flix. جميع الحقوق محفوظة 🇪🇬
+        </p>
+    </div>
+</body>
+</html>
     </div>
 </body>
 </html>

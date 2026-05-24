@@ -10,8 +10,8 @@ if (!isset($_SESSION['user_id'])) {
 $workerId = (string) $_SESSION['user_id'];
 
 // Get worker data
-$stmt = $conn->prepare("SELECT * FROM workers WHERE id::text = :id");
-$stmt->bindParam(':id', $workerId, PDO::PARAM_STR);
+$stmt = $conn->prepare("SELECT * FROM workers WHERE id = :id");
+$stmt->bindParam(':id', $workerId, PDO::PARAM_INT);
 $stmt->execute();
 $worker = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $updateStmt = $conn->prepare("
         UPDATE workers
         SET email = :email, phone = :phone, location = :location, city = :city, updated_at = NOW()
-        WHERE id::text = :id
+        WHERE id = :id
     ");
     $updateStmt->bindParam(':email', $email);
     $updateStmt->bindParam(':phone', $phone);
@@ -50,13 +50,13 @@ $statsStmt = $conn->prepare("
     SELECT
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_services,
         COUNT(CASE WHEN status = 'accepted' THEN 1 END) as active_services,
-        COALESCE(SUM(CASE WHEN status = 'completed' THEN budget END), 0) as total_earnings,
+        COALESCE(SUM(CASE WHEN status = 'completed' THEN checking_fee END), 0) as total_earnings,
         AVG(CASE WHEN status = 'completed' THEN rw.rating END) as avg_rating
     FROM service_requests sr
     LEFT JOIN reviews_worker rw ON rw.request_id = sr.id
-    WHERE sr.worker_id::text = :worker_id
+    WHERE sr.worker_id = :worker_id
 ");
-$statsStmt->bindParam(':worker_id', $workerId);
+$statsStmt->bindParam(':worker_id', $workerId, PDO::PARAM_INT);
 $statsStmt->execute();
 $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
 
@@ -66,11 +66,11 @@ $reviewsStmt = $conn->prepare("
     FROM reviews_worker rw
     LEFT JOIN service_requests sr ON sr.id = rw.request_id
     LEFT JOIN users u ON u.id = sr.user_id
-    WHERE rw.worker_id::text = :worker_id
+    WHERE rw.worker_id = :worker_id
     ORDER BY rw.created_at DESC
     LIMIT 5
 ");
-$reviewsStmt->bindParam(':worker_id', $workerId);
+$reviewsStmt->bindParam(':worker_id', $workerId, PDO::PARAM_INT);
 $reviewsStmt->execute();
 $recentReviews = $reviewsStmt->fetchAll(PDO::FETCH_ASSOC);
 ?>

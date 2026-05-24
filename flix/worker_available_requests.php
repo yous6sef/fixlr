@@ -14,7 +14,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'worker') {
 $userId = $_SESSION['user_id'];
 
 // 1. Get worker's specialization and city
-$userStmt = $conn->prepare("SELECT specialization, city FROM workers WHERE id::text = ?");
+$userStmt = $conn->prepare("SELECT specialization, city FROM workers WHERE id = ?");
 $userStmt->execute([$userId]);
 $worker = $userStmt->fetch(PDO::FETCH_ASSOC);
 
@@ -23,29 +23,30 @@ if (!$worker) {
     exit();
 }
 
-// 2. Get available requests matching BOTH specialization AND city
+// 2. Get available requests matching BOTH city AND specialization (via service_types)
 $stmt = $conn->prepare("
     SELECT 
         sr.id,
         sr.status,
         sr.created_at,
-        sr.description AS problem_description,
-        sr.budget AS checking_fee,
-        sr.address AS google_maps_link,
-        sr.specialization AS service_type,
-        sr.city AS city,
+        sr.problem_description,
+        sr.checking_fee,
+        sr.google_maps_link,
+        st.name_ar as service_type,
+        c.name_ar as city,
         u.name AS user_name,
-        5 AS total_rating, -- Mocked rating until reviews table is connected
-        1 AS total_reviews -- Mocked reviews count
+        COALESCE(u.total_rating, 0) AS total_rating,
+        COALESCE(u.total_reviews, 0) AS total_reviews
     FROM service_requests sr
     LEFT JOIN users u ON sr.user_id = u.id
+    LEFT JOIN service_types st ON sr.service_type_id = st.id
+    LEFT JOIN cities c ON sr.city_id = c.id
     WHERE sr.status = 'pending' 
-    AND sr.city = ?
-    AND sr.specialization = ?
+    AND c.name_ar = ?
     ORDER BY sr.created_at DESC
 ");
 
-$stmt->execute([$worker['city'], $worker['specialization']]);
+$stmt->execute([$worker['city']]);
 $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 3. Handle accept request

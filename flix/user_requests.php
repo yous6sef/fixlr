@@ -25,13 +25,12 @@ $stmt = $conn->prepare("
         st.name_ar as service_type,
         c.name_ar as city,
         d.name_ar as device,
-        u_worker.name as worker_name,
-        u_worker.total_rating
+        w.name as worker_name
     FROM service_requests sr
     JOIN service_types st ON sr.service_type_id = st.id
     JOIN cities c ON sr.city_id = c.id
     LEFT JOIN devices d ON sr.device_id = d.id
-    LEFT JOIN users u_worker ON sr.worker_id = u_worker.id
+    LEFT JOIN workers w ON sr.worker_id = w.id
     WHERE sr.user_id = ?
     ORDER BY sr.created_at DESC
 ");

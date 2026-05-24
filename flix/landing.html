@@ -3,38 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flix - منصة الخدمات المنزلية</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Flix - منصة الخدمات المنزلية المتقدمة</title>
     
-    <link rel="stylesheet" href="/css/design-tokens.css">
-    <link rel="stylesheet" href="/css/typography.css">
+    <link rel="stylesheet" href="/css/premium-ui.css">
     <link rel="stylesheet" href="/css/animations-enhanced.css">
-    <link rel="stylesheet" href="/css/components.css">
-    <link rel="stylesheet" href="/css/responsive-utilities.css">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Cairo', 'Inter', sans-serif; 
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            line-height: 1.6;
+        html[dir="rtl"] body {
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
-        .hero-gradient {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            padding: var(--spacing-3xl) var(--spacing-lg);
         }
-        .card-glow {
-            box-shadow: 0 10px 30px rgba(5, 150, 105, 0.1);
-            transition: all 0.3s ease;
+        
+        .hero-section h1 {
+            color: white;
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            line-height: 1.2;
+            margin-bottom: var(--spacing-lg);
         }
-        .card-glow:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(5, 150, 105, 0.2);
+        
+        .hero-section p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.125rem;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .booking-card {
+            background: white;
+            border-radius: var(--radius-2xl);
+            padding: var(--spacing-xl);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .service-badge {
+            padding: var(--spacing-md);
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--neutral-200);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .service-badge:hover {
+            border-color: var(--primary);
+            background-color: var(--neutral-50);
+        }
+        
+        .service-badge.active {
+            border-color: var(--primary);
+            background-color: rgba(14, 165, 233, 0.1);
+        }
+        
+        .section-title {
+            font-size: clamp(1.75rem, 5vw, 2.5rem);
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: var(--spacing-3xl);
+            color: var(--neutral-900);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-xl);
+            margin-bottom: var(--spacing-3xl);
+        }
+        
+        .step-badge {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 900;
+            margin: 0 auto var(--spacing-lg);
         }
     </style>
 </head>
@@ -49,125 +103,130 @@
             const [loading, setLoading] = React.useState(false);
 
             const services = [
-                { id: 'plumbing', name: 'سباكة', icon: '🚰', desc: 'إصلاحات السباكة' },
-                { id: 'electrical', name: 'كهرباء', icon: '⚡', desc: 'أعمال كهربائية' },
-                { id: 'cleaning', name: 'تنظيف', icon: '🧹', desc: 'تنظيف منازل' },
-                { id: 'carpentry', name: 'نجارة', icon: '🔨', desc: 'أعمال نجارة' },
-                { id: 'painting', name: 'دهان', icon: '🎨', desc: 'الدهان والتجديد' },
-                { id: 'moving', name: 'نقل', icon: '📦', desc: 'خدمات النقل' },
+                { id: 'plumbing', name: 'سباكة', icon: '🚰', desc: 'إصلاحات السباكة الاحترافية' },
+                { id: 'electrical', name: 'كهرباء', icon: '⚡', desc: 'أعمال كهربائية متقدمة' },
+                { id: 'cleaning', name: 'تنظيف', icon: '🧹', desc: 'تنظيف منازل شامل' },
+                { id: 'carpentry', name: 'نجارة', icon: '🔨', desc: 'أعمال النجارة المختلفة' },
+                { id: 'painting', name: 'دهان', icon: '🎨', desc: 'الدهان والتجديد الحديث' },
+                { id: 'moving', name: 'نقل', icon: '📦', desc: 'خدمات النقل الموثوقة' },
             ];
 
             const handleBook = () => {
                 if (selected && location.trim()) {
                     setLoading(true);
                     setTimeout(() => {
-                        alert(`تم الطلب:\nالخدمة: ${services.find(s => s.id === selected)?.name}\nالموقع: ${location}`);
-                        setLoading(false);
-                        setSelected('');
-                        setLocation('');
-                    }, 2000);
+                        const serviceName = services.find(s => s.id === selected)?.name;
+                        window.location.href = `login.php?service=${selected}&location=${encodeURIComponent(location)}`;
+                    }, 1000);
                 }
             };
 
-            // Notice the single parent <div> wrapping the entire return statement
             return (
-                <div className="min-h-screen flex flex-col">
+                <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
                     
                     {/* Navigation */}
-                    <nav className="bg-white shadow-sm py-4 px-4 sticky top-0 z-50">
-                        <div className="max-w-6xl mx-auto flex justify-between items-center">
-                            <h1 className="text-3xl font-black text-green-600">Flix</h1>
+                    <nav style={{ 
+                        background: 'white', 
+                        boxShadow: 'var(--shadow-sm)',
+                        padding: 'var(--spacing-md) var(--spacing-lg)',
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 50
+                    }}>
+                        <div style={{ 
+                            maxWidth: '1400px', 
+                            margin: '0 auto', 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center' 
+                        }}>
+                            <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary)' }}>Flix</h1>
                             
                             {/* Desktop Menu */}
-                            <div className="hidden md:flex gap-6 items-center">
-                                <a href="#services" className="hover:text-green-600 transition">الخدمات</a>
-                                <a href="#how" className="hover:text-green-600 transition">كيف يعمل</a>
-                                <a href="#tech" className="hover:text-green-600 transition">للفنيين</a>
-                                
-                                <a href="login.php" className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition inline-block">
-                                    تسجيل الدخول
-                                </a>
+                            <div style={{ display: 'flex', gap: 'var(--spacing-lg)', alignItems: 'center' }}>
+                                <a href="#services" style={{ color: 'inherit', textDecoration: 'none' }}>الخدمات</a>
+                                <a href="#how" style={{ color: 'inherit', textDecoration: 'none' }}>كيف يعمل</a>
+                                <a href="#tech" style={{ color: 'inherit', textDecoration: 'none' }}>للفنيين</a>
+                                <a href="login.php" className="btn btn-primary" style={{ display: 'inline-flex' }}>تسجيل الدخول</a>
                             </div>
 
-                            {/* Mobile Menu Toggle Button */}
-                            <button className="md:hidden text-2xl" onClick={() => setMenuOpen(!menuOpen)}>
+                            {/* Mobile Menu */}
+                            <button style={{ fontSize: '1.5rem', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setMenuOpen(!menuOpen)}>
                                 {menuOpen ? '✖' : '☰'}
                             </button>
                         </div>
                         
-                        {/* Mobile Menu Dropdown */}
                         {menuOpen && (
-                            <div className="md:hidden bg-white border-t mt-4 p-4 space-y-3">
-                                <a href="#services" className="block hover:text-green-600">الخدمات</a>
-                                <a href="#how" className="block hover:text-green-600">كيف يعمل</a>
-                                <a href="#tech" className="block hover:text-green-600">للفنيين</a>
-                                <a href="login.php" className="block text-center w-full px-4 py-2 bg-green-600 text-white rounded-lg">تسجيل الدخول</a>
+                            <div style={{ borderTop: '1px solid var(--neutral-200)', marginTop: 'var(--spacing-lg)', paddingTop: 'var(--spacing-md)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+                                <a href="#services" style={{ color: 'inherit', textDecoration: 'none' }}>الخدمات</a>
+                                <a href="#how" style={{ color: 'inherit', textDecoration: 'none' }}>كيف يعمل</a>
+                                <a href="#tech" style={{ color: 'inherit', textDecoration: 'none' }}>للفنيين</a>
+                                <a href="login.php" className="btn btn-primary">تسجيل الدخول</a>
                             </div>
                         )}
                     </nav>
 
                     {/* Hero Section */}
-                    <section className="hero-gradient text-white py-20 px-4">
-                        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 items-center">
+                    <section className="hero-section" style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--spacing-3xl)', alignItems: 'center' }}>
                             <div>
-                                <h2 className="text-5xl md:text-6xl font-bold mb-4 leading-tight">
-                                    فني في دقائق
-                                </h2>
-                                <p className="text-xl text-green-100 mb-6">
-                                    احصل على أفضل فني محترف في منطقتك وحل مشكلتك فورًا
-                                </p>
-                                <div className="flex gap-4 mb-8">
-                                    <div className="flex items-center gap-2">✅ فنيين موثوقين</div>
-                                    <div className="flex items-center gap-2">⏱️ وصول سريع</div>
+                                <h2 className="hero-section">فني محترف في دقائق</h2>
+                                <p className="hero-section">احصل على أفضل فني في منطقتك وحل مشكلتك فورًا بضمان الجودة والسرعة</p>
+                                <div style={{ display: 'flex', gap: 'var(--spacing-lg)' }}>
+                                    <div>✅ فنيين موثوقين معتمدين</div>
+                                    <div>⏱️ وصول سريع جدًا</div>
                                 </div>
                             </div>
 
                             {/* Booking Form */}
-                            <div className="bg-white rounded-3xl p-8 text-right text-gray-900 card-glow">
-                                <h3 className="text-2xl font-bold mb-6">احجز الآن</h3>
+                            <div className="booking-card">
+                                <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 'var(--spacing-lg)', textAlign: 'center' }}>احجز الخدمة الآن</h3>
                                 
                                 {/* Service Selection */}
-                                <div className="mb-6">
-                                    <label className="block font-bold mb-3">اختر الخدمة</label>
-                                    <div className="grid grid-cols-2 gap-3">
+                                <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+                                    <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-md)', color: 'var(--neutral-700)' }}>اختر الخدمة المطلوبة</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--spacing-md)' }}>
                                         {services.map(s => (
-                                            <button
+                                            <div
                                                 key={s.id}
+                                                className={`service-badge ${selected === s.id ? 'active' : ''}`}
                                                 onClick={() => setSelected(s.id)}
-                                                className={`p-4 rounded-lg border-2 transition ${
-                                                    selected === s.id 
-                                                        ? 'border-green-600 bg-green-50' 
-                                                        : 'border-gray-200 hover:border-green-300'
-                                                }`}
                                             >
-                                                <div className="text-2xl mb-2">{s.icon}</div>
-                                                <div className="font-bold text-sm">{s.name}</div>
-                                            </button>
+                                                <div style={{ fontSize: '2rem', marginBottom: 'var(--spacing-sm)' }}>{s.icon}</div>
+                                                <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{s.name}</div>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
 
                                 {/* Location Input */}
-                                <div className="mb-6">
-                                    <label className="block font-bold mb-3">موقعك</label>
-                                    <div className="flex gap-2">
+                                <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+                                    <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-md)', color: 'var(--neutral-700)' }}>موقعك الحالي</label>
+                                    <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
                                         <input
                                             type="text"
                                             value={location}
                                             onChange={(e) => setLocation(e.target.value)}
-                                            placeholder="أدخل عنوانك"
-                                            className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 outline-none"
+                                            placeholder="أدخل عنوانك الكامل"
+                                            style={{ 
+                                                flex: 1, 
+                                                padding: 'var(--spacing-md)', 
+                                                border: '2px solid var(--neutral-200)', 
+                                                borderRadius: 'var(--radius-lg)',
+                                                fontSize: '1rem',
+                                                fontFamily: 'inherit'
+                                            }}
                                         />
-                                        <button className="px-4 py-3 bg-gray-100 rounded-lg text-xl hover:bg-gray-200">📍</button>
+                                        <button style={{ padding: 'var(--spacing-md)', background: 'var(--neutral-100)', borderRadius: 'var(--radius-lg)', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>📍</button>
                                     </div>
                                 </div>
 
-                                {/* Info */}
+                                {/* Info Box */}
                                 {selected && location && (
-                                    <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span>7 فنيين متاحين الآن ⚡</span>
-                                            <span>15-20 دقيقة</span>
+                                    <div style={{ marginBottom: 'var(--spacing-lg)', padding: 'var(--spacing-md)', background: 'rgba(16, 185, 129, 0.1)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--success)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.875rem' }}>
+                                            <span>👨‍🔧 5-8 فنيين متاحين الآن</span>
+                                            <span>⏱️ 15-25 دقيقة</span>
                                         </div>
                                     </div>
                                 )}
@@ -176,31 +235,32 @@
                                 <button
                                     onClick={handleBook}
                                     disabled={!selected || !location || loading}
-                                    className={`w-full py-4 rounded-lg font-bold text-lg transition ${
-                                        selected && location && !loading
-                                            ? 'bg-green-600 text-white hover:bg-green-700'
-                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    }`}
+                                    className={`btn ${selected && location && !loading ? 'btn-primary' : ''}`}
+                                    style={{ 
+                                        width: '100%',
+                                        opacity: selected && location && !loading ? 1 : 0.5,
+                                        cursor: selected && location && !loading ? 'pointer' : 'not-allowed'
+                                    }}
                                 >
-                                    {loading ? '🔄 جاري البحث...' : '⚡ اطلب الآن'}
+                                    {loading ? '🔄 جاري البحث...' : '⚡ اطلب الخدمة الآن'}
                                 </button>
                             </div>
                         </div>
                     </section>
 
                     {/* Services Section */}
-                    <section id="services" className="py-20 px-4 bg-white">
-                        <div className="max-w-6xl mx-auto">
-                            <h2 className="text-4xl font-bold text-center mb-12">الخدمات المتوفرة</h2>
-                            <div className="grid md:grid-cols-3 gap-8">
+                    <section id="services" style={{ padding: 'var(--spacing-3xl) var(--spacing-lg)', background: 'white' }}>
+                        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+                            <h2 className="section-title">الخدمات المتوفرة</h2>
+                            <div className="feature-grid">
                                 {services.map(service => (
-                                    <div key={service.id} className="card-glow p-6 bg-gray-50 rounded-2xl">
-                                        <div className="text-5xl mb-4">{service.icon}</div>
-                                        <h3 className="text-2xl font-bold mb-2">{service.name}</h3>
-                                        <p className="text-gray-600 mb-4">{service.desc}</p>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-sm">⭐ 4.8</span>
-                                            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-bold">متاح</span>
+                                    <div key={service.id} className="card">
+                                        <div style={{ fontSize: '3.5rem', marginBottom: 'var(--spacing-md)' }}>{service.icon}</div>
+                                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 'var(--spacing-sm)' }}>{service.name}</h3>
+                                        <p style={{ marginBottom: 'var(--spacing-md)', color: 'var(--neutral-600)' }}>{service.desc}</p>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '0.875rem' }}>⭐ 4.8/5</span>
+                                            <span style={{ padding: 'var(--spacing-xs) var(--spacing-md)', background: 'var(--success)', color: 'white', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: 600 }}>متاح</span>
                                         </div>
                                     </div>
                                 ))}
@@ -209,92 +269,92 @@
                     </section>
 
                     {/* How It Works */}
-                    <section id="how" className="py-20 px-4 bg-gray-50">
-                        <div className="max-w-6xl mx-auto">
-                            <h2 className="text-4xl font-bold text-center mb-12">كيف يعمل؟</h2>
-                            <div className="grid md:grid-cols-3 gap-8">
-                                <div className="text-center">
-                                    <div className="w-16 h-16 bg-green-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">1</div>
-                                    <h3 className="text-xl font-bold mb-2">اطلب الخدمة</h3>
-                                    <p className="text-gray-600">اختر نوع الخدمة وحدد موقعك</p>
+                    <section id="how" style={{ padding: 'var(--spacing-3xl) var(--spacing-lg)', background: 'var(--neutral-50)' }}>
+                        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+                            <h2 className="section-title">كيف يعمل النظام؟</h2>
+                            <div className="feature-grid">
+                                <div style={{ textAlign: 'center' }}>
+                                    <div className="step-badge">1</div>
+                                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>اطلب الخدمة</h3>
+                                    <p style={{ color: 'var(--neutral-600)' }}>اختر نوع الخدمة وحدد موقعك على الخريطة</p>
                                 </div>
-                                <div className="text-center">
-                                    <div className="w-16 h-16 bg-green-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">2</div>
-                                    <h3 className="text-xl font-bold mb-2">اختر الفني</h3>
-                                    <p className="text-gray-600">شوف الفنيين وأسعارهم</p>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div className="step-badge">2</div>
+                                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>اختر الفني</h3>
+                                    <p style={{ color: 'var(--neutral-600)' }}>شاهد الفنيين المتاحين والتقييمات والأسعار</p>
                                 </div>
-                                <div className="text-center">
-                                    <div className="w-16 h-16 bg-green-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">3</div>
-                                    <h3 className="text-xl font-bold mb-2">تمتع بالخدمة</h3>
-                                    <p className="text-gray-600">الفني يوصل ويبدأ الشغل</p>
+                                <div style={{ textAlign: 'center' }}>
+                                    <div className="step-badge">3</div>
+                                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>استمتع بالخدمة</h3>
+                                    <p style={{ color: 'var(--neutral-600)' }}>الفني يصل وينفذ الشغل باحترافية</p>
                                 </div>
                             </div>
                         </div>
                     </section>
 
                     {/* For Technicians */}
-                    <section id="tech" className="py-20 px-4 hero-gradient text-white">
-                        <div className="max-w-6xl mx-auto text-center">
-                            <h2 className="text-4xl font-bold mb-6">هل أنت فني محترف؟</h2>
-                            <p className="text-xl mb-8 text-green-100">انضم لفليكس وكسب دخل إضافي</p>
-                            <div className="grid md:grid-cols-3 gap-8 mb-10">
+                    <section id="tech" className="hero-section">
+                        <div style={{ maxWidth: '1400px', margin: '0 auto', textAlign: 'center' }}>
+                            <h2 className="hero-section" style={{ color: 'white', marginBottom: 'var(--spacing-lg)' }}>هل أنت فني محترف؟</h2>
+                            <p style={{ fontSize: '1.25rem', marginBottom: 'var(--spacing-xl)', color: 'rgba(255,255,255,0.9)' }}>انضم لفليكس وحقق دخل إضافي مستقر</p>
+                            <div className="feature-grid">
                                 <div>
-                                    <div className="text-4xl mb-3">💰</div>
-                                    <h3 className="font-bold mb-2">دخل مرن</h3>
-                                    <p className="text-green-100">اشتغل وقت ما تبي</p>
+                                    <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-md)' }}>💰</div>
+                                    <h3 style={{ color: 'white', marginBottom: 'var(--spacing-sm)' }}>دخل مرن</h3>
+                                    <p style={{ color: 'rgba(255,255,255,0.9)' }}>اشتغل بالوقت اللي تختاره</p>
                                 </div>
                                 <div>
-                                    <div className="text-4xl mb-3">👥</div>
-                                    <h3 className="font-bold mb-2">عملاء كتير</h3>
-                                    <p className="text-green-100">وصول لآلاف العملاء</p>
+                                    <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-md)' }}>👥</div>
+                                    <h3 style={{ color: 'white', marginBottom: 'var(--spacing-sm)' }}>عملاء كثيرون</h3>
+                                    <p style={{ color: 'rgba(255,255,255,0.9)' }}>وصول لآلاف العملاء</p>
                                 </div>
                                 <div>
-                                    <div className="text-4xl mb-3">🛡️</div>
-                                    <h3 className="font-bold mb-2">دعم كامل</h3>
-                                    <p className="text-green-100">دعم فني 24/7</p>
+                                    <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-md)' }}>🛡️</div>
+                                    <h3 style={{ color: 'white', marginBottom: 'var(--spacing-sm)' }}>دعم كامل</h3>
+                                    <p style={{ color: 'rgba(255,255,255,0.9)' }}>دعم فني 24/7</p>
                                 </div>
                             </div>
-                            <button className="px-8 py-4 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-100">
-                                سجل كفني الآن 👷
+                            <button className="btn" style={{ background: 'white', color: 'var(--primary)', fontWeight: 700, marginTop: 'var(--spacing-xl)' }}>
+                                👷 سجل كفني الآن
                             </button>
                         </div>
                     </section>
 
                     {/* Footer */}
-                    <footer className="bg-gray-900 text-white py-12 px-4">
-                        <div className="max-w-6xl mx-auto">
-                            <div className="grid md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-gray-700">
+                    <footer style={{ background: 'var(--neutral-900)', color: 'white', padding: 'var(--spacing-3xl) var(--spacing-lg)' }}>
+                        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--spacing-xl)', marginBottom: 'var(--spacing-xl)', paddingBottom: 'var(--spacing-xl)', borderBottom: '1px solid var(--neutral-700)' }}>
                                 <div>
-                                    <h3 className="text-xl font-bold text-green-400 mb-4">Flix</h3>
-                                    <p className="text-gray-400 text-sm">منصة ربط الفنيين بالعملاء</p>
+                                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 'var(--spacing-md)', color: 'var(--primary)' }}>Flix</h3>
+                                    <p style={{ color: 'var(--neutral-400)', fontSize: '0.875rem' }}>منصة ربط الفنيين الموثوقين بالعملاء</p>
                                 </div>
                                 <div>
-                                    <h4 className="font-bold mb-3">الخدمات</h4>
-                                    <ul className="space-y-2 text-gray-400 text-sm">
-                                        <li><a href="#services" className="hover:text-white">الخدمات</a></li>
-                                        <li><a href="#how" className="hover:text-white">كيف يعمل</a></li>
-                                        <li><a href="#tech" className="hover:text-white">للفنيين</a></li>
+                                    <h4 style={{ fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>الخدمات</h4>
+                                    <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)', color: 'var(--neutral-400)', fontSize: '0.875rem' }}>
+                                        <li><a href="#services" style={{ color: 'inherit', textDecoration: 'none' }}>الخدمات الكاملة</a></li>
+                                        <li><a href="#how" style={{ color: 'inherit', textDecoration: 'none' }}>كيف يعمل</a></li>
+                                        <li><a href="#tech" style={{ color: 'inherit', textDecoration: 'none' }}>للفنيين</a></li>
                                     </ul>
                                 </div>
                                 <div>
-                                    <h4 className="font-bold mb-3">الشركة</h4>
-                                    <ul className="space-y-2 text-gray-400 text-sm">
-                                        <li><a href="#" className="hover:text-white">من نحن</a></li>
-                                        <li><a href="#" className="hover:text-white">الشروط</a></li>
-                                        <li><a href="#" className="hover:text-white">الخصوصية</a></li>
+                                    <h4 style={{ fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>الشركة</h4>
+                                    <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)', color: 'var(--neutral-400)', fontSize: '0.875rem' }}>
+                                        <li><a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>من نحن</a></li>
+                                        <li><a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>الشروط والأحكام</a></li>
+                                        <li><a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>الخصوصية</a></li>
                                     </ul>
                                 </div>
                                 <div>
-                                    <h4 className="font-bold mb-3">التواصل</h4>
-                                    <ul className="space-y-2 text-gray-400 text-sm">
-                                        <li><a href="#" className="hover:text-white">الدعم</a></li>
-                                        <li><a href="#" className="hover:text-white">الأسئلة الشائعة</a></li>
-                                        <li><a href="#" className="hover:text-white">تواصل معنا</a></li>
+                                    <h4 style={{ fontWeight: 700, marginBottom: 'var(--spacing-md)' }}>التواصل</h4>
+                                    <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)', color: 'var(--neutral-400)', fontSize: '0.875rem' }}>
+                                        <li><a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>الدعم الفني</a></li>
+                                        <li><a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>الأسئلة الشائعة</a></li>
+                                        <li><a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>تواصل معنا</a></li>
                                     </ul>
                                 </div>
                             </div>
-                            <div className="text-center text-sm text-gray-400">
-                                <p>© 2024 Flix. جميع الحقوق محفوظة 🇪🇬</p>
+                            <div style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--neutral-400)' }}>
+                                <p>© 2024-2026 Flix. جميع الحقوق محفوظة 🇪🇬 | منصة الخدمات المنزلية الموثوقة</p>
                             </div>
                         </div>
                     </footer>
@@ -308,13 +368,9 @@
             if (container) {
                 const root = ReactDOM.createRoot(container);
                 root.render(<App />);
-                console.log('✅ Landing page rendered successfully');
             }
         } catch (error) {
-            console.error('❌ Render error:', error);
-            if (document.getElementById('root')) {
-                document.getElementById('root').innerHTML = `<div style="padding: 40px; text-align: center; color: red; font-size: 18px;">⚠️ Error: ${error.message}</div>`;
-            }
+            console.error('Render error:', error);
         }
     </script>
 </body>
