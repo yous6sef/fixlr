@@ -1,0 +1,166 @@
+<?php
+// Worker Requests - Browse Available Requests
+include 'lang.php';
+include 'db.php';
+
+if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'worker') {
+    header('Location: login-new.php?lang=' . $lang);
+    exit;
+}
+
+// Simulate available requests
+$requests = [
+    [
+        'id' => 1,
+        'service_name' => 'Plumbing',
+        'problem_description' => 'Water leak from the kitchen tap...',
+        'location' => 'Giza',
+        'checking_fee' => 300,
+        'fixing_price' => 500,
+        'total_price' => 800,
+        'user_name' => 'محمد علي',
+        'user_phone' => '+201012345678',
+        'posted_time' => '2 hours ago'
+    ],
+    [
+        'id' => 2,
+        'service_name' => 'Electrical',
+        'problem_description' => 'Lights not working in bedroom...',
+        'location' => 'Cairo',
+        'checking_fee' => 300,
+        'fixing_price' => 400,
+        'total_price' => 700,
+        'user_name' => 'فاطمة أحمد',
+        'user_phone' => '+201098765432',
+        'posted_time' => '30 minutes ago'
+    ],
+];
+?>
+<!DOCTYPE html>
+<html lang="<?php echo $lang; ?>" dir="<?php echo $dir; ?>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo t('available_requests'); ?> - FLIX</title>
+    <link rel="stylesheet" href="css/premium-ui.css">
+    <style>
+        body { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0; color: #111827; }
+        .stats { display: flex; gap: 20px; }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 2rem; font-weight: 700; color: #0ea5e9; }
+        .stat-label { font-size: 0.9rem; color: #6b7280; }
+        .requests-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+        .request-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s; }
+        .request-card:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0,0,0,0.15); }
+        .card-header { background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); color: white; padding: 15px; }
+        .card-header h3 { margin: 0 0 5px 0; font-size: 1.1rem; }
+        .card-header p { margin: 0; opacity: 0.9; font-size: 0.9rem; }
+        .card-body { padding: 15px; }
+        .service-name { font-weight: 700; color: #111827; margin-bottom: 10px; }
+        .description { color: #6b7280; font-size: 0.9rem; margin-bottom: 10px; line-height: 1.4; }
+        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #6b7280; font-size: 0.85rem; }
+        .info-value { font-weight: 600; color: #111827; }
+        .price-section { background: rgba(34, 197, 94, 0.05); padding: 12px; border-radius: 6px; margin: 15px 0; }
+        .price-item { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 5px 0; }
+        .total-price { font-weight: 700; font-size: 1.1rem; color: #22c55e; }
+        .card-footer { display: flex; gap: 10px; padding: 15px; border-top: 1px solid #e5e7eb; }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-accept { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; }
+        .btn-accept:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3); }
+        .btn-reject { background: #f3f4f6; color: #111827; border: 1px solid #e5e7eb; }
+        .btn-reject:hover { background: #e5e7eb; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #6b7280; }
+        .empty-state h2 { color: #111827; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><?php echo t('available_requests'); ?></h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label"><?php echo t('active_tasks'); ?></div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">2,400</div>
+                    <div class="stat-label"><?php echo t('total_earned'); ?></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="requests-grid">
+            <?php if (count($requests) > 0): ?>
+                <?php foreach ($requests as $req): ?>
+                <div class="request-card">
+                    <div class="card-header">
+                        <h3><?php echo $req['service_name']; ?></h3>
+                        <p><?php echo $req['posted_time']; ?></p>
+                    </div>
+                    <div class="card-body">
+                        <div class="service-name"><?php echo $req['location']; ?></div>
+                        <div class="description"><?php echo $req['problem_description']; ?></div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">👤 Customer</span>
+                            <span class="info-value"><?php echo $req['user_name']; ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">📱 Phone</span>
+                            <span class="info-value"><?php echo $req['user_phone']; ?></span>
+                        </div>
+                        
+                        <div class="price-section">
+                            <div class="price-item">
+                                <span><?php echo t('checking_fee'); ?>:</span>
+                                <span><?php echo $req['checking_fee']; ?> EGP</span>
+                            </div>
+                            <div class="price-item">
+                                <span><?php echo t('fixing_fee'); ?>:</span>
+                                <span><?php echo $req['fixing_price']; ?> EGP</span>
+                            </div>
+                            <div class="price-item total-price">
+                                <span><?php echo t('total'); ?>:</span>
+                                <span><?php echo $req['total_price']; ?> EGP</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-accept" onclick="acceptRequest(<?php echo $req['id']; ?>)">
+                            ✓ <?php echo t('accept'); ?>
+                        </button>
+                        <button class="btn btn-reject" onclick="rejectRequest(<?php echo $req['id']; ?>)">
+                            ✗ <?php echo t('reject'); ?>
+                        </button>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="empty-state">
+                    <h2><?php echo t('no_requests'); ?></h2>
+                    <p><?php echo t('check_back_later'); ?></p>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+    
+    <script>
+        function acceptRequest(requestId) {
+            alert('Request #' + requestId + ' accepted!\nYou can now start working on it.');
+            location.reload();
+        }
+        
+        function rejectRequest(requestId) {
+            if (confirm('Are you sure you want to reject this request?')) {
+                alert('Request #' + requestId + ' rejected.');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

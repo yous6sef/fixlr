@@ -1,0 +1,142 @@
+<?php
+// Payment Page
+include 'lang.php';
+include 'db.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login-new.php?lang=' . $lang);
+    exit;
+}
+
+$request_id = $_GET['request_id'] ?? 1;
+
+// Simulate payment data
+$request = [
+    'id' => $request_id,
+    'service_name' => 'Plumbing',
+    'checking_fee' => 300,
+    'fixing_price' => 500,
+    'total_price' => 800,
+    'worker_name' => 'Ahmed Mohamed'
+];
+
+$transaction_id = 'TRX-' . time() . '-' . rand(1000, 9999);
+?>
+<!DOCTYPE html>
+<html lang="<?php echo $lang; ?>" dir="<?php echo $dir; ?>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo t('payment'); ?> - FLIX</title>
+    <link rel="stylesheet" href="css/premium-ui.css">
+    <style>
+        body { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card { background: white; padding: 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h2 { margin-top: 0; color: #111827; border-bottom: 2px solid #0ea5e9; padding-bottom: 15px; }
+        .payment-options { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+        .payment-option { display: flex; align-items: center; gap: 15px; padding: 15px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .payment-option input[type="radio"] { width: 20px; height: 20px; cursor: pointer; }
+        .payment-option:has(input:checked) { border-color: #0ea5e9; background: rgba(14, 165, 233, 0.05); }
+        .payment-label { flex: 1; }
+        .payment-title { font-weight: 600; color: #111827; margin-bottom: 5px; }
+        .payment-desc { font-size: 0.9rem; color: #6b7280; }
+        .cost-summary { background: rgba(14, 165, 233, 0.05); padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .cost-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(14, 165, 233, 0.2); }
+        .cost-item.total { font-weight: 700; font-size: 1.2rem; color: #0ea5e9; padding-top: 15px; border-top: 2px solid rgba(14, 165, 233, 0.3); border-bottom: none; }
+        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; font-size: 1rem; cursor: pointer; }
+        .btn-primary { background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(14, 165, 233, 0.3); }
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .alert-success { background: #dcfce7; color: #15803d; border-left: 4px solid #22c55e; }
+        .back-link { text-align: center; margin-top: 20px; }
+        .back-link a { color: #0ea5e9; text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2><?php echo t('select_payment_amount'); ?></h2>
+            <div class="payment-options">
+                <label class="payment-option">
+                    <input type="radio" name="payment_type" value="checking_fee" checked>
+                    <div class="payment-label">
+                        <div class="payment-title"><?php echo t('checking_fee_only'); ?></div>
+                        <div class="payment-desc">300 EGP</div>
+                    </div>
+                </label>
+                <label class="payment-option">
+                    <input type="radio" name="payment_type" value="total">
+                    <div class="payment-label">
+                        <div class="payment-title"><?php echo t('total_payment'); ?></div>
+                        <div class="payment-desc">Checking + Fixing (<?php echo $request['total_price']; ?> EGP)</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2><?php echo t('payment_method'); ?></h2>
+            <div class="payment-options">
+                <label class="payment-option">
+                    <input type="radio" name="method" value="card" checked>
+                    <div class="payment-label">
+                        <div class="payment-title">🏦 <?php echo t('credit_card'); ?></div>
+                        <div class="payment-desc">Visa, Mastercard</div>
+                    </div>
+                </label>
+                <label class="payment-option">
+                    <input type="radio" name="method" value="wallet">
+                    <div class="payment-label">
+                        <div class="payment-title">💳 <?php echo t('wallet'); ?></div>
+                        <div class="payment-desc">Digital Wallet</div>
+                    </div>
+                </label>
+                <label class="payment-option">
+                    <input type="radio" name="method" value="transfer">
+                    <div class="payment-label">
+                        <div class="payment-title">🏧 <?php echo t('bank_transfer'); ?></div>
+                        <div class="payment-desc">Bank Transfer</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2><?php echo t('cost_summary'); ?></h2>
+            <div class="cost-summary">
+                <div class="cost-item">
+                    <span><?php echo t('checking_fee'); ?>:</span>
+                    <span><?php echo $request['checking_fee']; ?> EGP</span>
+                </div>
+                <div class="cost-item">
+                    <span><?php echo t('fixing_fee'); ?>:</span>
+                    <span><?php echo $request['fixing_price']; ?> EGP</span>
+                </div>
+                <div class="cost-item total">
+                    <span><?php echo t('total'); ?>:</span>
+                    <span><?php echo $request['total_price']; ?> EGP</span>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" onclick="processPayment(<?php echo $request_id; ?>)">
+                <?php echo t('proceed_payment'); ?>
+            </button>
+        </div>
+        
+        <div class="back-link">
+            <a href="track-new.php?request_id=<?php echo $request_id; ?>&lang=<?php echo $lang; ?>"><?php echo t('back_to_tracking'); ?></a>
+        </div>
+    </div>
+    
+    <script>
+        function processPayment(requestId) {
+            const amount = document.querySelector('input[name="payment_type"]:checked').value;
+            const method = document.querySelector('input[name="method"]:checked').value;
+            
+            alert('Payment processed! Transaction ID: TRX-<?php echo substr(time(), -8); ?>\nRedirecting to receipt...');
+            window.location.href = 'receipt-new.php?request_id=' + requestId + '&lang=<?php echo $lang; ?>';
+        }
+    </script>
+</body>
+</html>

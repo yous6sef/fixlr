@@ -2,56 +2,175 @@
 /**
  * Database Connection Handler
  * Supports PostgreSQL (production) and SQLite (local development)
+ * Also includes demo mode for testing without database
  */
 
-$databaseUrl = getenv('DATABASE_URL');
+// Demo mode flag - set to true to use mock data
+$DEMO_MODE = true;
 
-try {
-    if ($databaseUrl) {
-        // Production: Use PostgreSQL via DATABASE_URL
-        $dbopts = parse_url($databaseUrl);
+// Mock data for demo testing
+$DEMO_USERS = [
+    [
+        'id' => 1,
+        'name' => 'Test User',
+        'email' => 'user@test.com',
+        'phone' => '+201001234567',
+        'password_hash' => '$2y$10$It1pFHiEr56asrkQFnDz5uh1imY34ryX2HiMtJULWfw40k/mKm1xK',
+        'city' => 'Cairo',
+        'user_type' => 'user',
+        'account_status' => 'active',
+        'total_rating' => 0,
+        'total_reviews' => 0
+    ],
+    [
+        'id' => 999,
+        'name' => 'Admin User',
+        'email' => 'admin@test.com',
+        'phone' => '+201005555555',
+        'password_hash' => '$2y$10$oCUyMJD6un/W9w4jsyGCq.GE9j9EPIbJGtRDZxgYl.X0BqKYqhg2O',
+        'city' => 'Cairo',
+        'user_type' => 'admin',
+        'account_status' => 'active',
+        'total_rating' => 0,
+        'total_reviews' => 0
+    ]
+];
+
+$DEMO_WORKERS = [
+    [
+        'id' => 2,
+        'name' => 'Test Worker',
+        'email' => 'worker@test.com',
+        'phone' => '+201009876543',
+        'password_hash' => '$2y$10$6rFmgC3gbg5YDLvUn7U5aOIF7AwlQlAauIB7BvKTk/8wonrE0/sdO',
+        'city' => 'Cairo',
+        'specialization' => 'Plumbing',
+        'approved' => 'yes',
+        'status' => 'active',
+        'total_rating' => 4.5,
+        'total_reviews' => 127
+    ]
+];
+
+// If demo mode is enabled, create mock functions or override real ones
+if ($DEMO_MODE) {
+    // Create wrapper function that always uses demo data when in DEMO_MODE
+    function _demo_pg_query_params($connection, $query, $params = []) {
+        global $DEMO_USERS, $DEMO_WORKERS;
         
-        $host = $dbopts["host"] ?? 'localhost';
-        $port = $dbopts["port"] ?? 5432;
-        $user = $dbopts["user"] ?? 'postgres';
-        $pass = $dbopts["pass"] ?? '';
-        $dbname = ltrim($dbopts["path"] ?? '/flix', '/');
-        
-        $dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode=require";
-        
-        $conn = new PDO($dsn, $user, $pass, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        ]);
-        
-        $conn->exec("SET NAMES 'utf8'");
-        
-    } else {
-        // Development: Use SQLite as fallback
-        $dbPath = __DIR__ . '/flix.db';
-        $dsn = "sqlite:{$dbPath}";
-        
-        $conn = new PDO($dsn, null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        ]);
-        
-        $conn->exec("PRAGMA foreign_keys = ON");
-        $conn->exec("PRAGMA journal_mode = WAL");
-        
-        // Auto-initialize SQLite schema if tables don't exist
-        $checkTable = $conn->query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
-        if (!$checkTable->fetch()) {
-            initializeSqliteSchema($conn);
+        // Simple mock query handler for common queries
+        if (strpos($query, 'SELECT * FROM users WHERE') !== false) {
+            foreach ($DEMO_USERS as $user) {
+                // Check email or phone match
+                if (isset($params[0]) && ($user['email'] === $params[0] || $user['phone'] === $params[0])) {
+                    return (object)['result' => [$user], 'count' => 1];
+                }
+            }
+            return (object)['result' => [], 'count' => 0];
         }
         
-        error_log("✅ SQLite database ready at: {$dbPath}");
+        if (strpos($query, 'SELECT * FROM workers WHERE') !== false) {
+            foreach ($DEMO_WORKERS as $worker) {
+                if (isset($params[0]) && ($worker['email'] === $params[0] || $worker['phone'] === $params[0])) {
+                    return (object)['result' => [$worker], 'count' => 1];
+                }
+            }
+            return (object)['result' => [], 'count' => 0];
+        }
+        
+        // Default: return empty result
+        return (object)['result' => [], 'count' => 0];
     }
     
-} catch (PDOException $e) {
-    die("❌ Database Connection Error: " . $e->getMessage());
+    function _demo_pg_num_rows($result) {
+        return isset($result->count) ? $result->count : 0;
+    }
+    
+    function _demo_pg_fetch_assoc($result) {
+        if (!isset($result->result) || empty($result->result)) {
+            return false;
+        }
+        return array_shift($result->result);
+    }
+    
+    // Create a fake $db connection for compatibility
+    $db = (object)['connected' => true];
+    
+    // Also define the standard PostgreSQL function names if they don't exist
+    if (!function_exists('pg_query_params')) {
+        function pg_query_params($connection, $query, $params = []) {
+            return _demo_pg_query_params($connection, $query, $params);
+        }
+    }
+    
+    if (!function_exists('pg_num_rows')) {
+        function pg_num_rows($result) {
+            return _demo_pg_num_rows($result);
+        }
+    }
+    
+    if (!function_exists('pg_fetch_assoc')) {
+        function pg_fetch_assoc($result) {
+            return _demo_pg_fetch_assoc($result);
+        }
+    }
+    
+    if (!function_exists('pg_last_oid')) {
+        function pg_last_oid($result) {
+            return 1;
+        }
+    }
+} else {
+    // Production: Attempt real database connection
+    $databaseUrl = getenv('DATABASE_URL');
+
+    try {
+        if ($databaseUrl) {
+            // Production: Use PostgreSQL via DATABASE_URL
+            $dbopts = parse_url($databaseUrl);
+            
+            $host = $dbopts["host"] ?? 'localhost';
+            $port = $dbopts["port"] ?? 5432;
+            $user = $dbopts["user"] ?? 'postgres';
+            $pass = $dbopts["pass"] ?? '';
+            $dbname = ltrim($dbopts["path"] ?? '/flix', '/');
+            
+            $dsn = "pgsql:host={$host};port={$port};dbname={$dbname};sslmode=require";
+            
+            $conn = new PDO($dsn, $user, $pass, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ]);
+            
+            $conn->exec("SET NAMES 'utf8'");
+            
+        } else {
+            // Development: Use SQLite as fallback
+            $dbPath = __DIR__ . '/flix.db';
+            $dsn = "sqlite:{$dbPath}";
+            
+            $conn = new PDO($dsn, null, null, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ]);
+            
+            $conn->exec("PRAGMA foreign_keys = ON");
+            $conn->exec("PRAGMA journal_mode = WAL");
+            
+            // Auto-initialize SQLite schema if tables don't exist
+            $checkTable = $conn->query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
+            if (!$checkTable->fetch()) {
+                initializeSqliteSchema($conn);
+            }
+            
+            error_log("✅ SQLite database ready at: {$dbPath}");
+        }
+        
+    } catch (PDOException $e) {
+        die("❌ Database Connection Error: " . $e->getMessage());
+    }
 }
 
 /**

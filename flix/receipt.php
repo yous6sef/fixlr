@@ -1,93 +1,59 @@
 <?php
 session_start();
-require_once __DIR__ . '/db.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit();
-}
-
-$userId = (string) $_SESSION['user_id'];
-$receiptStmt = $conn->prepare("SELECT sr.*, w.name AS worker_name, w.phone AS worker_phone FROM service_requests sr LEFT JOIN workers w ON w.id::text = sr.worker_id::text WHERE sr.us_id::text = :id AND sr.status = 'completed' ORDER BY sr.updated_at DESC LIMIT 1");
-$receiptStmt->bindParam(':id', $userId, PDO::PARAM_STR);
-$receiptStmt->execute();
-$receipt = $receiptStmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$receipt) {
-    header('Location: order.php');
-    exit();
-}
+if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit(); }
+include('lang.php');
+$lang = $_GET['lang'] ?? 'en';
+$request_id = $_GET['id'] ?? 1;
 ?>
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فليكس | إيصال الخدمة</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'IBM Plex Sans Arabic', sans-serif; background: #f8fafc; color: #1e293b; }</style>
+    <title><?php echo $lang === 'ar' ? 'الإيصال' : 'Receipt'; ?> - FLIX</title>
+    <link rel="stylesheet" href="css/app.css">
 </head>
-<body class="min-h-screen py-8">
-    <div class="max-w-4xl mx-auto px-4">
-        <div class="rounded-[2rem] bg-white p-8 shadow-2xl border border-slate-200">
-            <header class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                <div>
-                    <p class="text-sm text-slate-500">فليكس</p>
-                    <h1 class="text-3xl font-black text-slate-900">إيصال الخدمة المكتملة</h1>
-                </div>
-                <div class="text-right">
-                    <p class="text-sm text-slate-500">تاريخ الإتمام</p>
-                    <p class="text-xl font-bold text-slate-900"><?= htmlspecialchars(date('Y-m-d H:i', strtotime($receipt['updated_at']))) ?></p>
-                </div>
-            </header>
+<body>
+    <div class="page-container">
+        <div class="lang-switcher">
+            <a href="?lang=en&id=<?php echo $request_id; ?>" class="<?php echo $lang === 'en' ? 'active' : ''; ?>">English</a>
+            <a href="?lang=ar&id=<?php echo $request_id; ?>" class="<?php echo $lang === 'ar' ? 'active' : ''; ?>">العربية</a>
+        </div>
 
-            <div class="grid gap-6 lg:grid-cols-2">
-                <div class="space-y-4">
-                    <div class="rounded-3xl bg-slate-50 p-5 border border-slate-200">
-                        <p class="text-sm text-slate-500">نوع الخدمة</p>
-                        <p class="mt-3 text-xl font-bold text-slate-900"><?= htmlspecialchars($receipt['specialization']) ?></p>
-                    </div>
-                    <div class="rounded-3xl bg-slate-50 p-5 border border-slate-200">
-                        <p class="text-sm text-slate-500">الوصف</p>
-                        <p class="mt-3 text-lg font-semibold text-slate-700"><?= htmlspecialchars($receipt['description']) ?></p>
-                    </div>
-                    <div class="rounded-3xl bg-slate-50 p-5 border border-slate-200">
-                        <p class="text-sm text-slate-500">العنوان</p>
-                        <p class="mt-3 text-lg font-semibold text-slate-700"><?= htmlspecialchars($receipt['address']) ?> - <?= htmlspecialchars($receipt['city']) ?></p>
-                    </div>
-                </div>
+        <div class="card">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: #1A6B4A; margin-bottom: 0.5rem;">FLIX</h2>
+                <p style="color: #8A9389; font-size: 0.875rem;"><?php echo $lang === 'ar' ? 'إيصال الخدمة' : 'Service Receipt'; ?></p>
+            </div>
 
-                <div class="space-y-4">
-                    <div class="rounded-3xl bg-emerald-50 p-5 border border-emerald-200 text-emerald-800">
-                        <p class="text-sm font-semibold">الحالة النهائية</p>
-                        <p class="mt-3 text-2xl font-black"><?= htmlspecialchars($receipt['status']) ?></p>
-                    </div>
-                    <div class="rounded-3xl bg-slate-50 p-5 border border-slate-200">
-                        <p class="text-sm text-slate-500">الفني</p>
-                        <p class="mt-3 text-lg font-semibold text-slate-700"><?= htmlspecialchars($receipt['worker_name'] ?? 'غير محدد') ?></p>
-                        <p class="text-sm text-slate-500 mt-1"><?= htmlspecialchars($receipt['worker_phone'] ?? 'لا يوجد رقم') ?></p>
-                    </div>
-                    <div class="rounded-3xl bg-slate-50 p-5 border border-slate-200">
-                        <p class="text-sm text-slate-500">المبلغ المدفوع</p>
-                        <p class="mt-3 text-3xl font-black text-rose-600"><?= htmlspecialchars($receipt['worker_price'] ?: $receipt['budget']) ?> EGP</p>
-                    </div>
+            <div style="background: #F7F8F6; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                    <span style="color: #8A9389;"><?php echo $lang === 'ar' ? 'معرف الطلب' : 'Request ID'; ?>:</span>
+                    <span style="color: #141714; font-weight: 600;">#<?php echo $request_id; ?></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                    <span style="color: #8A9389;"><?php echo $lang === 'ar' ? 'التاريخ' : 'Date'; ?>:</span>
+                    <span style="color: #141714; font-weight: 600;">2024-01-15</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #8A9389;"><?php echo $lang === 'ar' ? 'الحالة' : 'Status'; ?>:</span>
+                    <span class="badge badge-success"><?php echo $lang === 'ar' ? 'مكتمل' : 'Completed'; ?></span>
                 </div>
             </div>
 
-            <div class="mt-8 rounded-[2rem] bg-slate-100 p-6 border border-slate-200">
-                <h2 class="text-lg font-black text-slate-900 mb-4">ملخص الخدمة</h2>
-                <ul class="space-y-3 text-slate-700 text-sm">
-                    <li><strong>اسم العميل:</strong> <?= htmlspecialchars($_SESSION['user_name'] ?? 'عميل فليكس') ?></li>
-                    <li><strong>سعر الطلب الأصلي:</strong> <?= htmlspecialchars($receipt['budget']) ?> EGP</li>
-                    <li><strong>العمولة المستحقة:</strong> <?= htmlspecialchars($receipt['commission_amount'] ?? '0') ?> EGP</li>
-                    <li><strong>حالة الدفع:</strong> <?= htmlspecialchars($receipt['payment_status'] ?? 'غير معروف') ?></li>
-                </ul>
+            <h3 style="color: #141714; margin-bottom: 1rem;"><?php echo $lang === 'ar' ? 'التفاصيل' : 'Details'; ?></h3>
+            <div style="margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #E5E4E1;">
+                    <span style="color: #4A5249;"><?php echo $lang === 'ar' ? 'أنابيب - إصلاح تسرب' : 'Plumbing - Leak Fix'; ?></span>
+                    <span style="color: #141714; font-weight: 600;">800 EGP</span>
+                </div>
             </div>
 
-            <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <a href="order.php" class="inline-flex justify-center rounded-3xl bg-emerald-500 px-6 py-3 text-white font-semibold shadow-lg shadow-emerald-200/50 hover:bg-emerald-600 transition">طلب خدمة جديدة</a>
-                <a href="logout.php" class="inline-flex justify-center rounded-3xl border border-slate-300 px-6 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition">تسجيل الخروج</a>
+            <div style="background: #E8F5EE; padding: 1rem; border-radius: 8px; border: 1px solid #D4E8E0;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #1A6B4A; font-weight: 600;"><?php echo $lang === 'ar' ? 'الإجمالي' : 'Total'; ?>:</span>
+                    <span style="color: #1A6B4A; font-size: 1.25rem; font-weight: 700;">800 EGP</span>
+                </div>
             </div>
         </div>
     </div>
