@@ -12,18 +12,66 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
     exit;
 }
 
-// Get admin name
-$adminQuery = "SELECT fullName FROM users WHERE id = $1";
-$adminResult = pg_query_params($POSTGRES_CONN, $adminQuery, [$_SESSION['user_id']]);
-$admin = pg_fetch_assoc($adminResult);
+// Get admin name (use null for demo mode wrapper functions)
+$connection = null;
+
+// In demo mode, use mock data
+$DEMO_MODE = true;
+if ($DEMO_MODE) {
+    $admin = ['fullName' => 'Admin User'];
+    $stats = [
+        'total_users' => 234,
+        'total_workers' => 87,
+        'pending_workers' => 45,
+        'approved_workers' => 42,
+        'completed_tasks' => 156,
+        'total_revenue' => 45600,
+        'pending_remittance' => 8200
+    ];
+    
+    $pendingWorkers = [
+        [
+            'id' => 1,
+            'fullName' => 'Ahmed Hassan',
+            'email' => 'ahmed@test.com',
+            'idCardNumber' => '12345678901234',
+            'specializations' => '["Plumbing","Electrical"]',
+            'idCardFrontUrl' => 'https://res.cloudinary.com/demo/image/upload/v1/sample.jpg',
+            'idCardBackUrl' => 'https://res.cloudinary.com/demo/image/upload/v1/sample2.jpg',
+            'criminalRecordUrl' => 'https://res.cloudinary.com/demo/image/upload/v1/sample3.jpg'
+        ],
+        [
+            'id' => 2,
+            'fullName' => 'Fatima Mohamed',
+            'email' => 'fatima@test.com',
+            'idCardNumber' => '12345678901235',
+            'specializations' => '["Carpentry"]',
+            'idCardFrontUrl' => 'https://res.cloudinary.com/demo/image/upload/v1/sample4.jpg',
+            'idCardBackUrl' => 'https://res.cloudinary.com/demo/image/upload/v1/sample5.jpg',
+            'criminalRecordUrl' => 'https://res.cloudinary.com/demo/image/upload/v1/sample6.jpg'
+        ]
+    ];
+    
+    $pendingPayments = [
+        ['id' => 1, 'fullName' => 'Hassan Ali', 'amount' => 2500, 'transactionId' => 'TXN001', 'status' => 'PENDING', 'receiptImageUrl' => 'https://res.cloudinary.com/demo/image/upload/v1/receipt1.jpg', 'createdAt' => '2026-05-20 14:30:00'],
+        ['id' => 2, 'fullName' => 'Amira Khan', 'email' => 'amira@test.com', 'amount' => 1800, 'transactionId' => 'TXN002', 'status' => 'PENDING', 'receiptImageUrl' => 'https://res.cloudinary.com/demo/image/upload/v1/receipt2.jpg', 'createdAt' => '2026-05-19 10:15:00'],
+    ];
+} else {
+    $adminQuery = "SELECT fullName FROM users WHERE id = $1";
+    $adminResult = pg_query_params($connection, $adminQuery, [$_SESSION['user_id']]);
+    $admin = pg_fetch_assoc($adminResult);
+}
 
 // Handle approval/rejection
 $message = '';
 $messageType = '';
 
-if ($_POST['action'] === 'approve_worker') {
+if (isset($_POST['action'])) {
+    $action = $_POST['action'];
+    
+    if ($action === 'approve_worker') {
     $workerId = $_POST['workerId'];
-    $result = pg_query_params($POSTGRES_CONN,
+    $result = pg_query_params($connection,
         "UPDATE workers SET status = 'APPROVED', approvedAt = NOW() WHERE id = $1",
         [$workerId]
     );
@@ -35,7 +83,7 @@ if ($_POST['action'] === 'approve_worker') {
 elseif ($_POST['action'] === 'reject_worker') {
     $workerId = $_POST['workerId'];
     $reason = $_POST['rejectionReason'] ?? '';
-    $result = pg_query_params($POSTGRES_CONN,
+    $result = pg_query_params($connection,
         "UPDATE workers SET status = 'REJECTED', rejectedAt = NOW(), rejectionReason = $1 WHERE id = $2",
         [$reason, $workerId]
     );
@@ -46,7 +94,7 @@ elseif ($_POST['action'] === 'reject_worker') {
 }
 elseif ($_POST['action'] === 'verify_payment') {
     $paymentId = $_POST['paymentId'];
-    $result = pg_query_params($POSTGRES_CONN,
+    $result = pg_query_params($connection,
         "UPDATE payments SET status = 'VERIFIED', verifiedAt = NOW(), verifiedByAdminId = $1 WHERE id = $2",
         [$_SESSION['user_id'], $paymentId]
     );
@@ -58,7 +106,7 @@ elseif ($_POST['action'] === 'verify_payment') {
 elseif ($_POST['action'] === 'reject_payment') {
     $paymentId = $_POST['paymentId'];
     $reason = $_POST['rejectionReason'] ?? '';
-    $result = pg_query_params($POSTGRES_CONN,
+    $result = pg_query_params($connection,
         "UPDATE payments SET status = 'REJECTED', rejectionReason = $1 WHERE id = $2",
         [$reason, $paymentId]
     );
@@ -66,47 +114,50 @@ elseif ($_POST['action'] === 'reject_payment') {
         $message = $lang === 'ar' ? 'تم رفض الدفع' : 'Payment rejected';
         $messageType = 'success';
     }
+    }
 }
 
-// Get system statistics
-$statsQuery = "SELECT 
-    (SELECT COUNT(*) FROM users WHERE userType = 'user') as total_users,
-    (SELECT COUNT(*) FROM users WHERE userType = 'worker') as total_workers,
-    (SELECT COUNT(*) FROM workers WHERE status = 'PENDING_APPROVAL') as pending_workers,
-    (SELECT COUNT(*) FROM workers WHERE status = 'APPROVED') as approved_workers,
-    (SELECT COUNT(*) FROM tasks WHERE currentStatus = 'COMPLETED') as completed_tasks,
-    (SELECT SUM(totalPrice) FROM tasks WHERE currentStatus = 'COMPLETED') as total_revenue,
-    (SELECT SUM(pendingRemittance) FROM workers) as pending_remittance";
+// Get system statistics (already set in demo mode above)
+if (!$DEMO_MODE) {
+    $statsQuery = "SELECT 
+        (SELECT COUNT(*) FROM users WHERE userType = 'user') as total_users,
+        (SELECT COUNT(*) FROM users WHERE userType = 'worker') as total_workers,
+        (SELECT COUNT(*) FROM workers WHERE status = 'PENDING_APPROVAL') as pending_workers,
+        (SELECT COUNT(*) FROM workers WHERE status = 'APPROVED') as approved_workers,
+        (SELECT COUNT(*) FROM tasks WHERE currentStatus = 'COMPLETED') as completed_tasks,
+        (SELECT SUM(totalPrice) FROM tasks WHERE currentStatus = 'COMPLETED') as total_revenue,
+        (SELECT SUM(pendingRemittance) FROM workers) as pending_remittance";
 
-$statsResult = pg_query($POSTGRES_CONN, $statsQuery);
-$stats = pg_fetch_assoc($statsResult);
+    $statsResult = pg_query($connection, $statsQuery);
+    $stats = pg_fetch_assoc($statsResult);
 
-// Get pending workers
-$pendingWorkersQuery = "SELECT w.id, w.userId, w.idCardNumber, w.idCardFrontUrl, w.idCardBackUrl, 
-                             w.criminalRecordUrl, w.resumeUrl, w.specializations, 
-                             w.residentialLocation, w.workLocation, w.createdAt,
-                             u.fullName, u.email, u.phoneNumber
-                      FROM workers w
-                      JOIN users u ON w.userId = u.id
-                      WHERE w.status = 'PENDING_APPROVAL'
-                      ORDER BY w.createdAt DESC
-                      LIMIT 50";
+    // Get pending workers
+    $pendingWorkersQuery = "SELECT w.id, w.userId, w.idCardNumber, w.idCardFrontUrl, w.idCardBackUrl, 
+                                 w.criminalRecordUrl, w.resumeUrl, w.specializations, 
+                                 w.residentialLocation, w.workLocation, w.createdAt,
+                                 u.fullName, u.email, u.phoneNumber
+                          FROM workers w
+                          JOIN users u ON w.userId = u.id
+                          WHERE w.status = 'PENDING_APPROVAL'
+                          ORDER BY w.createdAt DESC
+                          LIMIT 50";
 
-$pendingWorkersResult = pg_query($POSTGRES_CONN, $pendingWorkersQuery);
-$pendingWorkers = pg_fetch_all($pendingWorkersResult);
+    $pendingWorkersResult = pg_query($connection, $pendingWorkersQuery);
+    $pendingWorkers = pg_fetch_all($pendingWorkersResult);
 
-// Get pending payments
-$pendingPaymentsQuery = "SELECT p.id, p.workerId, p.amount, p.transactionId, p.receiptImageUrl, 
-                               p.status, p.createdAt, u.fullName
-                        FROM payments p
-                        JOIN workers w ON p.workerId = w.id
-                        JOIN users u ON w.userId = u.id
-                        WHERE p.status = 'PENDING'
-                        ORDER BY p.createdAt DESC
-                        LIMIT 50";
+    // Get pending payments
+    $pendingPaymentsQuery = "SELECT p.id, p.workerId, p.amount, p.transactionId, p.receiptImageUrl, 
+                                   p.status, p.createdAt, u.fullName
+                            FROM payments p
+                            JOIN workers w ON p.workerId = w.id
+                            JOIN users u ON w.userId = u.id
+                            WHERE p.status = 'PENDING'
+                            ORDER BY p.createdAt DESC
+                            LIMIT 50";
 
-$pendingPaymentsResult = pg_query($POSTGRES_CONN, $pendingPaymentsQuery);
-$pendingPayments = pg_fetch_all($pendingPaymentsResult);
+    $pendingPaymentsResult = pg_query($connection, $pendingPaymentsQuery);
+    $pendingPayments = pg_fetch_all($pendingPaymentsResult);
+}
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">

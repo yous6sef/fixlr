@@ -13,9 +13,20 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') {
 }
 
 // Get user information
-$userQuery = "SELECT fullName, city FROM users WHERE id = $1";
-$userResult = pg_query_params($POSTGRES_CONN, $userQuery, [$_SESSION['user_id']]);
-$user = pg_fetch_assoc($userResult);
+$DEMO_MODE = true;
+$connection = null;
+
+if ($DEMO_MODE) {
+    // Use mock user data
+    $user = [
+        'fullName' => 'Ahmed Hassan',
+        'city' => 'Cairo'
+    ];
+} else {
+    $userQuery = "SELECT fullName, city FROM users WHERE id = $1";
+    $userResult = pg_query_params($connection, $userQuery, [$_SESSION['user_id']]);
+    $user = pg_fetch_assoc($userResult);
+}
 
 $errors = [];
 $success = false;
@@ -42,23 +53,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Create task if no errors
     if (empty($errors)) {
         try {
-            $taskQuery = "INSERT INTO tasks (userId, city, specialization, description, currentStatus, urgency, address)
-                         VALUES ($1, $2, $3, $4, 'REQUESTED', $5, $6)
-                         RETURNING id";
-
-            $taskResult = pg_query_params($POSTGRES_CONN, $taskQuery, [
-                $_SESSION['user_id'],
-                $user['city'],
-                $specialization,
-                $description,
-                $urgency,
-                $address
-            ]);
-
-            if ($taskResult) {
-                $taskRow = pg_fetch_assoc($taskResult);
-                $taskId = $taskRow['id'];
+            if ($DEMO_MODE) {
+                // In demo mode, create a mock task
+                $taskId = rand(1000, 9999);
                 $success = true;
+            } else {
+                $taskQuery = "INSERT INTO tasks (userId, city, specialization, description, currentStatus, urgency, address)
+                             VALUES ($1, $2, $3, $4, 'REQUESTED', $5, $6)
+                             RETURNING id";
+
+                $taskResult = pg_query_params($connection, $taskQuery, [
+                    $_SESSION['user_id'],
+                    $user['city'],
+                    $specialization,
+                    $description,
+                    $urgency,
+                    $address
+                ]);
+
+                if ($taskResult) {
+                    $taskRow = pg_fetch_assoc($taskResult);
+                    $taskId = $taskRow['id'];
+                    $success = true;
+                }
             }
         } catch (Exception $e) {
             $errors[] = $lang === 'ar' ? 'خطأ في إنشاء الطلب' : 'Error creating request: ' . $e->getMessage();
