@@ -13,7 +13,17 @@ RUN apk add --no-cache \
 RUN docker-php-ext-install pdo pdo_sqlite
 
 # Create PHP-FPM config for production
-RUN echo '[www]\nuser = nobody\ngroup = nobody\nlisten = 127.0.0.1:9000\npm.max_children = 20\npm.start_servers = 5\npm.min_spare_servers = 3\npm.max_spare_servers = 10' > /usr/local/etc/php-fpm.d/www.conf
+RUN cat > /usr/local/etc/php-fpm.d/www.conf << 'EOF'
+[www]
+user = nobody
+group = nobody
+listen = 127.0.0.1:9000
+pm = dynamic
+pm.max_children = 20
+pm.start_servers = 5
+pm.min_spare_servers = 3
+pm.max_spare_servers = 10
+EOF
 
 # Set working directory
 WORKDIR /var/www/html
