@@ -3,5 +3,5 @@ builder = "dockerfile"
 dockerfile = "Dockerfile"
 
 [deploy]
-startCommand = "apache2-foreground"
+startCommand = "supervisord -c /etc/supervisor/conf.d/services.conf"
 port = 8080
