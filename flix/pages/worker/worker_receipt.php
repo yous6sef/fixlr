@@ -1,9 +1,9 @@
 <?php
 session_start();
-require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/../../core/db.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../user/login.php');
     exit();
 }
 
@@ -25,7 +25,7 @@ $receiptStmt->execute();
 $receipt = $receiptStmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$receipt) {
-    header('Location: workermain.php');
+    header('Location: ./worker_dashboard.php');
     exit();
 }
 ?>
@@ -47,19 +47,19 @@ if (!$receipt) {
                     <h1 class="text-3xl font-black text-slate-900">إيصال الخدمة المكتملة</h1>
                 </div>
                 <div class="flex gap-3">
-                    <a href="worker_profile.php" class="inline-flex items-center justify-center rounded-3xl bg-slate-600 px-5 py-3 text-white font-semibold hover:bg-slate-700 transition">الملف الشخصي</a>
-                    <a href="worker_payments.php" class="inline-flex items-center justify-center rounded-3xl bg-emerald-500 px-5 py-3 text-white font-semibold hover:bg-emerald-600 transition">المدفوعات</a>
+                    <a href="./worker_profile.php" class="inline-flex items-center justify-center rounded-3xl bg-slate-600 px-5 py-3 text-white font-semibold hover:bg-slate-700 transition">الملف الشخصي</a>
+                    <a href="./worker_payments.php" class="inline-flex items-center justify-center rounded-3xl bg-emerald-500 px-5 py-3 text-white font-semibold hover:bg-emerald-600 transition">المدفوعات</a>
                 </div>
             </header>
 
             <!-- Navigation Tabs -->
             <div class="mb-6">
                 <nav class="flex space-x-1 bg-slate-100 p-1 rounded-2xl rtl:space-x-reverse">
-                    <a href="worker_orders.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">الطلبات</a>
-                    <a href="worker_track.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">تتبع الخدمة</a>
-                    <a href="worker_receipt.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl bg-white text-slate-900 shadow-sm">الإيصالات</a>
-                    <a href="worker_payments.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">المدفوعات</a>
-                    <a href="worker_profile.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">الملف الشخصي</a>
+                    <a href="./worker_orders.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">الطلبات</a>
+                    <a href="./worker_track.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">تتبع الخدمة</a>
+                    <a href="./worker_receipt.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl bg-white text-slate-900 shadow-sm">الإيصالات</a>
+                    <a href="./worker_payments.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">المدفوعات</a>
+                    <a href="./worker_profile.php" class="flex-1 text-center px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-white hover:text-slate-900 transition">الملف الشخصي</a>
                 </nav>
             </div>
 
@@ -113,11 +113,11 @@ if (!$receipt) {
 
             <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex gap-3">
-                    <a href="worker_orders.php" class="inline-flex justify-center rounded-3xl bg-emerald-500 px-6 py-3 text-white font-semibold shadow-lg shadow-emerald-200/50 hover:bg-emerald-600 transition">الطلبات</a>
-                    <a href="worker_profile.php" class="inline-flex justify-center rounded-3xl bg-blue-500 px-6 py-3 text-white font-semibold shadow-lg shadow-blue-200/50 hover:bg-blue-600 transition">الملف الشخصي</a>
-                    <a href="worker_payments.php" class="inline-flex justify-center rounded-3xl bg-green-500 px-6 py-3 text-white font-semibold shadow-lg shadow-green-200/50 hover:bg-green-600 transition">المدفوعات</a>
+                    <a href="./worker_orders.php" class="inline-flex justify-center rounded-3xl bg-emerald-500 px-6 py-3 text-white font-semibold shadow-lg shadow-emerald-200/50 hover:bg-emerald-600 transition">الطلبات</a>
+                    <a href="./worker_profile.php" class="inline-flex justify-center rounded-3xl bg-blue-500 px-6 py-3 text-white font-semibold shadow-lg shadow-blue-200/50 hover:bg-blue-600 transition">الملف الشخصي</a>
+                    <a href="./worker_payments.php" class="inline-flex justify-center rounded-3xl bg-green-500 px-6 py-3 text-white font-semibold shadow-lg shadow-green-200/50 hover:bg-green-600 transition">المدفوعات</a>
                 </div>
-                <a href="logout.php" class="inline-flex justify-center rounded-3xl border border-slate-300 px-6 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition">تسجيل الخروج</a>
+                <a href="../user/logout.php" class="inline-flex justify-center rounded-3xl border border-slate-300 px-6 py-3 text-slate-900 font-semibold hover:bg-slate-50 transition">تسجيل الخروج</a>
             </div>
         </div>
     </div>

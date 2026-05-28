@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('lang.php');
+include('../../core/lang.php');
 
 $lang = $_GET['lang'] ?? 'en';
 $dir = $lang === 'ar' ? 'rtl' : 'ltr';
@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['user_type'] = $user['type'];
         $_SESSION['lang'] = $lang;
         
-        $page = $user['type'] === 'admin' ? 'admin.php' : ($user['type'] === 'worker' ? 'worker_dashboard.php' : 'user_dashboard.php');
+        $page = $user['type'] === 'admin' ? '../admin/admin.php' : ($user['type'] === 'worker' ? '../worker/worker_dashboard.php' : './user_dashboard.php');
         header('Location: ' . $page . '?lang=' . $lang);
         exit();
     }
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $lang === 'ar' ? 'تسجيل الدخول' : 'Login'; ?> - FLIX</title>
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="../../public/css/app.css">
     <style>
         body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         .login-box { background: white; border-radius: 14px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); padding: 2rem; max-width: 400px; width: 100%; }
@@ -89,8 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="lang-btns">
-            <a href="login.php?lang=en" class="<?php echo $lang === 'en' ? 'active' : ''; ?>">English</a>
-            <a href="login.php?lang=ar" class="<?php echo $lang === 'ar' ? 'active' : ''; ?>">العربية</a>
+            <a href="./login.php?lang=en" class="<?php echo $lang === 'en' ? 'active' : ''; ?>">English</a>
+            <a href="./login.php?lang=ar" class="<?php echo $lang === 'ar' ? 'active' : ''; ?>">العربية</a>
         </div>
     </div>
 </body>

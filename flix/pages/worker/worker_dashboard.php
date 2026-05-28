@@ -1,7 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'worker') { header('Location: login.php'); exit(); }
-include('lang.php');
+if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'worker') { header('Location: ../user/login.php'); exit(); }
+include('../../core/lang.php');
 $lang = $_GET['lang'] ?? 'en';
 ?>
 <!DOCTYPE html>
@@ -10,13 +10,13 @@ $lang = $_GET['lang'] ?? 'en';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $lang === 'ar' ? 'لوحة التحكم' : 'Dashboard'; ?> - FLIX</title>
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 <body>
     <div class="page-container">
         <div class="lang-switcher">
-            <a href="worker_dashboard.php?lang=en" class="<?php echo $lang === 'en' ? 'active' : ''; ?>">English</a>
-            <a href="worker_dashboard.php?lang=ar" class="<?php echo $lang === 'ar' ? 'active' : ''; ?>">العربية</a>
+            <a href="./worker_dashboard.php?lang=en" class="<?php echo $lang === 'en' ? 'active' : ''; ?>">English</a>
+            <a href="./worker_dashboard.php?lang=ar" class="<?php echo $lang === 'ar' ? 'active' : ''; ?>">العربية</a>
         </div>
 
         <div class="page-header">
@@ -66,10 +66,10 @@ $lang = $_GET['lang'] ?? 'en';
 
         <div class="card">
             <h3><?php echo $lang === 'ar' ? 'الإجراءات' : 'Actions'; ?></h3>
-            <a href="worker_available_requests.php?lang=<?php echo $lang; ?>" class="btn btn-primary btn-block"><?php echo $lang === 'ar' ? 'عرض الفرص' : 'Browse Opportunities'; ?></a>
-            <a href="worker_orders.php?lang=<?php echo $lang; ?>" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'الطلبات المقبولة' : 'My Jobs'; ?></a>
-            <a href="worker_payments.php?lang=<?php echo $lang; ?>" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'الأرباح' : 'Earnings'; ?></a>
-            <a href="logout.php" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'تسجيل الخروج' : 'Sign Out'; ?></a>
+            <a href="./worker_available_requests.php?lang=<?php echo $lang; ?>" class="btn btn-primary btn-block"><?php echo $lang === 'ar' ? 'عرض الفرص' : 'Browse Opportunities'; ?></a>
+            <a href="./worker_orders.php?lang=<?php echo $lang; ?>" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'الطلبات المقبولة' : 'My Jobs'; ?></a>
+            <a href="./worker_payments.php?lang=<?php echo $lang; ?>" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'الأرباح' : 'Earnings'; ?></a>
+            <a href="../user/logout.php" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'تسجيل الخروج' : 'Sign Out'; ?></a>
         </div>
     </div>
 </body>

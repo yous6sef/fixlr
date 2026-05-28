@@ -1,7 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') { header('Location: login.php'); exit(); }
-include('lang.php');
+if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') { header('Location: pages/user/login.php'); exit(); }
+include('core/lang.php');
 $lang = $_GET['lang'] ?? 'en';
 ?>
 <!DOCTYPE html>
@@ -10,7 +10,7 @@ $lang = $_GET['lang'] ?? 'en';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $lang === 'ar' ? 'طلب جديد' : 'New Request'; ?> - FLIX</title>
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="public/css/app.css">
 </head>
 <body>
     <div class="page-container">
@@ -69,7 +69,7 @@ $lang = $_GET['lang'] ?? 'en';
                 </div>
 
                 <button type="submit" class="btn btn-primary"><?php echo $lang === 'ar' ? 'إنشاء الطلب' : 'Create Request'; ?></button>
-                <a href="user_dashboard.php?lang=<?php echo $lang; ?>" class="btn btn-secondary" style="text-align: center;"><?php echo $lang === 'ar' ? 'إلغاء' : 'Cancel'; ?></a>
+                <a href="pages/user/user_dashboard.php?lang=<?php echo $lang; ?>" class="btn btn-secondary" style="text-align: center;"><?php echo $lang === 'ar' ? 'إلغاء' : 'Cancel'; ?></a>
             </form>
         </div>
     </div>

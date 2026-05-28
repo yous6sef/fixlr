@@ -1,9 +1,10 @@
 <?php
 session_start();
-include('db.php');
+include('../../core/db.php');
+include('../../core/lang.php');
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../user/login.php');
     exit();
 }
 
@@ -13,7 +14,7 @@ $stmt->execute([$userId]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$user) {
-    header('Location: login.php');
+    header('Location: ../user/login.php');
     exit();
 }
 ?>
@@ -111,8 +112,8 @@ if (!$user) {
             <div class="header">
                 <h1>الملف الشخصي</h1>
                 <div>
-                    <a class="secondary" href="user_dashboard.php">العودة إلى اللوحة</a>
-                    <a href="logout.php">تسجيل الخروج</a>
+                    <a class="secondary" href="./user_dashboard.php">العودة إلى اللوحة</a>
+                    <a href="../user/logout.php">تسجيل الخروج</a>
                 </div>
             </div>
             <div class="profile-grid">

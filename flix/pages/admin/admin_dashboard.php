@@ -1,14 +1,14 @@
 <?php
 session_start();
-include('lang.php');
-include('db.php');
+include('../../core/lang.php');
+include('../../core/db.php');
 
 $lang = $_GET['lang'] ?? $_SESSION['lang'] ?? 'en';
 $_SESSION['lang'] = $lang;
 
 // Check if admin
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
-    header('Location: login.php?lang=' . $lang);
+    header('Location: ../user/login.php?lang=' . $lang);
     exit;
 }
 
@@ -165,7 +165,7 @@ if (!$DEMO_MODE) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $lang === 'ar' ? 'لوحة التحكم الإدارية' : 'Admin Dashboard'; ?> - FLIX</title>
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="../../public/css/app.css">
     <style>
         :root {
             --primary: #1A6B4A;
@@ -477,7 +477,7 @@ if (!$DEMO_MODE) {
                 <h1><?php echo $lang === 'ar' ? 'لوحة التحكم الإدارية' : 'Admin Dashboard'; ?></h1>
                 <p><?php echo $lang === 'ar' ? 'مرحبا ' . htmlspecialchars($admin['fullName']) : 'Welcome ' . htmlspecialchars($admin['fullName']); ?></p>
             </div>
-            <a href="logout.php?lang=<?php echo $lang; ?>" class="logout-btn">
+            <a href="../user/logout.php?lang=<?php echo $lang; ?>" class="logout-btn">
                 <?php echo $lang === 'ar' ? 'تسجيل الخروج' : 'Logout'; ?>
             </a>
         </div>

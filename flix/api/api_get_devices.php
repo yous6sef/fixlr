@@ -3,7 +3,7 @@
  * API: Get Devices by Service Type
  */
 session_start();
-include('db.php');
+include('../core/db.php');
 
 header('Content-Type: application/json');
 

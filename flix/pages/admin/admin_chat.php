@@ -1,15 +1,15 @@
-i <?php
+<?php
 session_start();
-require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/../../core/db.php';
 
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
-    header('Location: login.php');
+    header('Location: ../user/login.php');
     exit();
 }
 
 $requestId = isset($_GET['request_id']) && is_numeric($_GET['request_id']) ? (int)$_GET['request_id'] : null;
 if (!$requestId) {
-    header('Location: admin.php');
+    header('Location: ./admin.php');
     exit();
 }
 
@@ -19,7 +19,7 @@ $requestStmt->execute();
 $request = $requestStmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$request) {
-    header('Location: admin.php');
+    header('Location: ./admin.php');
     exit();
 }
 
@@ -45,7 +45,7 @@ $messages = $messagesStmt->fetchAll(PDO::FETCH_ASSOC);
                 <h1 class="text-3xl font-bold text-slate-900">دردشة الطلب #<?= htmlspecialchars($request['id']) ?></h1>
                 <p class="text-slate-500 mt-1">العميل: <?= htmlspecialchars($request['user_name']) ?> - الفني: <?= htmlspecialchars($request['worker_name'] ?: 'غير محدد') ?></p>
             </div>
-            <a href="admin.php" class="px-4 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition">العودة إلى لوحة الإدارة</a>
+            <a href="./admin.php" class="px-4 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition">العودة إلى لوحة الإدارة</a>
         </div>
     </header>
 

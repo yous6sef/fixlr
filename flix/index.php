@@ -1,6 +1,6 @@
 <?php
 session_start();
-include('lang.php');
+include('core/lang.php');
 $lang = $_GET['lang'] ?? $_SESSION['lang'] ?? 'en';
 $_SESSION['lang'] = $lang;
 ?>
@@ -10,7 +10,7 @@ $_SESSION['lang'] = $lang;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $lang === 'ar' ? 'فليكس - خدمات المنزل' : 'Flix - Home Services Marketplace'; ?></title>
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="public/css/app.css">
     <style>
         :root {
             --primary: #1A6B4A;
@@ -345,7 +345,7 @@ $_SESSION['lang'] = $lang;
         <header>
             <div class="logo">FLIX</div>
             <nav class="header-nav">
-                <a href="login.php?lang=<?php echo $lang; ?>">
+                <a href="pages/user/login.php?lang=<?php echo $lang; ?>">
                     <?php echo $lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'; ?>
                 </a>
                 <button class="lang-switch" onclick="toggleLanguage()">

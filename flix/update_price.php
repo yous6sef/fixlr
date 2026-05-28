@@ -1,10 +1,11 @@
 <?php
 session_start();
-include("db.php");
+include("core/db.php");
+include("core/config.php");
 
 // 1. Auth Check
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+    header("Location: pages/user/login.php");
     exit();
 }
 
@@ -46,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['price'])) {
         $ss->bindParam(':order_id', $order_id, PDO::PARAM_INT);
         
         if ($ss->execute() && $ss->rowCount() > 0) {
-            header("Location: workermain.php?success=1");
+            header("Location: pages/worker/worker_dashboard.php?success=1");
             exit();
         }
         $error = "تعذر تحديث السعر. ربما تم قبول الطلب أو لم يعد متاحًا.";
@@ -179,7 +180,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['price'])) {
             </div>
 
             <div class="flex justify-end space-x-3 space-x-reverse">
-                <a href="workermain.php"
+                <a href="pages/worker/worker_dashboard.php"
                 class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-xl hover:bg-gray-400 transition duration-300">
                     إلغاء
                 </a>

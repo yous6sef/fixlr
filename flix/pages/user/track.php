@@ -1,14 +1,14 @@
 <?php
 session_start();
-include('lang.php');
-include('db.php');
+include('../../core/lang.php');
+include('../../core/db.php');
 
 $lang = $_GET['lang'] ?? $_SESSION['lang'] ?? 'en';
 $_SESSION['lang'] = $lang;
 
 // Check authentication
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php?lang=' . $lang);
+    header('Location: ../user/login.php?lang=' . $lang);
     exit;
 }
 
@@ -207,7 +207,7 @@ if (!$DEMO_MODE) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $lang === 'ar' ? 'تتبع الطلب' : 'Track Request'; ?> - FLIX</title>
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="../../public/css/app.css">
     <style>
         :root {
             --primary: #1A6B4A;
@@ -714,7 +714,7 @@ if (!$DEMO_MODE) {
             <?php endif; ?>
 
             <div style="text-align: center; margin-top: 2rem;">
-                <a href="user_dashboard.php?lang=<?php echo $lang; ?>" style="color: #4A5249; text-decoration: none;">
+                <a href="./user_dashboard.php?lang=<?php echo $lang; ?>" style="color: #4A5249; text-decoration: none;">
                     ← <?php echo $lang === 'ar' ? 'العودة إلى لوحة التحكم' : 'Back to Dashboard'; ?>
                 </a>
             </div>

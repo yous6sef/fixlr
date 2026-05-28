@@ -8,8 +8,8 @@
 session_start();
 header('Content-Type: application/json');
 
-include('db.php');
-include('lang.php');
+include('../core/db.php');
+include('../core/lang.php');
 
 // ============ RESPONSE HELPER ============
 function apiResponse($success, $message, $data = null, $statusCode = 200) {

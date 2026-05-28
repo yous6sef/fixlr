@@ -17,7 +17,7 @@
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
-include("db.php");
+include("../core/db.php");
 
 // Authentication check
 if (!isset($_SESSION['user_id'])) {

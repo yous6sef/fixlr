@@ -1,7 +1,7 @@
 <?php
 session_start();
-include('lang.php');
-include('lib/CloudinaryUploadHandler.php');
+include('../../core/lang.php');
+include('../../lib/CloudinaryUploadHandler.php');
 
 $lang = $_GET['lang'] ?? $_SESSION['lang'] ?? 'en';
 $_SESSION['lang'] = $lang;
@@ -9,7 +9,7 @@ $type = $_GET['type'] ?? 'user'; // 'user' or 'worker'
 
 // Check if already logged in
 if (isset($_SESSION['user_id'])) {
-    header('Location: ' . ($type === 'worker' ? 'worker_dashboard.php' : 'user_dashboard.php') . '?lang=' . $lang);
+    header('Location: ' . ($type === 'worker' ? '../worker/worker_dashboard.php' : './user_dashboard.php') . '?lang=' . $lang);
     exit;
 }
 
@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $lang === 'ar' ? 'إنشاء حساب' : 'Sign Up'; ?> - FLIX</title>
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="../../public/css/app.css">
     <style>
         :root {
             --primary: #1A6B4A;

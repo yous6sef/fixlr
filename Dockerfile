@@ -140,4 +140,3 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
 
 # Start both services via supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/services.conf"]
-

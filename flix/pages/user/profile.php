@@ -1,7 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit(); }
-include('lang.php');
+if (!isset($_SESSION['user_id'])) { header('Location: ../user/login.php'); exit(); }
+include('../../core/lang.php');
 $lang = $_GET['lang'] ?? 'en';
 ?>
 <!DOCTYPE html>
@@ -10,7 +10,7 @@ $lang = $_GET['lang'] ?? 'en';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $lang === 'ar' ? 'الملف الشخصي' : 'Profile'; ?> - FLIX</title>
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 <body>
     <div class="page-container">
@@ -51,7 +51,7 @@ $lang = $_GET['lang'] ?? 'en';
                     <div style="color: #141714; font-weight: 600;">2024-01-01</div>
                 </div>
             </div>
-            <a href="logout.php" class="btn btn-secondary"><?php echo $lang === 'ar' ? 'تسجيل الخروج' : 'Sign Out'; ?></a>
+            <a href="./logout.php" class="btn btn-secondary"><?php echo $lang === 'ar' ? 'تسجيل الخروج' : 'Sign Out'; ?></a>
         </div>
     </div>
 </body>

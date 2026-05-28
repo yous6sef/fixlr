@@ -1,7 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit(); }
-include('lang.php');
+if (!isset($_SESSION['user_id'])) { header('Location: ../user/login.php'); exit(); }
+include('../../core/lang.php');
 $lang = $_GET['lang'] ?? 'en';
 $request_id = $_GET['id'] ?? 1;
 ?>
@@ -11,7 +11,7 @@ $request_id = $_GET['id'] ?? 1;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $lang === 'ar' ? 'الإيصال' : 'Receipt'; ?> - FLIX</title>
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 <body>
     <div class="page-container">

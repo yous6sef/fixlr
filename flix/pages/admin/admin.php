@@ -1,7 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') { header('Location: login.php'); exit(); }
-include('lang.php');
+if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') { header('Location: ../user/login.php'); exit(); }
+include('../../core/lang.php');
 $lang = $_GET['lang'] ?? 'en';
 ?>
 <!DOCTYPE html>
@@ -10,13 +10,13 @@ $lang = $_GET['lang'] ?? 'en';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $lang === 'ar' ? 'لوحة الإدارة' : 'Admin Panel'; ?> - FLIX</title>
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 <body>
     <div class="page-container">
         <div class="lang-switcher">
-            <a href="admin.php?lang=en" class="<?php echo $lang === 'en' ? 'active' : ''; ?>">English</a>
-            <a href="admin.php?lang=ar" class="<?php echo $lang === 'ar' ? 'active' : ''; ?>">العربية</a>
+            <a href="./admin.php?lang=en" class="<?php echo $lang === 'en' ? 'active' : ''; ?>">English</a>
+            <a href="./admin.php?lang=ar" class="<?php echo $lang === 'ar' ? 'active' : ''; ?>">العربية</a>
         </div>
 
         <div class="page-header">
@@ -70,7 +70,7 @@ $lang = $_GET['lang'] ?? 'en';
 
         <div class="card">
             <h3><?php echo $lang === 'ar' ? 'الإدارة' : 'Management'; ?></h3>
-            <a href="logout.php" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'تسجيل الخروج' : 'Sign Out'; ?></a>
+            <a href="../user/logout.php" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'تسجيل الخروج' : 'Sign Out'; ?></a>
         </div>
     </div>
 </body>

@@ -3,5 +3,6 @@ builder = "dockerfile"
 dockerfile = "Dockerfile"
 
 [deploy]
-startCommand = "supervisord -c /etc/supervisor/conf.d/services.conf"
 port = 8080
+# Dockerfile CMD will be used (supervisord with nginx + php-fpm)
+# No startCommand needed - let Dockerfile handle it

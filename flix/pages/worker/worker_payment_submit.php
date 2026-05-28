@@ -4,10 +4,10 @@
  * Workers submit their daily revenue via Instapay and track commission
  */
 session_start();
-include('db.php');
+include('../../core/db.php');
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../user/login.php');
     exit();
 }
 

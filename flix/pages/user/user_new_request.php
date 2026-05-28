@@ -3,12 +3,12 @@
  * User Request Submission - جديد طلب خدمة
  */
 session_start();
-include('db.php');
-include('config.php');
+include('../../core/db.php');
+include('../../core/config.php');
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+    header('Location: ../user/login.php');
     exit();
 }
 
@@ -546,7 +546,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_request'])) {
             </div>
 
             <div class="button-group">
-                <a href="user_dashboard.php" class="btn-cancel">❌ إلغاء</a>
+                <a href="./user_dashboard.php" class="btn-cancel">❌ إلغاء</a>
                 <button type="submit" name="submit_request" value="1" class="btn-submit">
                     ✅ إرسال الطلب
                 </button>
