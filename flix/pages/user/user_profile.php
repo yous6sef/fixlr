@@ -113,7 +113,7 @@ if (!$user) {
                 <h1>الملف الشخصي</h1>
                 <div>
                     <a class="secondary" href="./user_dashboard.php">العودة إلى اللوحة</a>
-                    <a href="../user/logout.php">تسجيل الخروج</a>
+                    <a href="./logout.php">تسجيل الخروج</a>
                 </div>
             </div>
             <div class="profile-grid">

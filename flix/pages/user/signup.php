@@ -407,10 +407,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
 
                 <div class="type-tabs">
-                    <div class="type-tab active" onclick="switchType('user')">
+                    <div class="type-tab active" onclick="switchType('user', this)">
                         <?php echo $lang === 'ar' ? 'عميل' : 'User'; ?>
                     </div>
-                    <div class="type-tab" onclick="switchType('worker')">
+                    <div class="type-tab" onclick="switchType('worker', this)">
                         <?php echo $lang === 'ar' ? 'عامل' : 'Worker'; ?>
                     </div>
                 </div>
@@ -513,7 +513,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="already-registered">
                         <?php echo $lang === 'ar' ? 'لديك حساب بالفعل؟' : 'Already have an account?'; ?> 
-                        <a href="login.php?lang=<?php echo $lang; ?>">
+                        <a href="./login.php?lang=<?php echo $lang; ?>">
                             <?php echo $lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'; ?>
                         </a>
                     </div>
@@ -523,10 +523,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
-        function switchType(type) {
+        function switchType(type, el) {
             document.getElementById('typeInput').value = type;
             document.querySelectorAll('.type-tab').forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
+            if (el && el.classList) el.classList.add('active');
             
             const workerFields = document.getElementById('workerFields');
             if (type === 'worker') {

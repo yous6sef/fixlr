@@ -75,10 +75,10 @@ $lang = $_GET['lang'] ?? 'en';
 
         <div class="card">
             <h3><?php echo $lang === 'ar' ? 'الإجراءات السريعة' : 'Quick Actions'; ?></h3>
-            <a href="./order.php?lang=<?php echo $lang; ?>" class="btn btn-primary btn-block"><?php echo $lang === 'ar' ? 'طلب جديد' : 'New Request'; ?></a>
+            <a href="../../order.php?lang=<?php echo $lang; ?>" class="btn btn-primary btn-block"><?php echo $lang === 'ar' ? 'طلب جديد' : 'New Request'; ?></a>
             <a href="./user_requests.php?lang=<?php echo $lang; ?>" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'عرض الطلبات' : 'View Requests'; ?></a>
             <a href="./profile.php?lang=<?php echo $lang; ?>" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'الملف الشخصي' : 'Profile'; ?></a>
-            <a href="../user/logout.php" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'تسجيل الخروج' : 'Sign Out'; ?></a>
+            <a href="./logout.php" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'تسجيل الخروج' : 'Sign Out'; ?></a>
         </div>
     </div>
 </body>
