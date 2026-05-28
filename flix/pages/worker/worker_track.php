@@ -120,7 +120,7 @@ $progressValue = 60;
                             <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-600" style="width: 60%"></div>
                         </div>
                     </div>
-                    <form method="post" action="worker_receipt.php" class="flex gap-3">
+                    <form method="post" action="./worker_receipt.php" class="flex gap-3">
                         <input type="hidden" name="order_id" value="<?= htmlspecialchars($order['id']) ?>">
                         <button type="submit" name="complete" class="flex-1 bg-emerald-600 text-white p-3 rounded-xl font-bold hover:bg-emerald-700 transition">
                             إنهاء الخدمة

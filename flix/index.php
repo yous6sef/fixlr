@@ -364,10 +364,10 @@ $_SESSION['lang'] = $lang;
                 ?>
             </p>
             <div class="hero-buttons">
-                <a href="signup.php?lang=<?php echo $lang; ?>&type=user" class="btn btn-primary">
+                <a href="pages/user/signup.php?lang=<?php echo $lang; ?>&type=user" class="btn btn-primary">
                     <?php echo $lang === 'ar' ? 'أنا عميل' : 'I\'m a User'; ?>
                 </a>
-                <a href="signup.php?lang=<?php echo $lang; ?>&type=worker" class="btn btn-secondary">
+                <a href="pages/user/signup.php?lang=<?php echo $lang; ?>&type=worker" class="btn btn-secondary">
                     <?php echo $lang === 'ar' ? 'أنا عامل' : 'I\'m a Worker'; ?>
                 </a>
             </div>
@@ -461,10 +461,10 @@ $_SESSION['lang'] = $lang;
                 ?>
             </p>
             <div class="cta-buttons">
-                <a href="signup.php?lang=<?php echo $lang; ?>&type=user" class="btn btn-primary">
+                <a href="pages/user/signup.php?lang=<?php echo $lang; ?>&type=user" class="btn btn-primary">
                     <?php echo $lang === 'ar' ? 'ابدأ كعميل' : 'Sign Up as User'; ?>
                 </a>
-                <a href="signup.php?lang=<?php echo $lang; ?>&type=worker" class="btn btn-secondary">
+                <a href="pages/user/signup.php?lang=<?php echo $lang; ?>&type=worker" class="btn btn-secondary">
                     <?php echo $lang === 'ar' ? 'ابدأ كعامل' : 'Sign Up as Worker'; ?>
                 </a>
             </div>
