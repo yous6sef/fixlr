@@ -125,15 +125,15 @@ class CloudinaryUploadHandler {
     /**
      * Upload file directly to Cloudinary via CURL
      */
-    public function uploadToCloudinary($file, $folder = 'flix/documents') {
+    public function uploadToCloudinary($file, $folder = 'flix/documents', $fileType = 'idCardFront') {
         // Validate first
-        $validation = self::validateUpload($file, 'idCardFront');
+        $validation = self::validateUpload($file, $fileType);
         if (!$validation['success']) {
             return $validation;
         }
 
         $ch = curl_init();
-        $uploadUrl = "https://api.cloudinary.com/v1_1/{$this->cloudName}/image/upload";
+        $uploadUrl = "https://api.cloudinary.com/v1_1/{$this->cloudName}/auto/upload";
 
         $postFields = [
             'file' => curl_file_create($file['tmp_name'], $file['type'], $file['name']),

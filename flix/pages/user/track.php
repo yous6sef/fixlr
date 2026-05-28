@@ -20,39 +20,16 @@ if (!$taskId) {
 }
 
 // Get task details
-$DEMO_MODE = true;
-$connection = null;
+$connection = $conn;
+$taskQuery = "SELECT t.*, u.fullName as userName, w.id as workerId, wu.fullName as workerName, wu.phoneNumber as workerPhone
+             FROM tasks t
+             LEFT JOIN users u ON t.userId = u.id
+             LEFT JOIN workers w ON t.workerId = w.id
+             LEFT JOIN users wu ON w.userId = wu.id
+             WHERE t.id = $1";
 
-if ($DEMO_MODE) {
-    // Use mock task data
-    $task = [
-        'id' => $taskId,
-        'userId' => $_SESSION['user_id'],
-        'specialization' => 'Plumbing',
-        'description' => 'Water leaking from the main kitchen sink. The pipes need inspection and repair.',
-        'address' => '123 Nile Street, Cairo, Egypt',
-        'currentStatus' => 'REQUESTED',
-        'urgency' => 'Normal',
-        'checkingFee' => 300,
-        'fixingPrice' => 0,
-        'totalPrice' => 300,
-        'userName' => 'Ahmed Hassan',
-        'workerName' => null,
-        'workerPhone' => null,
-        'workerId' => null,
-        'createdAt' => date('Y-m-d H:i:s')
-    ];
-} else {
-    $taskQuery = "SELECT t.*, u.fullName as userName, w.id as workerId, wu.fullName as workerName, wu.phoneNumber as workerPhone
-                 FROM tasks t
-                 LEFT JOIN users u ON t.userId = u.id
-                 LEFT JOIN workers w ON t.workerId = w.id
-                 LEFT JOIN users wu ON w.userId = wu.id
-                 WHERE t.id = $1";
-
-    $taskResult = pg_query_params($connection, $taskQuery, [$taskId]);
-    $task = pg_fetch_assoc($taskResult);
-}
+$taskResult = pg_query_params($connection, $taskQuery, [$taskId]);
+$task = pg_fetch_assoc($taskResult);
 
 if (!$task) {
     header('Location: user_dashboard.php?lang=' . $lang);
@@ -66,7 +43,7 @@ if ($task['userId'] !== $_SESSION['user_id'] && $_SESSION['user_type'] !== 'admi
 }
 
 // Define state progression
-$stateOrder = ['REQUESTED', 'ACCEPTED', 'ARRIVED', 'ARRIVAL_CONFIRMED', 'CHECKING', 'CHECKING_COMPLETED', 'DECISION', 'PRICE_PROPOSED', 'PRICE_ACCEPTED', 'FIXING', 'COMPLETED'];
+$stateOrder = ['REQUESTED', 'ACCEPTED', 'ARRIVED', 'ARRIVAL_CONFIRMED', 'CHECKING', 'CHECKING_COMPLETED', 'DECISION', 'PRICE_PROPOSED', 'PRICE_ACCEPTED', 'FIXING', 'COMPLETED', 'CANCELLED_AFTER_CHECK'];
 
 $currentStateIndex = array_search($task['currentStatus'], $stateOrder);
 
@@ -80,15 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         switch ($action) {
             case 'confirm_arrival':
-                if (!$DEMO_MODE) {
-                    $result = pg_query_params($connection,
-                        "UPDATE tasks SET currentStatus = 'ARRIVAL_CONFIRMED' WHERE id = $1",
-                        [$taskId]
-                    );
-                } else {
-                    $task['currentStatus'] = 'ARRIVAL_CONFIRMED';
-                    $result = true;
-                }
+                $result = pg_query_params($connection,
+                    "UPDATE tasks SET currentStatus = 'ARRIVAL_CONFIRMED' WHERE id = $1",
+                    [$taskId]
+                );
                 if ($result) {
                     $actionMessage = $lang === 'ar' ? 'تم تأكيد الوصول' : 'Arrival confirmed';
                     header('Refresh:2; url=track.php?taskId=' . $taskId . '&lang=' . $lang);
@@ -96,15 +68,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
 
             case 'proceed_with_fix':
-                if (!$DEMO_MODE) {
-                    $result = pg_query_params($connection,
-                        "UPDATE tasks SET currentStatus = 'DECISION', userDecisionProceedWithFix = true WHERE id = $1",
-                        [$taskId]
-                    );
-                } else {
-                    $task['currentStatus'] = 'DECISION';
-                    $result = true;
-                }
+                $result = pg_query_params($connection,
+                    "UPDATE tasks SET currentStatus = 'DECISION', userDecisionProceedWithFix = true WHERE id = $1",
+                    [$taskId]
+                );
                 if ($result) {
                     $actionMessage = $lang === 'ar' ? 'تم الموافقة على المتابعة' : 'Proceeding with fix';
                     header('Refresh:2; url=track.php?taskId=' . $taskId . '&lang=' . $lang);
@@ -112,15 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
 
             case 'cancel_task':
-                if (!$DEMO_MODE) {
-                    $result = pg_query_params($connection,
-                        "UPDATE tasks SET currentStatus = 'CANCELLED', userDecisionProceedWithFix = false WHERE id = $1",
-                        [$taskId]
-                    );
-                } else {
-                    $task['currentStatus'] = 'CANCELLED';
-                    $result = true;
-                }
+                $cancelStatus = in_array($task['currentStatus'], ['CHECKING_COMPLETED', 'DECISION', 'PRICE_PROPOSED', 'PRICE_ACCEPTED', 'FIXING']) ? 'CANCELLED_AFTER_CHECK' : 'CANCELLED';
+                $result = pg_query_params($connection,
+                    "UPDATE tasks SET currentStatus = '$cancelStatus', userDecisionProceedWithFix = false, cancelledAt = NOW() WHERE id = $1",
+                    [$taskId]
+                );
                 if ($result) {
                     $actionMessage = $lang === 'ar' ? 'تم إلغاء الطلب' : 'Task cancelled';
                     header('Refresh:2; url=track.php?taskId=' . $taskId . '&lang=' . $lang);
@@ -128,15 +91,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
 
             case 'accept_price':
-                if (!$DEMO_MODE) {
-                    $result = pg_query_params($connection,
-                        "UPDATE tasks SET currentStatus = 'PRICE_ACCEPTED' WHERE id = $1",
-                        [$taskId]
-                    );
-                } else {
-                    $task['currentStatus'] = 'PRICE_ACCEPTED';
-                    $result = true;
-                }
+                $result = pg_query_params($connection,
+                    "UPDATE tasks SET currentStatus = 'PRICE_ACCEPTED' WHERE id = $1",
+                    [$taskId]
+                );
                 if ($result) {
                     $actionMessage = $lang === 'ar' ? 'تم قبول السعر' : 'Price accepted';
                     header('Refresh:2; url=track.php?taskId=' . $taskId . '&lang=' . $lang);
@@ -144,15 +102,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
 
             case 'confirm_completion':
-                if (!$DEMO_MODE) {
-                    $result = pg_query_params($connection,
-                        "UPDATE tasks SET currentStatus = 'COMPLETED' WHERE id = $1",
-                        [$taskId]
-                    );
-                } else {
-                    $task['currentStatus'] = 'COMPLETED';
-                    $result = true;
-                }
+                $result = pg_query_params($connection,
+                    "UPDATE tasks SET currentStatus = 'COMPLETED', completedAt = NOW() WHERE id = $1",
+                    [$taskId]
+                );
                 if ($result) {
                     $actionMessage = $lang === 'ar' ? 'تم تأكيد الاكتمال' : 'Completion confirmed';
                     header('Refresh:2; url=track.php?taskId=' . $taskId . '&lang=' . $lang);
@@ -160,27 +113,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
 
             case 'submit_rating':
-                $rating = $_POST['rating'] ?? 0;
+                $rating = intval($_POST['rating'] ?? 0);
                 $comment = $_POST['comment'] ?? '';
-                
-                if (!$DEMO_MODE) {
-                    $ratingQuery = "INSERT INTO ratings (taskId, ratedByUserId, ratedToWorkerId, userRating, userComment)
-                                   VALUES ($1, $2, $3, $4, $5)
-                                   ON CONFLICT (taskId, ratedByUserId) DO UPDATE
-                                   SET userRating = $4, userComment = $5";
-                    
-                    $result = pg_query_params($connection, $ratingQuery, [
-                        $taskId,
-                        $_SESSION['user_id'],
-                        $task['workerId'],
-                        $rating,
-                        $comment
-                    ]);
-                } else {
-                    $userRating = ['userRating' => $rating, 'userComment' => $comment];
-                    $result = true;
+
+                if ($rating < 1 || $rating > 5) {
+                    throw new Exception($lang === 'ar' ? 'قيمة التقييم غير صالحة' : 'Invalid rating value');
                 }
-                
+
+                $ratingQuery = "INSERT INTO ratings (taskId, raterId, ratedToWorkerId, rating, comment)
+                               VALUES ($1, $2, $3, $4, $5)
+                               ON CONFLICT (taskId, raterId) DO UPDATE
+                               SET rating = $4, comment = $5";
+
+                $result = pg_query_params($connection, $ratingQuery, [
+                    $taskId,
+                    $_SESSION['user_id'],
+                    $task['workerId'],
+                    $rating,
+                    $comment
+                ]);
+
                 if ($result) {
                     $actionMessage = $lang === 'ar' ? 'تم تقديم التقييم' : 'Rating submitted';
                     header('Refresh:2; url=track.php?taskId=' . $taskId . '&lang=' . $lang);
@@ -193,13 +145,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Get current rating if exists
-if (!$DEMO_MODE) {
-    $ratingQuery = "SELECT * FROM ratings WHERE taskId = $1 AND ratedByUserId = $2";
-    $ratingResult = pg_query_params($connection, $ratingQuery, [$taskId, $_SESSION['user_id']]);
-    $userRating = pg_fetch_assoc($ratingResult);
-} else {
-    $userRating = null; // In demo mode, no pre-existing rating
-}
+$ratingQuery = "SELECT * FROM ratings WHERE taskId = $1 AND raterId = $2";
+$ratingResult = pg_query_params($connection, $ratingQuery, [$taskId, $_SESSION['user_id']]);
+$userRating = pg_fetch_assoc($ratingResult);
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">

@@ -1,11 +1,13 @@
 <?php
 session_start();
 include('../../core/lang.php');
+include('../../core/db.php');
 include('../../lib/CloudinaryUploadHandler.php');
 
 $lang = $_GET['lang'] ?? $_SESSION['lang'] ?? 'en';
 $_SESSION['lang'] = $lang;
 $type = $_GET['type'] ?? 'user'; // 'user' or 'worker'
+$connection = $conn;
 
 // Check if already logged in
 if (isset($_SESSION['user_id'])) {
@@ -47,12 +49,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($_FILES['criminalRecord']['tmp_name'])) $errors[] = $lang === 'ar' ? 'السجل الجنائي مطلوب' : 'Criminal record document is required';
     }
 
-    // Check email
+    // Check email and uniqueness constraints
     if (empty($errors)) {
         $emailCheckQuery = "SELECT id FROM users WHERE email = $1";
-        $emailCheckResult = pg_query_params($POSTGRES_CONN, $emailCheckQuery, [$email]);
+        $emailCheckResult = pg_query_params($connection, $emailCheckQuery, [$email]);
         if (pg_num_rows($emailCheckResult) > 0) {
             $errors[] = $lang === 'ar' ? 'البريد الإلكتروني مسجل بالفعل' : 'Email already registered';
+        }
+
+        if ($formType === 'worker' && empty($errors)) {
+            $idCardCheckQuery = "SELECT id FROM workers WHERE idCardNumber = $1";
+            $idCardCheckResult = pg_query_params($connection, $idCardCheckQuery, [$idCardNumber]);
+            if (pg_num_rows($idCardCheckResult) > 0) {
+                $errors[] = $lang === 'ar' ? 'رقم بطاقة الهوية مسجل بالفعل' : 'ID card number already registered';
+            }
         }
     }
 
@@ -67,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$frontValidation['success']) {
                 $errors[] = 'ID card front: ' . $frontValidation['error'];
             } else {
-                $frontUpload = $cloudinary->uploadToCloudinary($_FILES['idCardFront'], 'flix/documents/id-cards');
+                $frontUpload = $cloudinary->uploadToCloudinary($_FILES['idCardFront'], 'flix/documents/id-cards', 'idCardFront');
                 if (!$frontUpload['success']) {
                     $errors[] = 'Failed to upload ID card front: ' . $frontUpload['error'];
                 } else {
@@ -80,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$backValidation['success']) {
                     $errors[] = 'ID card back: ' . $backValidation['error'];
                 } else {
-                    $backUpload = $cloudinary->uploadToCloudinary($_FILES['idCardBack'], 'flix/documents/id-cards');
+                    $backUpload = $cloudinary->uploadToCloudinary($_FILES['idCardBack'], 'flix/documents/id-cards', 'idCardBack');
                     if (!$backUpload['success']) {
                         $errors[] = 'Failed to upload ID card back: ' . $backUpload['error'];
                     } else {
@@ -94,11 +104,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$crimeValidation['success']) {
                     $errors[] = 'Criminal record: ' . $crimeValidation['error'];
                 } else {
-                    $crimeUpload = $cloudinary->uploadToCloudinary($_FILES['criminalRecord'], 'flix/documents/criminal-records');
+                    $crimeUpload = $cloudinary->uploadToCloudinary($_FILES['criminalRecord'], 'flix/documents/criminal-records', 'criminalRecord');
                     if (!$crimeUpload['success']) {
                         $errors[] = 'Failed to upload criminal record: ' . $crimeUpload['error'];
                     } else {
                         $uploadedFiles['criminalRecord'] = $crimeUpload['url'];
+                    }
+                }
+            }
+
+            if (empty($errors) && !empty($_FILES['resume']['tmp_name'])) {
+                $resumeValidation = CloudinaryUploadHandler::validateUpload($_FILES['resume'], 'resume');
+                if (!$resumeValidation['success']) {
+                    $errors[] = 'Resume: ' . $resumeValidation['error'];
+                } else {
+                    $resumeUpload = $cloudinary->uploadToCloudinary($_FILES['resume'], 'flix/documents/resumes', 'resume');
+                    if (!$resumeUpload['success']) {
+                        $errors[] = 'Failed to upload resume: ' . $resumeUpload['error'];
+                    } else {
+                        $uploadedFiles['resume'] = $resumeUpload['url'];
                     }
                 }
             }
@@ -118,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                          VALUES ($1, $2, $3, $4, $5, $6)
                          RETURNING id";
 
-            $userResult = pg_query_params($POSTGRES_CONN, $userQuery, [
+            $userResult = pg_query_params($connection, $userQuery, [
                 $fullName,
                 $email,
                 $phoneNumber,
@@ -136,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $workerQuery = "INSERT INTO workers (userId, idCardNumber, idCardFrontUrl, idCardBackUrl, criminalRecordUrl, resumeUrl, specializations, residentialLocation, workLocation, status)
                                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'PENDING_APPROVAL')";
 
-                    pg_query_params($POSTGRES_CONN, $workerQuery, [
+                    pg_query_params($connection, $workerQuery, [
                         $userId,
                         $_POST['idCardNumber'],
                         $uploadedFiles['idCardFront'],

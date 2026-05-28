@@ -3,6 +3,17 @@ session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') { header('Location: ../user/login.php'); exit(); }
 include('../../core/lang.php');
 $lang = $_GET['lang'] ?? 'en';
+include('../../core/db.php');
+
+$connection = $conn ?? null;
+$userId = $_SESSION['user_id'];
+$userRequests = [];
+try {
+    $res = pg_query_params($connection, "SELECT t.id, t.specialization, t.createdAt, t.currentStatus, wu.fullName as workerName FROM tasks t LEFT JOIN workers w ON t.workerId = w.id LEFT JOIN users wu ON w.userId = wu.id WHERE t.userId = $1 ORDER BY t.createdAt DESC", [$userId]);
+    $userRequests = pg_fetch_all($res) ?: [];
+} catch (Exception $e) {
+    // ignore
+}
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
@@ -25,21 +36,23 @@ $lang = $_GET['lang'] ?? 'en';
 
         <div class="card">
             <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <a href="./request_detail.php?lang=<?php echo $lang; ?>&id=1" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #F7F8F6; border-radius: 8px; text-decoration: none; color: inherit;">
-                    <div>
-                        <div style="color: #141714; font-weight: 600;"><?php echo $lang === 'ar' ? 'أنابيب - إصلاح تسرب' : 'Plumbing - Leak Fix'; ?></div>
-                        <div style="color: #8A9389; font-size: 0.875rem;">2024-01-15 • Ahmed Mohamed</div>
-                    </div>
-                    <span class="badge badge-success"><?php echo $lang === 'ar' ? 'مكتمل' : 'Completed'; ?></span>
-                </a>
-
-                <a href="./request_detail.php?lang=<?php echo $lang; ?>&id=2" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #F7F8F6; border-radius: 8px; text-decoration: none; color: inherit;">
-                    <div>
-                        <div style="color: #141714; font-weight: 600;"><?php echo $lang === 'ar' ? 'كهرباء - تبديل مصابيح' : 'Electrical - Lamp Change'; ?></div>
-                        <div style="color: #8A9389; font-size: 0.875rem;">2024-01-14 • Mahmoud Ali</div>
-                    </div>
-                    <span class="badge badge-active"><?php echo $lang === 'ar' ? 'نشط' : 'Active'; ?></span>
-                </a>
+                <?php if (!empty($userRequests)): ?>
+                    <?php foreach ($userRequests as $r): ?>
+                        <a href="./request_detail.php?lang=<?php echo $lang; ?>&id=<?php echo htmlspecialchars($r['id']); ?>" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #F7F8F6; border-radius: 8px; text-decoration: none; color: inherit;">
+                            <div>
+                                <div style="color: #141714; font-weight: 600;"><?php echo htmlspecialchars($r['specialization'] ?? ($lang === 'ar' ? 'طلب' : 'Request')); ?></div>
+                                <div style="color: #8A9389; font-size: 0.875rem;">
+                                    <?php echo htmlspecialchars(date('Y-m-d', strtotime($r['createdAt'])) . ' • ' . ($r['workerName'] ?? ($lang === 'ar' ? 'غير معين' : 'Unassigned'))); ?>
+                                </div>
+                            </div>
+                            <span class="badge <?php echo $r['currentStatus'] === 'COMPLETED' ? 'badge-success' : ($r['currentStatus'] === 'CANCELLED' ? 'badge-danger' : 'badge-active'); ?>">
+                                <?php echo htmlspecialchars($r['currentStatus']); ?>
+                            </span>
+                        </a>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div style="color: #6B6F6B;"><?php echo $lang === 'ar' ? 'لا توجد طلبات' : 'No requests yet'; ?></div>
+                <?php endif; ?>
             </div>
         </div>
 

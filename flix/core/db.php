@@ -2,11 +2,11 @@
 /**
  * Database Connection Handler
  * Supports PostgreSQL (production) and SQLite (local development)
- * Also includes demo mode for testing without database
+ * Production-ready: No demo mode
  */
 
-// Demo mode flag - set to true to use mock data
-$DEMO_MODE = true;
+// Demo mode flag - set to false for production
+$DEMO_MODE = false;
 
 // Mock data for demo testing
 $DEMO_USERS = [
@@ -170,6 +170,91 @@ if ($DEMO_MODE) {
         
     } catch (PDOException $e) {
         die("❌ Database Connection Error: " . $e->getMessage());
+    }
+}
+
+// Expose the active PDO connection for compatibility with legacy pg_* usage and wrappers.
+if (!empty($conn) && !isset($POSTGRES_CONN)) {
+    $POSTGRES_CONN = $conn;
+}
+
+if (!function_exists('pgQueryPlaceholderize')) {
+    function pgQueryPlaceholderize(string $query): string {
+        return preg_replace_callback('/\$([0-9]+)/', function ($matches) {
+            return '?';
+        }, $query);
+    }
+}
+
+if (!function_exists('pg_query_params')) {
+    function pg_query_params($connection, $query, $params = []) {
+        global $conn;
+        $pdo = $connection instanceof PDO ? $connection : ($conn instanceof PDO ? $conn : null);
+        if (!$pdo) {
+            throw new Exception('Database connection unavailable');
+        }
+
+        $convertedQuery = pgQueryPlaceholderize($query);
+        $stmt = $pdo->prepare($convertedQuery);
+        $stmt->execute(array_values($params));
+
+        return (object)[
+            'stmt' => $stmt,
+            'rows' => $stmt->fetchAll(PDO::FETCH_ASSOC),
+            'position' => 0
+        ];
+    }
+}
+
+if (!function_exists('pg_query')) {
+    function pg_query($connection, $query) {
+        return pg_query_params($connection, $query, []);
+    }
+}
+
+if (!function_exists('pg_fetch_assoc')) {
+    function pg_fetch_assoc($result) {
+        if (!$result || !isset($result->rows) || $result->position >= count($result->rows)) {
+            return false;
+        }
+        return $result->rows[$result->position++];
+    }
+}
+
+if (!function_exists('pg_fetch_all')) {
+    function pg_fetch_all($result) {
+        if (!$result || !isset($result->rows)) {
+            return [];
+        }
+        return $result->rows;
+    }
+}
+
+if (!function_exists('pg_num_rows')) {
+    function pg_num_rows($result) {
+        if (!$result || !isset($result->rows)) {
+            return 0;
+        }
+        return count($result->rows);
+    }
+}
+
+if (!function_exists('pg_last_oid')) {
+    function pg_last_oid($result) {
+        global $conn;
+        try {
+            return $conn instanceof PDO ? $conn->lastInsertId() : 0;
+        } catch (Exception $e) {
+            return 0;
+        }
+    }
+}
+
+if (!function_exists('pg_free_result')) {
+    function pg_free_result($result) {
+        if ($result && isset($result->stmt)) {
+            $result->stmt->closeCursor();
+        }
     }
 }
 

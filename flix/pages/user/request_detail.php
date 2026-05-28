@@ -2,6 +2,116 @@
 session_start();
 if (!isset($_SESSION['user_id'])) { header('Location: ../user/login.php'); exit(); }
 include('../../core/lang.php');
+include('../../core/db.php');
+
+$lang = $_GET['lang'] ?? 'en';
+$taskId = $_GET['id'] ?? null;
+if (!$taskId) { header('Location: user_requests.php?lang=' . $lang); exit; }
+
+$connection = $conn ?? null;
+try {
+    $res = pg_query_params($connection, "SELECT t.*, u.fullName as requesterName, wu.fullName as workerName FROM tasks t LEFT JOIN users u ON t.userId = u.id LEFT JOIN workers w ON t.workerId = w.id LEFT JOIN users wu ON w.userId = wu.id WHERE t.id = $1", [$taskId]);
+    $task = pg_fetch_assoc($res);
+} catch (Exception $e) {
+    $task = false;
+}
+
+if (!$task) { header('Location: user_requests.php?lang=' . $lang); exit; }
+
+// Authorization: allow owner or admin
+if ($task['userId'] != $_SESSION['user_id'] && $_SESSION['user_type'] !== 'admin') {
+    header('Location: user_requests.php?lang=' . $lang); exit;
+}
+
+function safeEcho($v) { return htmlspecialchars($v ?? ''); }
+
+?>
+<!DOCTYPE html>
+<html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title><?php echo $lang === 'ar' ? 'تفاصيل الطلب' : 'Request Details'; ?> - FLIX</title>
+    <link rel="stylesheet" href="../../public/css/app.css">
+    <style> .map-embed { width:100%; height:320px; border:0; margin-top:0.5rem; }</style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="card">
+            <h2><?php echo $lang === 'ar' ? 'تفاصيل الطلب' : 'Request Details'; ?></h2>
+
+            <div style="margin-top:1rem;">
+                <strong><?php echo $lang === 'ar' ? 'التخصص' : 'Specialization'; ?>:</strong>
+                <?php echo safeEcho($task['specialization']); ?>
+            </div>
+
+            <div style="margin-top:0.75rem;">
+                <strong><?php echo $lang === 'ar' ? 'حالة الطلب' : 'Status'; ?>:</strong>
+                <?php echo safeEcho($task['currentStatus']); ?>
+            </div>
+
+            <div style="margin-top:0.75rem;">
+                <strong><?php echo $lang === 'ar' ? 'الوصف' : 'Description'; ?>:</strong>
+                <p><?php echo nl2br(safeEcho($task['description'])); ?></p>
+            </div>
+
+            <div style="margin-top:0.75rem;">
+                <strong><?php echo $lang === 'ar' ? 'وصف المشكلة' : 'Problem Description'; ?>:</strong>
+                <p><?php echo nl2br(safeEcho($task['problemDescription'])); ?></p>
+            </div>
+
+            <div style="margin-top:0.75rem;">
+                <strong><?php echo $lang === 'ar' ? 'العنوان' : 'Address'; ?>:</strong>
+                <p><?php echo nl2br(safeEcho($task['address'])); ?></p>
+            </div>
+
+            <?php if (!empty($task['addressDescription'])): ?>
+                <div style="margin-top:0.75rem;">
+                    <strong><?php echo $lang === 'ar' ? 'تفاصيل الوصول' : 'Access Details'; ?>:</strong>
+                    <p><?php echo nl2br(safeEcho($task['addressDescription'])); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($task['googleMapsLink'])): ?>
+                <div style="margin-top:0.75rem;">
+                    <strong><?php echo $lang === 'ar' ? 'موقع خرائط جوجل' : 'Google Maps Link'; ?>:</strong>
+                    <div><a href="<?php echo safeEcho($task['googleMapsLink']); ?>" target="_blank"><?php echo safeEcho($task['googleMapsLink']); ?></a></div>
+
+                    <?php
+                    $g = $task['googleMapsLink'];
+                    $embedSrc = null;
+                    if (!empty($g) && filter_var($g, FILTER_VALIDATE_URL)) {
+                        $host = parse_url($g, PHP_URL_HOST) ?: '';
+                        if (preg_match('/(google\.|maps\.app\.goo\.gl|goo\.gl)/i', $host)) {
+                            // Only embed when the path contains /maps
+                            if (strpos($g, '/maps') !== false) {
+                                if (strpos($g, '/embed') === false) {
+                                    // Insert /embed after /maps safely
+                                    $embedSrc = preg_replace('#/maps#', '/maps/embed', $g, 1);
+                                } else {
+                                    $embedSrc = $g;
+                                }
+                            }
+                        }
+                    }
+                    if ($embedSrc) {
+                        echo '<iframe class="map-embed" src="' . safeEcho($embedSrc) . '"></iframe>';
+                    }
+                    ?>
+                </div>
+            <?php endif; ?>
+
+            <div style="margin-top:1rem;">
+                <a href="./user_requests.php?lang=<?php echo $lang; ?>" class="btn btn-secondary"><?php echo $lang === 'ar' ? 'العودة' : 'Back'; ?></a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) { header('Location: ../user/login.php'); exit(); }
+include('../../core/lang.php');
 $lang = $_GET['lang'] ?? 'en';
 $request_id = $_GET['id'] ?? 1;
 ?>

@@ -11,6 +11,9 @@ header('Content-Type: application/json');
 include('../core/db.php');
 include('../core/lang.php');
 
+global $conn;
+$POSTGRES_CONN = $conn ?? null;
+
 // ============ RESPONSE HELPER ============
 function apiResponse($success, $message, $data = null, $statusCode = 200) {
     http_response_code($statusCode);
@@ -41,12 +44,13 @@ $stateTransitions = [
     'ARRIVAL_CONFIRMED' => ['CHECKING'],
     'CHECKING' => ['CHECKING_COMPLETED'],
     'CHECKING_COMPLETED' => ['DECISION'],
-    'DECISION' => ['PRICE_PROPOSED', 'CANCELLED'],  // If user says NO, cancel
+    'DECISION' => ['PRICE_PROPOSED', 'CANCELLED_AFTER_CHECK'],  // If user says NO, cancel after checking
     'PRICE_PROPOSED' => ['PRICE_ACCEPTED', 'CANCELLED'],
     'PRICE_ACCEPTED' => ['FIXING'],
     'FIXING' => ['COMPLETED'],
     'COMPLETED' => [],
-    'CANCELLED' => []
+    'CANCELLED' => [],
+    'CANCELLED_AFTER_CHECK' => []
 ];
 
 $action = $_GET['action'] ?? $_POST['action'] ?? null;
@@ -133,44 +137,55 @@ else if ($action === 'accept_task') {
     requireAuth('worker');
     
     $taskId = $_GET['id'] ?? $_POST['id'];
-    
-    // Get task
-    $taskQuery = "SELECT id, currentStatus, workerId FROM tasks WHERE id = $1";
-    $taskResult = pg_query_params($POSTGRES_CONN, $taskQuery, [$taskId]);
-    $task = pg_fetch_assoc($taskResult);
-    
-    if (!$task) {
-        apiResponse(false, 'Task not found', null, 404);
+
+    try {
+        $POSTGRES_CONN->beginTransaction();
+
+        // Get task and validate transition
+        $taskQuery = "SELECT id, currentStatus, workerId FROM tasks WHERE id = $1";
+        $taskResult = pg_query_params($POSTGRES_CONN, $taskQuery, [$taskId]);
+        $task = pg_fetch_assoc($taskResult);
+
+        if (!$task) {
+            throw new Exception('Task not found');
+        }
+
+        if (!in_array('ACCEPTED', $stateTransitions[$task['currentStatus']] ?? [])) {
+            throw new Exception("Cannot move from {$task['currentStatus']} to ACCEPTED");
+        }
+
+        // Get worker and ensure worker is eligible
+        $workerQuery = "SELECT id, isCurrentlyAssigned, status FROM workers WHERE userId = $1";
+        $workerResult = pg_query_params($POSTGRES_CONN, $workerQuery, [$_SESSION['user_id']]);
+        $worker = pg_fetch_assoc($workerResult);
+
+        if (!$worker || $worker['status'] !== 'APPROVED') {
+            throw new Exception('Worker not approved or not found');
+        }
+
+        if ($worker['isCurrentlyAssigned']) {
+            throw new Exception('You already have an active task');
+        }
+
+        pg_query_params($POSTGRES_CONN, 
+            "UPDATE tasks SET currentStatus = 'ACCEPTED', workerId = $1, assignedAt = NOW() WHERE id = $2",
+            [$worker['id'], $taskId]
+        );
+
+        pg_query_params($POSTGRES_CONN,
+            "UPDATE workers SET isCurrentlyAssigned = TRUE WHERE id = $1",
+            [$worker['id']]
+        );
+
+        $POSTGRES_CONN->commit();
+
+        apiResponse(true, 'Task accepted. You are now assigned.', ['taskId' => $taskId, 'status' => 'ACCEPTED']);
+    } catch (Exception $e) {
+        if ($POSTGRES_CONN->inTransaction()) {
+            $POSTGRES_CONN->rollBack();
+        }
+        apiResponse(false, $e->getMessage(), null, 400);
     }
-    
-    // Validate state transition
-    if (!in_array('ACCEPTED', $stateTransitions[$task['currentStatus']] ?? [])) {
-        apiResponse(false, "Cannot move from {$task['currentStatus']} to ACCEPTED", null, 400);
-    }
-    
-    // Get worker
-    $workerQuery = "SELECT id, isCurrentlyAssigned FROM workers WHERE userId = $1";
-    $workerResult = pg_query_params($POSTGRES_CONN, $workerQuery, [$_SESSION['user_id']]);
-    $worker = pg_fetch_assoc($workerResult);
-    
-    // Check if worker already has active task
-    if ($worker['isCurrentlyAssigned']) {
-        apiResponse(false, 'You already have an active task', null, 400);
-    }
-    
-    // Update task
-    pg_query_params($POSTGRES_CONN, 
-        "UPDATE tasks SET currentStatus = 'ACCEPTED', workerId = $1, assignedAt = NOW() WHERE id = $2",
-        [$worker['id'], $taskId]
-    );
-    
-    // Lock worker
-    pg_query_params($POSTGRES_CONN,
-        "UPDATE workers SET isCurrentlyAssigned = TRUE WHERE id = $1",
-        [$worker['id']]
-    );
-    
-    apiResponse(true, 'Task accepted. You are now assigned.', ['taskId' => $taskId, 'status' => 'ACCEPTED']);
 }
 
 // ============================================================================
@@ -305,19 +320,29 @@ else if ($action === 'user_decision') {
     
     if (!$proceedWithFix) {
         // Cancel: User pays 300 EGP checking fee, worker unlocks
-        pg_query_params($POSTGRES_CONN,
-            "UPDATE tasks SET currentStatus = 'CANCELLED', userDecisionProceedWithFix = FALSE WHERE id = $1",
-            [$taskId]
-        );
+        try {
+            $POSTGRES_CONN->beginTransaction();
+
+            pg_query_params($POSTGRES_CONN,
+                "UPDATE tasks SET currentStatus = 'CANCELLED_AFTER_CHECK', userDecisionProceedWithFix = FALSE, cancelledAt = NOW() WHERE id = $1",
+                [$taskId]
+            );
+            
+            pg_query_params($POSTGRES_CONN,
+                "UPDATE workers SET isCurrentlyAssigned = FALSE WHERE id = $1",
+                [$task['workerId']]
+            );
+
+            $POSTGRES_CONN->commit();
+        } catch (Exception $e) {
+            if ($POSTGRES_CONN->inTransaction()) {
+                $POSTGRES_CONN->rollBack();
+            }
+            apiResponse(false, $e->getMessage(), null, 500);
+        }
         
-        // Unlock worker
-        pg_query_params($POSTGRES_CONN,
-            "UPDATE workers SET isCurrentlyAssigned = FALSE WHERE id = $1",
-            [$task['workerId']]
-        );
-        
-        apiResponse(true, 'Task cancelled. You owe 300 EGP checking fee.', 
-            ['status' => 'CANCELLED', 'amountDue' => 300.00]);
+        apiResponse(true, 'Task cancelled after checking. You owe 300 EGP checking fee.', 
+            ['status' => 'CANCELLED_AFTER_CHECK', 'amountDue' => 300.00]);
     } else {
         // Proceed: Move to DECISION state
         pg_query_params($POSTGRES_CONN,
@@ -439,26 +464,35 @@ else if ($action === 'confirm_completion') {
         apiResponse(false, 'Task must be in FIXING state', null, 400);
     }
     
-    // Mark task completed
-    pg_query_params($POSTGRES_CONN,
-        "UPDATE tasks SET currentStatus = 'COMPLETED', completedAt = NOW() WHERE id = $1",
-        [$taskId]
-    );
-    
-    // Unlock worker
-    pg_query_params($POSTGRES_CONN,
-        "UPDATE workers SET isCurrentlyAssigned = FALSE WHERE id = $1",
-        [$task['workerId']]
-    );
-    
-    // Add to worker's earnings (20% goes to platform, 80% to worker)
-    $workerEarnings = $task['totalPrice'] * 0.8;
-    $platformFee = $task['totalPrice'] * 0.2;
-    
-    pg_query_params($POSTGRES_CONN,
-        "UPDATE workers SET availableBalance = availableBalance + $1, totalEarnings = totalEarnings + $2, pendingRemittance = pendingRemittance + $3 WHERE id = $4",
-        [$workerEarnings, $task['totalPrice'], $platformFee, $task['workerId']]
-    );
+    try {
+        $POSTGRES_CONN->beginTransaction();
+
+        pg_query_params($POSTGRES_CONN,
+            "UPDATE tasks SET currentStatus = 'COMPLETED', completedAt = NOW() WHERE id = $1",
+            [$taskId]
+        );
+        
+        pg_query_params($POSTGRES_CONN,
+            "UPDATE workers SET isCurrentlyAssigned = FALSE WHERE id = $1",
+            [$task['workerId']]
+        );
+        
+        // Add to worker's earnings (20% goes to platform, 80% to worker)
+        $workerEarnings = $task['totalPrice'] * 0.8;
+        $platformFee = $task['totalPrice'] * 0.2;
+        
+        pg_query_params($POSTGRES_CONN,
+            "UPDATE workers SET availableBalance = availableBalance + $1, totalEarnings = totalEarnings + $2, pendingRemittance = pendingRemittance + $3 WHERE id = $4",
+            [$workerEarnings, $task['totalPrice'], $platformFee, $task['workerId']]
+        );
+
+        $POSTGRES_CONN->commit();
+    } catch (Exception $e) {
+        if ($POSTGRES_CONN->inTransaction()) {
+            $POSTGRES_CONN->rollBack();
+        }
+        apiResponse(false, $e->getMessage(), null, 500);
+    }
     
     apiResponse(true, 'Task completed! You will now be prompted for mutual ratings.', 
         ['status' => 'COMPLETED', 'taskId' => $taskId, 'promptRating' => true]);
@@ -485,26 +519,35 @@ else if ($action === 'submit_ratings') {
     $taskResult = pg_query_params($POSTGRES_CONN, $taskQuery, [$taskId]);
     $task = pg_fetch_assoc($taskResult);
     
+    // Resolve worker user account for worker-side ratings
+    $workerUserId = null;
+    if ($task['workerId']) {
+        $workerUserQuery = "SELECT userId FROM workers WHERE id = $1";
+        $workerUserResult = pg_query_params($POSTGRES_CONN, $workerUserQuery, [$task['workerId']]);
+        $workerUser = pg_fetch_assoc($workerUserResult);
+        $workerUserId = $workerUser['userId'] ?? null;
+    }
+
     if ($_SESSION['user_type'] === 'user') {
         // User rating worker
         pg_query_params($POSTGRES_CONN,
-            "INSERT INTO ratings (taskId, ratedByUserId, ratedToWorkerId, userRating, userComment)
+            "INSERT INTO ratings (taskId, raterId, ratedToWorkerId, rating, comment)
              VALUES ($1, $2, $3, $4, $5)
-             ON CONFLICT (taskId) DO UPDATE SET userRating = $4, userComment = $5",
+             ON CONFLICT (taskId, raterId) DO UPDATE SET rating = $4, comment = $5",
             [$taskId, $task['userId'], $task['workerId'], $userRating, $userComment]
         );
-    } else if ($_SESSION['user_type'] === 'worker') {
+    } else if ($_SESSION['user_type'] === 'worker' && $workerUserId) {
         // Worker rating user
         pg_query_params($POSTGRES_CONN,
-            "INSERT INTO ratings (taskId, ratedByWorkerId, ratedToUserId, workerRating, workerComment)
+            "INSERT INTO ratings (taskId, raterId, ratedToUserId, rating, comment)
              VALUES ($1, $2, $3, $4, $5)
-             ON CONFLICT (taskId) DO UPDATE SET workerRating = $4, workerComment = $5",
-            [$taskId, $task['workerId'], $task['userId'], $workerRating, $workerComment]
+             ON CONFLICT (taskId, raterId) DO UPDATE SET rating = $4, comment = $5",
+            [$taskId, $workerUserId, $task['userId'], $workerRating, $workerComment]
         );
     }
     
     // Recalculate average ratings
-    $userQuery = "SELECT AVG(userRating) as avgRating, COUNT(*) as total FROM ratings WHERE ratedToUserId = $1";
+    $userQuery = "SELECT AVG(rating) as avgRating, COUNT(*) as total FROM ratings WHERE ratedToUserId = $1";
     $userResult = pg_query_params($POSTGRES_CONN, $userQuery, [$task['userId']]);
     $userStats = pg_fetch_assoc($userResult);
     
@@ -514,7 +557,7 @@ else if ($action === 'submit_ratings') {
     );
     
     // Same for worker
-    $workerQuery = "SELECT AVG(userRating) as avgRating, COUNT(*) as total FROM ratings WHERE ratedToWorkerId = $1";
+    $workerQuery = "SELECT AVG(rating) as avgRating, COUNT(*) as total FROM ratings WHERE ratedToWorkerId = $1";
     $workerResult = pg_query_params($POSTGRES_CONN, $workerQuery, [$task['workerId']]);
     $workerStats = pg_fetch_assoc($workerResult);
     

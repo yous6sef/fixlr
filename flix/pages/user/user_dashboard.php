@@ -3,6 +3,40 @@ session_start();
 if (!isset($_SESSION['user_id'])) { header('Location: ../user/login.php'); exit(); }
 include('../../core/lang.php');
 $lang = $_GET['lang'] ?? 'en';
+include('../../core/db.php');
+
+// Gather user-specific stats
+$connection = $conn ?? null;
+$userId = $_SESSION['user_id'];
+
+$totalRequests = 0;
+$completedRequests = 0;
+$activeRequests = 0;
+$totalSpent = 0.00;
+$recentRequests = [];
+
+try {
+    $res = pg_query_params($connection, "SELECT COUNT(*) as cnt FROM tasks WHERE userId = $1", [$userId]);
+    $row = pg_fetch_assoc($res);
+    $totalRequests = intval($row['cnt'] ?? 0);
+
+    $res = pg_query_params($connection, "SELECT COUNT(*) as cnt FROM tasks WHERE userId = $1 AND currentStatus = 'COMPLETED'", [$userId]);
+    $row = pg_fetch_assoc($res);
+    $completedRequests = intval($row['cnt'] ?? 0);
+
+    $res = pg_query_params($connection, "SELECT COUNT(*) as cnt FROM tasks WHERE userId = $1 AND currentStatus NOT IN ('COMPLETED','CANCELLED','CANCELLED_AFTER_CHECK')", [$userId]);
+    $row = pg_fetch_assoc($res);
+    $activeRequests = intval($row['cnt'] ?? 0);
+
+    $res = pg_query_params($connection, "SELECT COALESCE(SUM(totalPrice),0) as sum FROM tasks WHERE userId = $1 AND currentStatus = 'COMPLETED'", [$userId]);
+    $row = pg_fetch_assoc($res);
+    $totalSpent = floatval($row['sum'] ?? 0.00);
+
+    $recentRes = pg_query_params($connection, "SELECT t.id, t.specialization, t.createdAt, t.currentStatus, wu.fullName as workerName FROM tasks t LEFT JOIN workers w ON t.workerId = w.id LEFT JOIN users wu ON w.userId = wu.id WHERE t.userId = $1 ORDER BY t.createdAt DESC LIMIT 5", [$userId]);
+    $recentRequests = pg_fetch_all($recentRes) ?: [];
+} catch (Exception $e) {
+    // ignore DB errors for dashboard view
+}
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
@@ -35,42 +69,42 @@ $lang = $_GET['lang'] ?? 'en';
 
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-value">5</div>
+                <div class="stat-value"><?php echo htmlspecialchars($totalRequests); ?></div>
                 <div class="stat-label"><?php echo $lang === 'ar' ? 'الطلبات' : 'Requests'; ?></div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">3</div>
+                <div class="stat-value"><?php echo htmlspecialchars($completedRequests); ?></div>
                 <div class="stat-label"><?php echo $lang === 'ar' ? 'مكتملة' : 'Completed'; ?></div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">2</div>
+                <div class="stat-value"><?php echo htmlspecialchars($activeRequests); ?></div>
                 <div class="stat-label"><?php echo $lang === 'ar' ? 'نشطة' : 'Active'; ?></div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">1500 EGP</div>
+                <div class="stat-value"><?php echo number_format($totalSpent, 2); ?> EGP</div>
                 <div class="stat-label"><?php echo $lang === 'ar' ? 'المنفق' : 'Spent'; ?></div>
             </div>
         </div>
 
         <div class="card">
             <h3><?php echo $lang === 'ar' ? 'الطلبات الأخيرة' : 'Recent Requests'; ?></h3>
-            <div class="provider-card">
-                <div class="provider-avatar">SM</div>
-                <div class="provider-info">
-                    <div class="provider-name"><?php echo $lang === 'ar' ? 'أنابيب - إصلاح الأنابيب' : 'Plumbing - Pipe Fix'; ?></div>
-                    <div class="provider-role"><?php echo $lang === 'ar' ? 'أحمد محمد • 2024-01-15' : 'Ahmed Mohamed • 2024-01-15'; ?></div>
-                </div>
-                <div class="provider-price">800 EGP</div>
-            </div>
-
-            <div class="provider-card">
-                <div class="provider-avatar" style="background: #FEF3E2; color: #9A6400;">EM</div>
-                <div class="provider-info">
-                    <div class="provider-name"><?php echo $lang === 'ar' ? 'كهرباء - إصلاح' : 'Electrical - Repair'; ?></div>
-                    <div class="provider-role"><?php echo $lang === 'ar' ? 'محمود علي • 2024-01-18' : 'Mahmoud Ali • 2024-01-18'; ?></div>
-                </div>
-                <div class="provider-price">400 EGP</div>
-            </div>
+            <?php if (!empty($recentRequests)): ?>
+                <?php foreach ($recentRequests as $r): ?>
+                    <a href="./request_detail.php?lang=<?php echo $lang; ?>&id=<?php echo htmlspecialchars($r['id']); ?>" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #F7F8F6; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 0.75rem;">
+                        <div>
+                            <div style="color: #141714; font-weight: 600;"><?php echo htmlspecialchars($r['specialization'] ?? ($lang === 'ar' ? 'طلب' : 'Request')); ?></div>
+                            <div style="color: #8A9389; font-size: 0.875rem;">
+                                <?php echo htmlspecialchars(($r['workerName'] ?? ($lang === 'ar' ? 'غير معين' : 'Unassigned')) . ' • ' . date('Y-m-d', strtotime($r['createdAt']))); ?>
+                            </div>
+                        </div>
+                        <span class="badge <?php echo $r['currentStatus'] === 'COMPLETED' ? 'badge-success' : ($r['currentStatus'] === 'CANCELLED' ? 'badge-danger' : 'badge-active'); ?>">
+                            <?php echo htmlspecialchars($r['currentStatus']); ?>
+                        </span>
+                    </a>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div style="color: #6B6F6B;"><?php echo $lang === 'ar' ? 'لا يوجد طلبات حالياً' : 'No recent requests'; ?></div>
+            <?php endif; ?>
         </div>
 
         <div class="card">
