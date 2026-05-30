@@ -1,6 +1,8 @@
 <?php
-
 session_start();
+
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
 include('../../core/lang.php');
 include('../../core/db.php');
@@ -13,15 +15,13 @@ $type = $_GET['type'] ?? 'user';
 $connection = $conn;
 
 if (isset($_SESSION['user_id'])) {
-
     header(
         'Location: ' .
         ($type === 'worker'
-            ? '../worker/worker_dashboard.php'
-            : './user_dashboard.php')
+            ? 'pages/worker/worker_dashboard.php'
+            : 'user_dashboard.php')
         . '?lang=' . $lang
     );
-
     exit;
 }
 
@@ -33,18 +33,13 @@ $success = false;
 | Upload Function (BY WORKER ID)
 |--------------------------------------------------------------------------
 */
-
 function uploadFile($file, $workerId)
 {
     if (!isset($file['tmp_name']) || empty($file['tmp_name'])) {
         return ['success' => false, 'error' => 'No file uploaded'];
     }
 
-    $allowedMimeTypes = [
-        'image/jpeg',
-        'image/png',
-        'application/pdf'
-    ];
+    $allowedMimeTypes = ['image/jpeg', 'image/png', 'application/pdf'];
 
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mimeType = finfo_file($finfo, $file['tmp_name']);
@@ -59,11 +54,9 @@ function uploadFile($file, $workerId)
     }
 
     $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
     $fileName = bin2hex(random_bytes(16)) . '_' . time() . '.' . $ext;
 
     $uploadDir = "../../uploads/workers/$workerId/";
-
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0775, true);
     }
@@ -71,10 +64,7 @@ function uploadFile($file, $workerId)
     $path = $uploadDir . $fileName;
 
     if (move_uploaded_file($file['tmp_name'], $path)) {
-        return [
-            'success' => true,
-            'path' => "uploads/workers/$workerId/$fileName"
-        ];
+        return ['success' => true, 'path' => "uploads/workers/$workerId/$fileName"];
     }
 
     return ['success' => false, 'error' => 'Upload failed'];
@@ -85,7 +75,6 @@ function uploadFile($file, $workerId)
 | Handle Request
 |--------------------------------------------------------------------------
 */
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $formType = $_POST['type'] ?? 'user';
@@ -103,138 +92,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($password !== $confirmPassword) {
-        $errors[] = 'Passwords not match';
+        $errors[] = 'Passwords do not match';
     }
 
     if (empty($errors)) {
-
         try {
-
             $connection->beginTransaction();
 
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-            /*
-            |--------------------------------------------------------------------------
-            | Create User
-            |--------------------------------------------------------------------------
-            */
-
+            // Create User
             $userQuery = "
-                INSERT INTO users (name, phone, password_hash, role, city)
-                VALUES (?, ?, ?, ?, ?)
-                RETURNING id
+                INSERT INTO users (name, phone, password, city)
+                VALUES (?, ?, ?, ?)
             ";
-
             $userStmt = $connection->prepare($userQuery);
-            $userStmt->execute([
-                $fullName,
-                $phoneNumber,
-                $passwordHash,
-                $formType,
-                $workLocation
-            ]);
+            $userStmt->execute([$fullName, $phoneNumber, $passwordHash, $workLocation]);
 
             $user = $userStmt->fetch(PDO::FETCH_ASSOC);
-            $userId = $user['id'];
 
-            /*
-            |--------------------------------------------------------------------------
-            | Create Worker (IF WORKER)
-            |--------------------------------------------------------------------------
-            */
-
-            if ($formType === 'worker') {
-
-                $specializations = $_POST['specializations'] ?? [];
-
-                $workerQuery = "
-                    INSERT INTO workers
-                    (
-                        name,
-                        national_id,
-                        specialization,
-                        location,
-                        city,
-                        phone,
-                        password,
-                        status
-                    )
-                    VALUES
-                    ( ?, ?, ?, ?, ?, ?, ?, 'PENDING_APPROVAL')
-                    RETURNING id
-                ";
-
-                $workerStmt = $connection->prepare($workerQuery);
-
-                $workerStmt->execute([
-                    $fullName,
-                    $national_id,
-                    json_encode($specializations),
-                    $residentialLocation,
-                    $workLocation,
-                    $phoneNumber,
-                    $passwordHash
-                ]);
-
-                $worker = $workerStmt->fetch(PDO::FETCH_ASSOC);
-                $workerId = $worker['id'];
-
-                /*
-                |--------------------------------------------------------------------------
-                | Upload Files (NOW USING workerId)
-                |--------------------------------------------------------------------------
-                */
-
-                $uploadedFiles = [];
-
-                $front = uploadFile($_FILES['idCardFront'], $workerId);
-                if (!$front['success']) throw new Exception($front['error']);
-                $uploadedFiles['front'] = $front['path'];
-
-                $back = uploadFile($_FILES['idCardBack'], $workerId);
-                if (!$back['success']) throw new Exception($back['error']);
-                $uploadedFiles['back'] = $back['path'];
-
-                $crime = uploadFile($_FILES['criminalRecord'], $workerId);
-                if (!$crime['success']) throw new Exception($crime['error']);
-                $uploadedFiles['crime'] = $crime['path'];
-
-                if (!empty($_FILES['resume']['tmp_name'])) {
-                    $resume = uploadFile($_FILES['resume'], $workerId);
-                    if ($resume['success']) {
-                        $uploadedFiles['resume'] = $resume['path'];
-                    }
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | Update Worker With Files
-                |--------------------------------------------------------------------------
-                */
-
-                $update = "
-                    UPDATE workers
-                    SET id_front_path = ?,
-                        id_back_path = ?,
-                        certificate_path = ?,
-                        cv_path = ?
-                    WHERE id = ?
-                ";
-
-                $stmt = $connection->prepare($update);
-
-                $stmt->execute([
-                    $uploadedFiles['front'],
-                    $uploadedFiles['back'],
-                    $uploadedFiles['crime'],
-                    $uploadedFiles['resume'] ?? null,
-                    $workerId
-                ]);
-            }
-
+            // Commit user creation immediately
             $connection->commit();
             $success = true;
+
+            // If worker, handle separately
+            if ($formType === 'worker') {
+                try {
+                    $connection->beginTransaction();
+
+                    $specializations = $_POST['specializations'] ?? [];
+
+                    $workerQuery = "
+                        INSERT INTO workers
+                        (name, national_id, specialization, Location, city, phone, password, status)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING_APPROVAL')
+                        RETURNING id
+                    ";
+                    $workerStmt = $connection->prepare($workerQuery);
+                    $workerStmt->execute([
+                        $fullName,
+                        $national_id,
+                        json_encode($specializations),
+                        $residentialLocation,
+                        $workLocation,
+                        $phoneNumber,
+                        $passwordHash
+                    ]);
+
+                    $worker = $workerStmt->fetch(PDO::FETCH_ASSOC);
+                    $workerId = $worker['id'];
+
+                    // Upload files
+                    $uploadedFiles = [];
+
+                    $front = uploadFile($_FILES['idCardFront'], $workerId);
+                    if ($front['success']) $uploadedFiles['front'] = $front['path'];
+
+                    $back = uploadFile($_FILES['idCardBack'], $workerId);
+                    if ($back['success']) $uploadedFiles['back'] = $back['path'];
+
+                    $crime = uploadFile($_FILES['criminalRecord'], $workerId);
+                    if ($crime['success']) $uploadedFiles['crime'] = $crime['path'];
+
+                    if (!empty($_FILES['resume']['tmp_name'])) {
+                        $resume = uploadFile($_FILES['resume'], $workerId);
+                        if ($resume['success']) $uploadedFiles['resume'] = $resume['path'];
+                    }
+
+                    // Update worker with files
+                    $update = "
+                        UPDATE workers
+                        SET id_front_path = ?,
+                            id_back_path = ?,
+                            certificate_path = ?,
+                            cv_path = ?
+                        WHERE id = ?
+                    ";
+                    $stmt = $connection->prepare($update);
+                    $stmt->execute([
+                        $uploadedFiles['front'] ?? null,
+                        $uploadedFiles['back'] ?? null,
+                        $uploadedFiles['crime'] ?? null,
+                        $uploadedFiles['resume'] ?? null,
+                        $workerId
+                    ]);
+
+                    $connection->commit();
+                } catch (Exception $e) {
+                    $connection->rollBack();
+                    $errors[] = "Worker creation failed: " . $e->getMessage();
+                }
+            }
 
         } catch (Exception $e) {
             $connection->rollBack();
@@ -243,6 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
 <head>
@@ -493,12 +442,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
 
                 <div class="type-tabs">
-                    <div class="type-tab active" onclick="switchType('user', this)">
-                        <?php echo $lang === 'ar' ? 'عميل' : 'User'; ?>
-                    </div>
-                    <div class="type-tab" onclick="switchType('worker', this)">
-                        <?php echo $lang === 'ar' ? 'عامل' : 'Worker'; ?>
-                    </div>
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <input type="radio" id="user" name="role" value="user" checked class="w-4 h-4" onclick="switchType('user')">
+                        <label for="user" class="text-gray-700">عميل</label>
+                        <input type="radio" id="worker" name="role" value="worker" class="w-4 h-4" onclick="switchType('worker')">
+                        <label for="worker" class="text-gray-700">عامل</label>
+                    </div><br>
                 </div>
 
                 <form method="POST" enctype="multipart/form-data" id="signupForm">
@@ -569,7 +518,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="file-upload" onclick="document.getElementById('idCardFront').click()">
                                 <p><?php echo $lang === 'ar' ? 'اضغط لتحميل الصورة' : 'Click to upload'; ?></p>
                             </div>
-                            <input type="file" id="idCardFront" name="idCardFront" accept="image/jpeg,image/png" required>
+                            <input type="file" id="idCardFront" name="idCardFront" accept="image/jpeg,image/png" >
                         </div>
 
                         <div class="form-group">
@@ -577,7 +526,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="file-upload" onclick="document.getElementById('idCardBack').click()">
                                 <p><?php echo $lang === 'ar' ? 'اضغط لتحميل الصورة' : 'Click to upload'; ?></p>
                             </div>
-                            <input type="file" id="idCardBack" name="idCardBack" accept="image/jpeg,image/png" required>
+                            <input type="file" id="idCardBack" name="idCardBack" accept="image/jpeg,image/png" >
                         </div>
 
                         <div class="form-group">
@@ -585,7 +534,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="file-upload" onclick="document.getElementById('criminalRecord').click()">
                                 <p><?php echo $lang === 'ar' ? 'اضغط لتحميل الملف' : 'Click to upload'; ?></p>
                             </div>
-                            <input type="file" id="criminalRecord" name="criminalRecord" accept="image/jpeg,image/png,application/pdf" required>
+                            <input type="file" id="criminalRecord" name="criminalRecord" accept="image/jpeg,image/png,application/pdf" >
                         </div>
                     </div>
 
@@ -605,18 +554,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
-        function switchType(type, el) {
-            document.getElementById('typeInput').value = type;
-            document.querySelectorAll('.type-tab').forEach(tab => tab.classList.remove('active'));
-            if (el && el.classList) el.classList.add('active');
-            
-            const workerFields = document.getElementById('workerFields');
-            if (type === 'worker') {
-                workerFields.classList.add('show');
-            } else {
-                workerFields.classList.remove('show');
-            }
-        }
+        function switchType(type) {
+    document.getElementById('typeInput').value = type;
+
+    const workerFields = document.getElementById('workerFields');
+
+    const requiredFiles = [
+        document.getElementById('idCardFront'),
+        document.getElementById('idCardBack'),
+        document.getElementById('criminalRecord')
+    ];
+
+    if (type === 'worker') {
+        workerFields.classList.add('show');
+
+        requiredFiles.forEach(file => {
+            file.required = true;
+        });
+
+    } else {
+        workerFields.classList.remove('show');
+
+        requiredFiles.forEach(file => {
+            file.required = false;
+        });
+    }
+}
     </script>
 </body>
 </html>

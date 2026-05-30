@@ -1,8 +1,17 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'worker') { header('Location: ../user/login.php'); exit(); }
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'worker')
+    { header('Location: ../user/login.php'); exit(); }
+
 include('../../core/lang.php');
+include('../../core/db.php');
 $lang = $_GET['lang'] ?? 'en';
+
+
+$stmt = $conn->prepare("SELECT name FROM workers WHERE id = :id");
+$stmt->bindParam(':id', $_SESSION['user_id']);
+$stmt->execute();
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
@@ -20,7 +29,7 @@ $lang = $_GET['lang'] ?? 'en';
         </div>
 
         <div class="page-header">
-            <h1><?php echo $lang === 'ar' ? 'مرحبا ' . htmlspecialchars($_SESSION['user_name']) : 'Hi ' . htmlspecialchars($_SESSION['user_name']); ?></h1>
+            <h1><?php echo $lang === 'ar' ? 'مرحبا ' . htmlspecialchars($user['name']) : 'Hi ' . htmlspecialchars($user['name']); ?></h1>
             <p><?php echo $lang === 'ar' ? 'الطلبات المتاحة' : 'Available Opportunities'; ?></p>
         </div>
 
@@ -52,15 +61,6 @@ $lang = $_GET['lang'] ?? 'en';
                     <div class="provider-role"><?php echo $lang === 'ar' ? 'حي النيل • الآن' : 'Nile Area • Now'; ?></div>
                 </div>
                 <div class="provider-price">300 EGP</div>
-            </div>
-
-            <div class="provider-card">
-                <div class="provider-avatar" style="background: #FEF3E2; color: #9A6400;">P2</div>
-                <div class="provider-info">
-                    <div class="provider-name"><?php echo $lang === 'ar' ? 'كهرباء - مصباح' : 'Electrical - Lamp'; ?></div>
-                    <div class="provider-role"><?php echo $lang === 'ar' ? 'وسط البلد • اليوم' : 'Downtown • Today'; ?></div>
-                </div>
-                <div class="provider-price">250 EGP</div>
             </div>
         </div>
 

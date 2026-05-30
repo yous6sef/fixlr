@@ -14,10 +14,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $password = $_POST['password'];
   $role = $_POST['role'];
   if ($role == "user"){
-  $stmt = $conn->prepare("SELECT id, password, role FROM users WHERE phone = :phone");
-  $stmt->bindParam(':phone', $phone);
-  $stmt->execute();
-  $user = $stmt->fetch(PDO::FETCH_ASSOC);
+  $stm = $conn->prepare("SELECT id, password, role FROM users WHERE phone = :phone");
+  $stm->bindParam(':phone', $phone);
+  $stm->execute();
+  $user = $stm->fetch(PDO::FETCH_ASSOC);
   }
   else{
     $stmt = $conn->prepare("SELECT id, password, role FROM workers WHERE phone = :phone");
@@ -31,7 +31,7 @@ if ($user && !empty($user['password'])) {
         $_SESSION['role'] = $user['role'];
 
         if ($user['role'] === 'worker') {
-            header("Location: ../../worker/worker_dashboard.php?lang=" . $lang);
+            header("Location: /pages/worker/worker_dashboard.php?lang=" . $lang);
             exit();
         } else {
             header("Location: user_dashboard.php?lang=" . $lang);
@@ -92,9 +92,9 @@ if ($user && !empty($user['password'])) {
                 <input type="password" name="password" required>
             </div>
             <div class="flex items-center space-x-2 space-x-reverse">
-                <input type="radio" id="user-role" name="role" value="user" checked class="w-4 h-4">
+                <input type="radio" id="user" name="role" value="user" checked class="w-4 h-4">
                 <label for="user-role" class="text-gray-700">عميل</label>
-                <input type="radio" id="worker-role" name="role" value="worker" class="w-4 h-4">
+                <input type="radio" id="worker" name="role" value="worker" class="w-4 h-4">
                 <label for="worker-role" class="text-gray-700">عامل</label>
             </div><br>
             <button type="submit"><?php echo $lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'; ?></button>
