@@ -1,4 +1,14 @@
 [build]
+<<<<<<< HEAD
 
 [deploy]
 startCommand = "apache2-foreground"
+=======
+builder = "dockerfile"
+dockerfile = "Dockerfile"
+
+[deploy]
+port = 8080
+# Dockerfile CMD will be used (supervisord with nginx + php-fpm)
+# No startCommand needed - let Dockerfile handle it
+>>>>>>> 9c211b7cc9cf0b23a202640acf994861fe9f618f

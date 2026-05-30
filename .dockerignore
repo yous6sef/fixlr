@@ -1,0 +1,16 @@
+.git
+.gitignore
+.vscode
+node_modules
+*.db
+*.db-wal
+*.db-shm
+flix.db*
+.DS_Store
+README.md
+DEPLOYMENT_GUIDE.md
+DATABASE_CONFIGURATION_GUIDE.md
+PROJECT_STRUCTURE.md
+TEAM_QUICKSTART.md
+DOCUMENTATION_INDEX.md
+FIX_NODE_MODULES.sh
