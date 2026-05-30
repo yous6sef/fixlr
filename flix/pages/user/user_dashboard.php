@@ -9,31 +9,50 @@ include('../../core/db.php');
 $connection = $conn ?? null;
 $userId = $_SESSION['user_id'];
 
+$stmt = $conn->prepare("SELECT name FROM users WHERE id = :user_id");
+$stmt->bindParam(':user_id', $userId);
+$stmt->execute();
+$user_name = $stmt->fetch(PDO::FETCH_ASSOC);
+$name = $user_name['name'];
+
 $totalRequests = 0;
 $completedRequests = 0;
 $activeRequests = 0;
 $totalSpent = 0.00;
 $recentRequests = [];
 
+$prepareQuery = function ($sql) {
+    return preg_replace('/\$\d+/', '?', $sql);
+};
+
+$executeQuery = function ($connection, $sql, $params = []) use ($prepareQuery) {
+    if ($connection instanceof PDO) {
+        $stmt = $connection->prepare($prepareQuery($sql));
+        $stmt->execute($params);
+        return $stmt;
+    }
+    return pg_query_params($connection, $sql, $params);
+};
+
 try {
-    $res = pg_query_params($connection, "SELECT COUNT(*) as cnt FROM tasks WHERE userId = $1", [$userId]);
-    $row = pg_fetch_assoc($res);
+    $res = $executeQuery($connection, "SELECT COUNT(*) as cnt FROM tasks WHERE userId = $1", [$userId]);
+    $row = $connection instanceof PDO ? $res->fetch(PDO::FETCH_ASSOC) : pg_fetch_assoc($res);
     $totalRequests = intval($row['cnt'] ?? 0);
 
-    $res = pg_query_params($connection, "SELECT COUNT(*) as cnt FROM tasks WHERE userId = $1 AND currentStatus = 'COMPLETED'", [$userId]);
-    $row = pg_fetch_assoc($res);
+    $res = $executeQuery($connection, "SELECT COUNT(*) as cnt FROM tasks WHERE userId = $1 AND currentStatus = 'COMPLETED'", [$userId]);
+    $row = $connection instanceof PDO ? $res->fetch(PDO::FETCH_ASSOC) : pg_fetch_assoc($res);
     $completedRequests = intval($row['cnt'] ?? 0);
 
-    $res = pg_query_params($connection, "SELECT COUNT(*) as cnt FROM tasks WHERE userId = $1 AND currentStatus NOT IN ('COMPLETED','CANCELLED','CANCELLED_AFTER_CHECK')", [$userId]);
-    $row = pg_fetch_assoc($res);
+    $res = $executeQuery($connection, "SELECT COUNT(*) as cnt FROM tasks WHERE userId = $1 AND currentStatus NOT IN ('COMPLETED','CANCELLED','CANCELLED_AFTER_CHECK')", [$userId]);
+    $row = $connection instanceof PDO ? $res->fetch(PDO::FETCH_ASSOC) : pg_fetch_assoc($res);
     $activeRequests = intval($row['cnt'] ?? 0);
 
-    $res = pg_query_params($connection, "SELECT COALESCE(SUM(totalPrice),0) as sum FROM tasks WHERE userId = $1 AND currentStatus = 'COMPLETED'", [$userId]);
-    $row = pg_fetch_assoc($res);
+    $res = $executeQuery($connection, "SELECT COALESCE(SUM(totalPrice),0) as sum FROM tasks WHERE userId = $1 AND currentStatus = 'COMPLETED'", [$userId]);
+    $row = $connection instanceof PDO ? $res->fetch(PDO::FETCH_ASSOC) : pg_fetch_assoc($res);
     $totalSpent = floatval($row['sum'] ?? 0.00);
 
-    $recentRes = pg_query_params($connection, "SELECT t.id, t.specialization, t.createdAt, t.currentStatus, wu.fullName as workerName FROM tasks t LEFT JOIN workers w ON t.workerId = w.id LEFT JOIN users wu ON w.userId = wu.id WHERE t.userId = $1 ORDER BY t.createdAt DESC LIMIT 5", [$userId]);
-    $recentRequests = pg_fetch_all($recentRes) ?: [];
+    $res = $executeQuery($connection, "SELECT t.id, t.specialization, t.createdAt, t.currentStatus, wu.fullName as workerName FROM tasks t LEFT JOIN workers w ON t.workerId = w.id LEFT JOIN users wu ON w.userId = wu.id WHERE t.userId = $1 ORDER BY t.createdAt DESC LIMIT 5", [$userId]);
+    $recentRequests = $connection instanceof PDO ? $res->fetchAll(PDO::FETCH_ASSOC) : (pg_fetch_all($res) ?: []);
 } catch (Exception $e) {
     // ignore DB errors for dashboard view
 }
@@ -48,7 +67,7 @@ try {
     <style>
         body { padding-bottom: 100px; }
         .header-content { margin-bottom: 1.5rem; }
-        .greeting { color: #8A9389; margin-bottom: 0.3rem; }
+        .greeting { color: black; margin-bottom: 0.3rem; }
         .user-name { font-size: 1.5rem; font-weight: 600; }
         @media (max-width: 480px) { .page-container { padding-bottom: 0.5rem; } }
     </style>
@@ -63,7 +82,7 @@ try {
         <div class="page-header">
             <div class="header-content">
                 <div class="greeting"><?php echo $lang === 'ar' ? 'صباح الخير' : 'Good morning'; ?></div>
-                <div class="user-name"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'User'); ?></div>
+                <div class="user-name"><?php echo htmlspecialchars($name); ?></div>
             </div>
         </div>
 

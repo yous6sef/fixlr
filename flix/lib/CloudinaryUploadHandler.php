@@ -11,13 +11,13 @@ class CloudinaryUploadHandler {
     private $uploadPreset;
 
     public function __construct() {
-        // Load from .env file
-        $this->cloudName = getenv('CLOUDINARY_CLOUD_NAME') ?: $_ENV['CLOUDINARY_CLOUD_NAME'] ?? null;
-        $this->apiKey = getenv('CLOUDINARY_API_KEY') ?: $_ENV['CLOUDINARY_API_KEY'] ?? null;
-        $this->apiSecret = getenv('CLOUDINARY_API_SECRET') ?: $_ENV['CLOUDINARY_API_SECRET'] ?? null;
-        $this->uploadPreset = getenv('CLOUDINARY_UPLOAD_PRESET') ?: $_ENV['CLOUDINARY_UPLOAD_PRESET'] ?? null;
+        // Load from .env file (via phpdotenv أو getenv)
+        $this->cloudName    ="drsywss2u"    ?: $_ENV['CLOUDINARY_CLOUD_NAME'] ?? null;
+        $this->apiKey       ="125561257682895"       ?: $_ENV['CLOUDINARY_API_KEY'] ?? null;
+        $this->apiSecret    ="REowR4su7mEhLHP0SieR6d40Ao8"     ?: $_ENV['CLOUDINARY_API_SECRET'] ?? null;
+        $this->uploadPreset ="Flix"  ?: $_ENV['CLOUDINARY_UPLOAD_PRESET'] ?? null;
 
-        if (!$this->cloudName || !$this->uploadPreset) {
+        if (!$this->cloudName || !$this->uploadPreset || !$this->apiSecret) {
             throw new Exception('Cloudinary configuration missing');
         }
     }
@@ -44,7 +44,7 @@ class CloudinaryUploadHandler {
     }
 
     /**
-     * Generate SHA-1 signature for secure uploads
+     * Generate SHA-1 signature (hex string)
      */
     private function generateSignature($params) {
         $params = array_filter($params, function($v) {
@@ -53,8 +53,8 @@ class CloudinaryUploadHandler {
         ksort($params);
 
         $query_string = http_build_query($params);
-        $signature = hash_hmac('sha1', $query_string, $this->apiSecret, true);
-        $signature = base64_encode($signature);
+        // Cloudinary expects hex string, not base64
+        $signature = hash_hmac('sha1', $query_string, $this->apiSecret);
 
         return $signature;
     }
@@ -65,21 +65,18 @@ class CloudinaryUploadHandler {
     public static function validateUpload($file, $fileType) {
         $maxSize = 10 * 1024 * 1024; // 10MB
         
-        // Allowed MIME types
         $allowedTypes = [
-            'idCardFront' => ['image/jpeg', 'image/png'],
-            'idCardBack' => ['image/jpeg', 'image/png'],
+            'idCardFront'    => ['image/jpeg', 'image/png'],
+            'idCardBack'     => ['image/jpeg', 'image/png'],
             'criminalRecord' => ['image/jpeg', 'image/png', 'application/pdf'],
-            'resume' => ['application/pdf', 'application/msword'],
-            'profileImage' => ['image/jpeg', 'image/png'],
+            'resume'         => ['application/pdf', 'application/msword'],
+            'profileImage'   => ['image/jpeg', 'image/png'],
         ];
 
-        // Check file size
         if ($file['size'] > $maxSize) {
             return ['success' => false, 'error' => 'File size exceeds 10MB limit'];
         }
 
-        // Check MIME type
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mimeType = finfo_file($finfo, $file['tmp_name']);
         finfo_close($finfo);
@@ -88,15 +85,12 @@ class CloudinaryUploadHandler {
             return ['success' => false, 'error' => 'Invalid file type for ' . $fileType];
         }
 
-        // Additional validation
         if ($fileType !== 'resume' && $fileType !== 'profileImage') {
-            // Verify image dimensions for ID cards
             if (strpos($mimeType, 'image') === 0) {
                 $imageInfo = getimagesize($file['tmp_name']);
                 if (!$imageInfo) {
                     return ['success' => false, 'error' => 'Invalid image file'];
                 }
-                // Basic dimension check
                 if ($imageInfo[0] < 200 || $imageInfo[1] < 200) {
                     return ['success' => false, 'error' => 'Image too small (minimum 200x200px)'];
                 }
@@ -107,12 +101,12 @@ class CloudinaryUploadHandler {
     }
 
     /**
-     * Process multipart form data for Cloudinary upload
+     * Build form data for upload
      */
     public static function buildFormData($file, $publicId = null) {
         $formData = [
             'file' => new CURLFile($file['tmp_name'], $file['type'], $file['name']),
-            'upload_preset' => $_ENV['CLOUDINARY_UPLOAD_PRESET'],
+            'upload_preset' => getenv('CLOUDINARY_UPLOAD_PRESET'),
         ];
 
         if ($publicId) {
@@ -126,7 +120,6 @@ class CloudinaryUploadHandler {
      * Upload file directly to Cloudinary via CURL
      */
     public function uploadToCloudinary($file, $folder = 'flix/documents', $fileType = 'idCardFront') {
-        // Validate first
         $validation = self::validateUpload($file, $fileType);
         if (!$validation['success']) {
             return $validation;
@@ -180,4 +173,3 @@ function getCloudinaryToken() {
     $handler = new CloudinaryUploadHandler();
     return $handler->getUploadSignature();
 }
-?>

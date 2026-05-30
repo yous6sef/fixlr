@@ -1,5 +1,6 @@
 <?php
 session_start();
+include("../../core/db.php");
 include('../../core/lang.php');
 
 $lang = $_GET['lang'] ?? $_SESSION['lang'] ?? 'en';
@@ -7,56 +8,42 @@ $dir = $lang === 'ar' ? 'rtl' : 'ltr';
 $_SESSION['lang'] = $lang;
 $error = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $identifier = trim($_POST['identifier'] ?? '');
-    $password = $_POST['password'] ?? '';
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    if ($identifier === '' || $password === '') {
-        $error = $lang === 'ar' ? 'البريد الإلكتروني أو رقم الهاتف وكلمة المرور مطلوبة' : 'Email or phone and password are required';
-    } else {
-        try {
-            require_once('../../core/db.php');
+  $phone = $_POST['phone'];
+  $password = $_POST['password'];
+  $role = $_POST['role'];
+  if ($role == "user"){
+  $stm = $conn->prepare("SELECT id, password, role FROM users WHERE phone = :phone");
+  $stm->bindParam(':phone', $phone);
+  $stm->execute();
+  $user = $stm->fetch(PDO::FETCH_ASSOC);
+  }
+  else{
+    $stmt = $conn->prepare("SELECT id, password, role FROM workers WHERE phone = :phone");
+    $stmt->bindParam(':phone', $phone);
+    $stmt->execute();
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+  }
+if ($user && !empty($user['password'])) {
+    if (password_verify($password, $user['password'])) {
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['role'] = $user['role'];
 
-            $query = "SELECT u.id, u.fullName, u.email, u.phoneNumber, u.password_hash, u.userType, u.city, u.accountStatus, w.status AS workerStatus
-                      FROM users u
-                      LEFT JOIN workers w ON w.userId = u.id
-                      WHERE u.email = :identifier OR u.phoneNumber = :identifier
-                      LIMIT 1";
-            $stmt = $conn->prepare($query);
-            $stmt->execute([':identifier' => $identifier]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$user || !password_verify($password, $user['password_hash'])) {
-                $error = $lang === 'ar' ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة' : 'Invalid email/phone or password';
-            } elseif ($user['accountStatus'] !== 'active') {
-                $error = $lang === 'ar' ? 'الحساب معطل أو موقوف' : 'Account is disabled or suspended';
-            } elseif ($user['userType'] === 'worker' && $user['workerStatus'] !== 'APPROVED') {
-                $error = $lang === 'ar' ? 'حساب العامل قيد المراجعة أو غير معتمد بعد' : 'Worker account is pending approval or not approved yet';
-            } else {
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_name'] = $user['fullName'];
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_type'] = $user['userType'];
-                $_SESSION['user_city'] = $user['city'];
-
-                if ($user['userType'] === 'worker') {
-                    header('Location: ../worker/worker_dashboard.php?lang=' . $lang);
-                    exit();
-                }
-
-                if ($user['userType'] === 'admin') {
-                    header('Location: ../admin/admin.php?lang=' . $lang);
-                    exit();
-                }
-
-                header('Location: ../user/user_dashboard.php?lang=' . $lang);
-                exit();
-            }
-        } catch (PDOException $e) {
-            error_log('Login error: ' . $e->getMessage());
-            $error = $lang === 'ar' ? 'خطأ في الخادم. حاول لاحقًا' : 'Server error. Please try again later';
+        if ($user['role'] === 'worker') {
+            header("Location: /pages/worker/worker_dashboard.php?lang=" . $lang);
+            exit();
+        } else {
+            header("Location: user_dashboard.php?lang=" . $lang);
+            exit();
         }
+    } else {
+        $error = $lang === 'ar' ? 'كلمة المرور غير صحيحة' : 'Incorrect password';
     }
+} else {
+    $error = $lang === 'ar' ? 'الأسم غير صحيح أو كلمة المرور غير مسجلة' : 'User not found or password not set';
+}
+
 }
 ?>
 <!DOCTYPE html>
@@ -89,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="login-box">
         <div class="logo">FLIX</div>
         <div class="title"><?php echo $lang === 'ar' ? 'مرحبا بعودتك' : 'Welcome Back'; ?></div>
-        <div class="subtitle"><?php echo $lang === 'ar' ? 'سجل دخولك باستخدام بريدك أو رقم هاتفك' : 'Sign in with your email or phone'; ?></div>
+        <div class="subtitle"><?php echo $lang === 'ar' ? 'سجل دخولك باستخدام رقم هاتفك' : 'Sign in with your phone'; ?></div>
 
         <?php if ($error): ?>
             <div class="error"><?php echo htmlspecialchars($error); ?></div>
@@ -97,13 +84,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="POST">
             <div class="form-group">
-                <label class="label"><?php echo $lang === 'ar' ? 'البريد الإلكتروني أو رقم الهاتف' : 'Email or Phone'; ?></label>
-                <input type="text" name="identifier" value="<?php echo htmlspecialchars($_POST['identifier'] ?? ''); ?>" required>
+                <label class="label"><?php echo $lang === 'ar' ? ' رقم الهاتف' : 'Phone'; ?></label>
+                <input type="text" name="phone" required>
             </div>
             <div class="form-group">
                 <label class="label"><?php echo $lang === 'ar' ? 'كلمة المرور' : 'Password'; ?></label>
                 <input type="password" name="password" required>
             </div>
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <input type="radio" id="user" name="role" value="user" checked class="w-4 h-4">
+                <label for="user-role" class="text-gray-700">عميل</label>
+                <input type="radio" id="worker" name="role" value="worker" class="w-4 h-4">
+                <label for="worker-role" class="text-gray-700">عامل</label>
+            </div><br>
             <button type="submit"><?php echo $lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'; ?></button>
         </form>
 
