@@ -190,6 +190,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+$stmt = $conn->query("SELECT id, name_ar, name_en FROM service_types");
+$services = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$services_ar = [];
+$services_en = [];
+
+foreach ($services as $service) {
+    $services_ar[] = $service['name_ar'];
+    $services_en[] = $service['name_en'];
+}
 ?>
 
 <!DOCTYPE html>
@@ -405,6 +415,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-bottom: 1rem;
         }
 
+        .checked-pass {
+            margin-top: 1rem;
+            display:none;
+        }
+
+        .checked-pass p {
+            color: green;
+            font-size: 0.9rem;
+        }
+
+        .checked-pass.show {
+            display:block;
+        }
+
         @media (max-width: 640px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -444,9 +468,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="type-tabs">
                     <div class="flex items-center space-x-2 space-x-reverse">
                         <input type="radio" id="user" name="role" value="user" checked class="w-4 h-4" onclick="switchType('user')">
-                        <label for="user" class="text-gray-700">عميل</label>
+                        <label for="user" class="text-gray-700"><?php echo $lang === 'ar'?'عميل': 'user' ?></label>
                         <input type="radio" id="worker" name="role" value="worker" class="w-4 h-4" onclick="switchType('worker')">
-                        <label for="worker" class="text-gray-700">عامل</label>
+                        <label for="worker" class="text-gray-700"><?php echo $lang === 'ar'?'عامل': 'worker' ?></label>
                     </div><br>
                 </div>
 
@@ -468,30 +492,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <div class="form-group">
                             <label><?php echo $lang === 'ar' ? 'كلمة المرور' : 'Password'; ?> *</label>
-                            <input type="password" name="password" required>
+                            <input type="password" name="password" id="password" required>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label><?php echo $lang === 'ar' ? 'تأكيد كلمة المرور' : 'Confirm Password'; ?> *</label>
-                        <input type="password" name="confirmPassword" required>
+                        <input type="password" name="confirmPassword" id="confirmPassword" required>
                     </div>
+
+                    <div class="checked-pass">
+                        <p><?php echo $lang === 'ar' ? 'كلمة المرور متطابقة مع تأكيد كلمة المرور' : 'Password match the confirm password'; ?><br><br></p>
+                    </div>
+
+                    <div>
+                        <p><?php echo $lang === 'ar' 
+                            ? 'ملاحظة: يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل.' 
+                            : 'Note: Password must be at least 8 characters.';
+                        ?></p>
+                    </div><br>
 
                     <!-- Worker-Specific Fields -->
                     <div id="workerFields" class="worker-fields">
                         <div class="form-group">
                             <label><?php echo $lang === 'ar' ? 'رقم بطاقة الهوية' : 'ID Card Number'; ?> *</label>
-                            <input type="text" name="national_id">
+                            <input type="text" name="national_id" id="national-id">
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
                                 <label><?php echo $lang === 'ar' ? 'العنوان السكني' : 'Residential Address'; ?> *</label>
-                                <input type="text" name="residentialLocation">
+                                <input type="text" name="residentialLocation" >
                             </div>
                             <div class="form-group">
                                 <label><?php echo $lang === 'ar' ? 'منطقة العمل' : 'Work Area'; ?> *</label>
-                                <select name="workLocation">
+                                <select name="workLocation" >
                                     <option value="6th of October City">6th of October City</option>
                                     <option value="Sheikh Zayed">Sheikh Zayed</option>
                                 </select>
@@ -500,17 +535,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         <div class="form-group">
                             <label><?php echo $lang === 'ar' ? 'التخصصات' : 'Specializations'; ?> *</label>
-                            <div class="checkbox-group">
-                                <?php 
-                                $specs = ['Plumbing', 'Electrical', 'Carpentry', 'Painting'];
-                                foreach ($specs as $spec): 
-                                ?>
-                                    <div class="checkbox-item">
-                                        <input type="checkbox" name="specializations[]" value="<?php echo $spec; ?>" id="spec_<?php echo $spec; ?>" >
-                                        <label for="spec_<?php echo $spec; ?>"><?php echo $spec; ?></label>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
+                            <?php foreach ($services as $service): ?>
+                                <div class="checkbox-item">
+                                    <input
+                                        type="checkbox"
+                                        name="specializations[]"
+                                        value="<?php echo htmlspecialchars($service['name_en']); ?>"
+                                        id="spec_<?php echo $service['id']; ?>"
+                                    ><br><br>
+
+                                <label for="spec_<?php echo $service['id']; ?>">
+                                    <?php
+                                        echo $lang === 'ar'
+                                        ? htmlspecialchars($service['name_ar'])
+                                        : htmlspecialchars($service['name_en']);
+                                    ?>
+                                </label><br><br>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
 
                         <div class="form-group">
@@ -554,7 +596,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
-        function switchType(type) {
+       function switchType(type) {
     document.getElementById('typeInput').value = type;
 
     const workerFields = document.getElementById('workerFields');
@@ -567,19 +609,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (type === 'worker') {
         workerFields.classList.add('show');
-
-        requiredFiles.forEach(file => {
-            file.required = true;
-        });
-
+        requiredFiles.forEach(file => file.required = true);
     } else {
         workerFields.classList.remove('show');
-
-        requiredFiles.forEach(file => {
-            file.required = false;
-        });
+        requiredFiles.forEach(file => file.required = false);
     }
 }
+
+const password = document.getElementById('password');
+const confirmPassword = document.getElementById('confirmPassword');
+const checkIcon = document.querySelector('.checked-pass');
+
+function validatePassword() {
+    if (!password.value || !confirmPassword.value) {
+        checkIcon.classList.remove('show');
+        return;
+    }
+
+    if (password.value === confirmPassword.value && password.value !== '') {
+        checkIcon.classList.add('show');
+    } else {
+        checkIcon.classList.remove('show');
+    }
+}
+
+password.addEventListener('input', validatePassword);
+confirmPassword.addEventListener('input', validatePassword);
     </script>
 </body>
 </html>
