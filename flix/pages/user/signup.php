@@ -429,6 +429,21 @@ foreach ($services as $service) {
             display:block;
         }
 
+        .checking-password {
+            margin-top: 1rem;
+            display:block;
+        }
+
+        .password-error {
+            margin-top: 1rem;
+            display:none;
+        }
+
+        .phone-hint {
+            margin-top: 0.5rem;
+            color: #DC2626;
+        }
+
         @media (max-width: 640px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -488,7 +503,13 @@ foreach ($services as $service) {
                     <div class="form-row">
                         <div class="form-group">
                             <label><?php echo $lang === 'ar' ? 'رقم الهاتف' : 'Phone Number'; ?> *</label>
-                            <input type="tel" name="phoneNumber" placeholder="+201001234567" required>
+                            <input type="tel" name="phoneNumber" placeholder="+201001234567" id="phone" required>
+                        </div><br>
+                        <div id="phone_hint" class="phone-hint">
+                            <p><?php echo $lang === 'ar' 
+                                ? 'يرجى إدخال رقم هاتف مصري صالح يبدأ بـ 010، 011، 012، أو 015.'
+                                : 'Please enter a valid Egyptian phone number starting with 010, 011, 012, or 015.';
+                            ?></p>
                         </div>
                         <div class="form-group">
                             <label><?php echo $lang === 'ar' ? 'كلمة المرور' : 'Password'; ?> *</label>
@@ -505,12 +526,16 @@ foreach ($services as $service) {
                         <p><?php echo $lang === 'ar' ? 'كلمة المرور متطابقة مع تأكيد كلمة المرور' : 'Password match the confirm password'; ?><br><br></p>
                     </div>
 
-                    <div>
+                    <div id="checking_password" class="checking-password">
                         <p><?php echo $lang === 'ar' 
                             ? 'ملاحظة: يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل.' 
                             : 'Note: Password must be at least 8 characters.';
                         ?></p>
                     </div><br>
+
+                    <div id="password_error" class="password-error">
+                        <p style="color: #DC2626;"><?php echo $lang === 'ar' ? 'يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل.' : 'Password must be at least 8 characters.'; ?></p>
+                    </div>
 
                     <!-- Worker-Specific Fields -->
                     <div id="workerFields" class="worker-fields">
@@ -596,7 +621,7 @@ foreach ($services as $service) {
     </div>
 
     <script>
-       function switchType(type) {
+function switchType(type) {
     document.getElementById('typeInput').value = type;
 
     const workerFields = document.getElementById('workerFields');
@@ -609,32 +634,97 @@ foreach ($services as $service) {
 
     if (type === 'worker') {
         workerFields.classList.add('show');
-        requiredFiles.forEach(file => file.required = true);
+        requiredFiles.forEach(file => {
+            if (file) file.required = true;
+        });
     } else {
         workerFields.classList.remove('show');
-        requiredFiles.forEach(file => file.required = false);
+        requiredFiles.forEach(file => {
+            if (file) file.required = false;
+        });
     }
 }
 
+// Password Elements
 const password = document.getElementById('password');
 const confirmPassword = document.getElementById('confirmPassword');
 const checkIcon = document.querySelector('.checked-pass');
+const passwordError = document.getElementById('password_error');
+
+// إنشاء رسالة عدم التطابق إذا لم تكن موجودة
+let mismatchError = document.getElementById('password_mismatch');
+
+if (!mismatchError) {
+    mismatchError = document.createElement('div');
+    mismatchError.id = 'password_mismatch';
+    mismatchError.style.display = 'none';
+    mismatchError.style.color = '#DC2626';
+    mismatchError.style.marginTop = '10px';
+
+    mismatchError.textContent =
+        "<?php echo $lang === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'; ?>";
+
+    passwordError.insertAdjacentElement('afterend', mismatchError);
+}
 
 function validatePassword() {
-    if (!password.value || !confirmPassword.value) {
-        checkIcon.classList.remove('show');
+    const pass = password.value;
+    const confirm = confirmPassword.value;
+
+    checkIcon.classList.remove('show');
+    passwordError.style.display = 'none';
+    mismatchError.style.display = 'none';
+
+    if (!pass && !confirm) {
         return;
     }
 
-    if (password.value === confirmPassword.value && password.value !== '') {
+    // أقل من 8 أحرف
+    if (pass.length > 0 && pass.length < 8) {
+        passwordError.style.display = 'block';
+        return;
+    }
+
+    // لا نتحقق من التطابق إلا إذا المستخدم كتب في الحقلين
+    if (pass && confirm) {
+
+        if (pass !== confirm) {
+            mismatchError.style.display = 'block';
+            return;
+        }
+
         checkIcon.classList.add('show');
-    } else {
-        checkIcon.classList.remove('show');
     }
 }
 
+// Phone Validation
+const phone = document.getElementById('phone');
+const phoneHint = document.getElementById('phone_hint');
+
+function validatePhone() {
+    const phonePattern = /^01[0125][0-9]{8}$/;
+
+    if (!phone.value) return;
+
+    if (!phonePattern.test(phone.value)) {
+        phoneHint.style.display = 'block';
+
+        phone.focus();
+    }
+        else {
+            phoneHint.style.display = 'none';
+        }
+}
+
+// Events
 password.addEventListener('input', validatePassword);
 confirmPassword.addEventListener('input', validatePassword);
-    </script>
+
+// التحقق عند مغادرة الحقل وليس أثناء كل حرف
+phone.addEventListener('input', validatePhone);
+
+// تشغيل أولي عند تحميل الصفحة
+validatePassword();
+</script>
 </body>
 </html>
