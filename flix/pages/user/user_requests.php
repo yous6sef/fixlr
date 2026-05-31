@@ -1,6 +1,6 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'user') { header('Location: ../user/login.php'); exit(); }
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'user') { header('Location: ../user/login.php'); exit(); }
 include('../../core/lang.php');
 $lang = $_GET['lang'] ?? 'en';
 include('../../core/db.php');
@@ -8,9 +8,23 @@ include('../../core/db.php');
 $connection = $conn ?? null;
 $userId = $_SESSION['user_id'];
 $userRequests = [];
+
+$stmt = $conn->prepare("SELECT worker_id FROM service_requests WHERE user_id = ? ORDER BY created_at DESC LIMIT 5");
+$stmt->execute([$userId]);
+$recentRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$worker_id = $recentRequests[0]['worker_id'] ?? null;
+
+if ($worker_id) {
+    $stmt = $conn->prepare("SELECT name FROM workers WHERE id = ?");
+    $stmt->execute([$worker_id]);
+    $worker = $stmt->fetch(PDO::FETCH_ASSOC);
+    $worker_name = $worker['name'] ?? null;
+}
+
 try {
-    $res = pg_query_params($connection, "SELECT t.id, t.specialization, t.createdAt, t.currentStatus, wu.fullName as workerName FROM tasks t LEFT JOIN workers w ON t.workerId = w.id LEFT JOIN users wu ON w.userId = wu.id WHERE t.userId = $1 ORDER BY t.createdAt DESC", [$userId]);
-    $userRequests = pg_fetch_all($res) ?: [];
+    $stmt = $conn->prepare("SELECT * FROM service_requests WHERE user_id = ? ORDER BY created_at DESC LIMIT 5");
+    $stmt->execute([$userId]);
+    $userRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     // ignore
 }
@@ -42,11 +56,11 @@ try {
                             <div>
                                 <div style="color: #141714; font-weight: 600;"><?php echo htmlspecialchars($r['specialization'] ?? ($lang === 'ar' ? 'طلب' : 'Request')); ?></div>
                                 <div style="color: #8A9389; font-size: 0.875rem;">
-                                    <?php echo htmlspecialchars(date('Y-m-d', strtotime($r['createdAt'])) . ' • ' . ($r['workerName'] ?? ($lang === 'ar' ? 'غير معين' : 'Unassigned'))); ?>
+                                    <?php echo htmlspecialchars(date('Y-m-d', strtotime($r['created_at'])) . ' • ' . ($worker_name ?? ($lang === 'ar' ? 'غير معين' : 'Unassigned'))); ?>
                                 </div>
                             </div>
-                            <span class="badge <?php echo $r['currentStatus'] === 'COMPLETED' ? 'badge-success' : ($r['currentStatus'] === 'CANCELLED' ? 'badge-danger' : 'badge-active'); ?>">
-                                <?php echo htmlspecialchars($r['currentStatus']); ?>
+                            <span class="badge <?php echo $r['status'] === 'COMPLETED' ? 'badge-success' : ($r['status'] === 'CANCELLED' ? 'badge-danger' : 'badge-active'); ?>">
+                                <?php echo htmlspecialchars($r['status']); ?>
                             </span>
                         </a>
                     <?php endforeach; ?>

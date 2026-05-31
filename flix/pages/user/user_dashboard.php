@@ -8,9 +8,10 @@ include('../../core/db.php');
 // Gather user-specific stats
 $connection = $conn ?? null;
 $userId = $_SESSION['user_id'];
+$role = $_SESSION['role'] ?? 'user';
 
-$stmt = $conn->prepare("SELECT name FROM users WHERE id = :user_id");
-$stmt->bindParam(':user_id', $userId);
+$stmt = $conn->prepare("SELECT name FROM users WHERE id = :id");
+$stmt->bindParam(':id', $userId);
 $stmt->execute();
 $user_name = $stmt->fetch(PDO::FETCH_ASSOC);
 $name = $user_name['name'];
@@ -35,26 +36,31 @@ $executeQuery = function ($connection, $sql, $params = []) use ($prepareQuery) {
 };
 
 try {
-    $res = $executeQuery($connection, "SELECT COUNT(*) as cnt FROM tasks WHERE userId = $1", [$userId]);
-    $row = $connection instanceof PDO ? $res->fetch(PDO::FETCH_ASSOC) : pg_fetch_assoc($res);
+    $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM service_requests WHERE user_id = ?");
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     $totalRequests = intval($row['cnt'] ?? 0);
 
-    $res = $executeQuery($connection, "SELECT COUNT(*) as cnt FROM tasks WHERE userId = $1 AND currentStatus = 'COMPLETED'", [$userId]);
-    $row = $connection instanceof PDO ? $res->fetch(PDO::FETCH_ASSOC) : pg_fetch_assoc($res);
+    $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM service_requests WHERE user_id = ? AND status = 'COMPLETED'");
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     $completedRequests = intval($row['cnt'] ?? 0);
 
-    $res = $executeQuery($connection, "SELECT COUNT(*) as cnt FROM tasks WHERE userId = $1 AND currentStatus NOT IN ('COMPLETED','CANCELLED','CANCELLED_AFTER_CHECK')", [$userId]);
-    $row = $connection instanceof PDO ? $res->fetch(PDO::FETCH_ASSOC) : pg_fetch_assoc($res);
+    $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM service_requests WHERE user_id = ? AND status NOT IN ('COMPLETED','CANCELLED','CANCELLED_AFTER_CHECK')");
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     $activeRequests = intval($row['cnt'] ?? 0);
 
-    $res = $executeQuery($connection, "SELECT COALESCE(SUM(totalPrice),0) as sum FROM tasks WHERE userId = $1 AND currentStatus = 'COMPLETED'", [$userId]);
-    $row = $connection instanceof PDO ? $res->fetch(PDO::FETCH_ASSOC) : pg_fetch_assoc($res);
+    $stmt = $conn->prepare("SELECT COALESCE(SUM(total_price),0) as sum FROM service_requests WHERE user_id = ? AND status = 'COMPLETED'");
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     $totalSpent = floatval($row['sum'] ?? 0.00);
 
-    $res = $executeQuery($connection, "SELECT t.id, t.specialization, t.createdAt, t.currentStatus, wu.fullName as workerName FROM tasks t LEFT JOIN workers w ON t.workerId = w.id LEFT JOIN users wu ON w.userId = wu.id WHERE t.userId = $1 ORDER BY t.createdAt DESC LIMIT 5", [$userId]);
-    $recentRequests = $connection instanceof PDO ? $res->fetchAll(PDO::FETCH_ASSOC) : (pg_fetch_all($res) ?: []);
+    $stmt = $conn->prepare("SELECT * FROM service_requests WHERE user_id = ? ORDER BY created_at DESC LIMIT 5");
+    $stmt->execute([$userId]);
+    $recentRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
-    // ignore DB errors for dashboard view
+        error_log("Error fetching dashboard data: " . $e->getMessage());
 }
 ?>
 <!DOCTYPE html>
@@ -113,11 +119,11 @@ try {
                         <div>
                             <div style="color: #141714; font-weight: 600;"><?php echo htmlspecialchars($r['specialization'] ?? ($lang === 'ar' ? 'طلب' : 'Request')); ?></div>
                             <div style="color: #8A9389; font-size: 0.875rem;">
-                                <?php echo htmlspecialchars(($r['workerName'] ?? ($lang === 'ar' ? 'غير معين' : 'Unassigned')) . ' • ' . date('Y-m-d', strtotime($r['createdAt']))); ?>
+                                <?php echo htmlspecialchars(($r['worker_id'] ?? ($lang === 'ar' ? 'غير معين' : 'Unassigned')) . ' • ' . date('Y-m-d', strtotime($r['created_at']))); ?>
                             </div>
                         </div>
-                        <span class="badge <?php echo $r['currentStatus'] === 'COMPLETED' ? 'badge-success' : ($r['currentStatus'] === 'CANCELLED' ? 'badge-danger' : 'badge-active'); ?>">
-                            <?php echo htmlspecialchars($r['currentStatus']); ?>
+                        <span class="badge <?php echo $r['status'] === 'COMPLETED' ? 'badge-success' : ($r['status'] === 'CANCELLED' ? 'badge-danger' : 'badge-active'); ?>">
+                            <?php echo htmlspecialchars($r['status']); ?>
                         </span>
                     </a>
                 <?php endforeach; ?>
@@ -128,7 +134,7 @@ try {
 
         <div class="card">
             <h3><?php echo $lang === 'ar' ? 'الإجراءات السريعة' : 'Quick Actions'; ?></h3>
-            <a href="../../order.php?lang=<?php echo $lang; ?>" class="btn btn-primary btn-block"><?php echo $lang === 'ar' ? 'طلب جديد' : 'New Request'; ?></a>
+            <a href="./order.php?lang=<?php echo $lang; ?>" class="btn btn-primary btn-block"><?php echo $lang === 'ar' ? 'طلب جديد' : 'New Request'; ?></a>
             <a href="./user_requests.php?lang=<?php echo $lang; ?>" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'عرض الطلبات' : 'View Requests'; ?></a>
             <a href="./profile.php?lang=<?php echo $lang; ?>" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'الملف الشخصي' : 'Profile'; ?></a>
             <a href="./logout.php" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'تسجيل الخروج' : 'Sign Out'; ?></a>
