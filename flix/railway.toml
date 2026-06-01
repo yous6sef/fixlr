@@ -1,4 +1,0 @@
-[build]
-
-[deploy]
-startCommand = "apache2-foreground"
