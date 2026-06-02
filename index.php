@@ -72,24 +72,21 @@ $_SESSION['lang'] = $lang;
         .logo-section {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.5rem;
         }
 
         .logo {
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             object-fit: contain;
-            filter: brightness(0) invert(1);
         }
 
-        .logo-text {
-            font-size: 1.75rem;
-            font-weight: 800;
-            letter-spacing: -1px;
-            background: linear-gradient(135deg, #FFFFFF 0%, #F0F0F0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .logo-badge {
+            font-size: 0.75rem;
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            backdrop-filter: blur(10px);
         }
 
         .logo-badge {
@@ -243,11 +240,10 @@ $_SESSION['lang'] = $lang;
         }
 
         .hero-logo {
-            width: 80px;
-            height: 80px;
+            width: 120px;
+            height: 120px;
             object-fit: contain;
-            margin-bottom: 1.5rem;
-            filter: brightness(0) invert(1);
+            margin-bottom: 2rem;
             animation: fadeInUp 0.8s ease;
         }
 
@@ -619,10 +615,9 @@ $_SESSION['lang'] = $lang;
         }
 
         .footer-logo {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             object-fit: contain;
-            filter: brightness(0) invert(1);
             margin-bottom: 0.5rem;
         }
 
@@ -760,7 +755,6 @@ $_SESSION['lang'] = $lang;
         <header>
             <div class="logo-section">
                 <img src="public/images/logoflix.png" alt="FLIX Logo" class="logo">
-                <span class="logo-text">FLIX</span>
                 <span class="logo-badge">PRO</span>
             </div>
             <nav class="header-nav">
@@ -939,11 +933,8 @@ $_SESSION['lang'] = $lang;
         <footer>
             <div class="footer-content">
                 <div class="footer-section">
-                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                        <img src="public/images/logoflix.png" alt="FLIX Logo" class="footer-logo">
-                        <h4 style="margin: 0;">FLIX</h4>
-                    </div>
-                    <ul>
+                    <img src="public/images/logoflix.png" alt="FLIX Logo" class="footer-logo">
+                    <ul style="margin-top: 1rem;">
                         <li><?php echo $lang === 'ar' ? 'منصة خدمات منزلية موثوقة' : 'Trusted home services platform'; ?></li>
                         <li><?php echo $lang === 'ar' ? 'نخدم آلاف العملاء' : 'Serving thousands daily'; ?></li>
                         <li><?php echo $lang === 'ar' ? 'جودة مضمونة' : 'Quality assured'; ?></li>
