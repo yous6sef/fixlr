@@ -201,11 +201,38 @@ $_SESSION['lang'] = $lang;
             }
         }
 
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
         .hero h1 {
             font-size: clamp(2rem, 8vw, 3.5rem);
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
             font-weight: 800;
             letter-spacing: -0.5px;
+        }
+
+        .hero-slogan {
+            font-size: clamp(1.25rem, 3vw, 1.75rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: rgba(255, 255, 255, 0.95);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .slogan-main {
+            display: inline-block;
+            position: relative;
+            padding: 0.5rem 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .hero p {
@@ -725,12 +752,23 @@ $_SESSION['lang'] = $lang;
         <section class="hero">
             <div class="hero-content">
                 <h1><?php echo $lang === 'ar' ? 'خدماتك المنزلية، بسهولة وثقة' : 'Your Home Services, Made Simple'; ?></h1>
+                <div class="hero-slogan">
+                    <span class="slogan-main">
+                        <?php echo $lang === 'ar' ? 'فليكس وبس 🚀' : 'Just Flix it 🚀'; ?>
+                    </span>
+                </div>
                 <p>
                     <?php echo $lang === 'ar' 
                         ? 'منصة موثوقة تربطك بأفضل الحرفيين المحترفين لكل احتياجات منزلك. جودة، أمان، وأسعار عادلة'
                         : 'Connect with trusted professionals for all your home repair and service needs. Quality, safety, and fair pricing guaranteed'; 
                     ?>
                 </p>
+                <div style="font-size: 0.95rem; opacity: 0.9; margin-bottom: 2rem; font-style: italic;">
+                    <?php echo $lang === 'ar' 
+                        ? '✨ فليكسها و انسىها - اترك الباقي علينا'
+                        : '✨ Flix it & Forget it - We handle the rest'; 
+                    ?>
+                </div>
                 <div class="hero-buttons">
                     <a href="pages/user/signup.php?lang=<?php echo $lang; ?>&type=user" class="btn btn-primary">
                         <?php echo $lang === 'ar' ? 'ابدأ كعميل' : 'Get Started'; ?>
