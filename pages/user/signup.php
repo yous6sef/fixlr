@@ -201,7 +201,6 @@ foreach ($services as $service) {
     $services_en[] = $service['name_en'];
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
 <head>
@@ -213,23 +212,80 @@ foreach ($services as $service) {
         :root {
             --primary: #1A6B4A;
             --primary-light: #2D9A6C;
+            --primary-lighter: #E8F5EE;
+            --text-primary: #141714;
+            --text-secondary: #4A5249;
+            --text-tertiary: #8A9389;
+            --border: #D4D3D0;
             --surface: #FFFFFF;
             --surface-light: #F7F8F6;
+            --surface-lighter: #F0F2EE;
+            --radius: 14px;
+            --shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
 
-        body { background: var(--surface-light); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--surface-light);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-brand { display: flex; align-items: center; }
+
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .header-nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .header-nav a:hover { opacity: 0.8; }
+
+        .signup-wrapper {
+            min-height: calc(100vh - 70px);
+            padding: 2rem 1rem;
+        }
 
         .signup-container {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 2rem;
-        }
-
-        .signup-card {
+            max-width: 600px;
+            margin: 0 auto;
             background: var(--surface);
-            border-radius: 14px;
-            padding: 2rem;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2.5rem;
         }
 
         .signup-header {
@@ -237,9 +293,23 @@ foreach ($services as $service) {
             margin-bottom: 2rem;
         }
 
-        .signup-header h1 {
+        .signup-header .logo-text {
+            font-size: 2.5rem;
+            font-weight: 700;
             color: var(--primary);
             margin-bottom: 0.5rem;
+        }
+
+        .signup-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .signup-header p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
         }
 
         .type-tabs {
@@ -251,13 +321,13 @@ foreach ($services as $service) {
 
         .type-tab {
             padding: 1rem;
-            border: 2px solid #D4D3D0;
+            border: 2px solid var(--border);
             border-radius: 8px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s;
-            background: var(--surface);
-            color: #4A5249;
+            background: var(--surface-light);
+            color: var(--text-secondary);
             font-weight: 600;
         }
 
@@ -269,29 +339,30 @@ foreach ($services as $service) {
 
         .type-tab:hover {
             border-color: var(--primary);
+            background: var(--primary-lighter);
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
 
         .form-group label {
             display: block;
-            color: #141714;
+            color: var(--text-primary);
             font-weight: 500;
             margin-bottom: 0.5rem;
             font-size: 0.95rem;
         }
 
         .form-group input,
-        .form-group select,
-        .form-group textarea {
+        .form-group select {
             width: 100%;
             padding: 0.875rem;
-            border: 1px solid #D4D3D0;
+            border: 1px solid var(--border);
             border-radius: 8px;
             font-family: inherit;
             font-size: 1rem;
+            transition: all 0.2s;
         }
 
         .form-group input:focus,
@@ -303,7 +374,7 @@ foreach ($services as $service) {
 
         .form-row {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 1rem;
         }
 
@@ -311,18 +382,13 @@ foreach ($services as $service) {
             padding: 1rem;
             border-radius: 8px;
             margin-bottom: 1.5rem;
+            border: 1px solid;
         }
 
         .alert-error {
             background: #FEE2E2;
-            color: #DC2626;
-            border: 1px solid #FECACA;
-        }
-
-        .alert-success {
-            background: #E8F5EE;
-            color: var(--primary);
-            border: 1px solid #D4E8E0;
+            color: #991B1B;
+            border-color: #FECACA;
         }
 
         .error-list {
@@ -331,7 +397,8 @@ foreach ($services as $service) {
         }
 
         .error-list li {
-            padding: 0.5rem 0;
+            padding: 0.35rem 0;
+            font-size: 0.95rem;
         }
 
         .error-list li:before {
@@ -342,13 +409,15 @@ foreach ($services as $service) {
         .btn-submit {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
             color: white;
-            padding: 0.875rem 2rem;
+            padding: 0.9rem 2rem;
             border: none;
             border-radius: 8px;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 1rem;
             cursor: pointer;
             width: 100%;
             transition: all 0.2s;
+            margin-top: 1.5rem;
         }
 
         .btn-submit:hover {
@@ -356,104 +425,214 @@ foreach ($services as $service) {
             box-shadow: 0 4px 16px rgba(26, 107, 74, 0.3);
         }
 
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .success-message {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .success-message h2 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .success-message p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(26, 107, 74, 0.3);
+        }
+
         .already-registered {
             text-align: center;
             margin-top: 1.5rem;
-            color: #4A5249;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
         }
 
         .already-registered a {
             color: var(--primary);
             text-decoration: none;
             font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .already-registered a:hover {
+            color: var(--primary-light);
         }
 
         .checkbox-group {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 1rem;
+            margin: 1rem 0;
         }
 
         .checkbox-item {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 0.5rem;
         }
 
         .checkbox-item input {
             width: auto;
+            margin-top: 0.25rem;
+            cursor: pointer;
         }
 
         .checkbox-item label {
             margin: 0;
             cursor: pointer;
+            font-size: 0.95rem;
         }
 
         .file-upload {
-            border: 2px dashed #D4D3D0;
+            border: 2px dashed var(--border);
             border-radius: 8px;
             padding: 1.5rem;
             text-align: center;
             cursor: pointer;
-            background: #F7F8F6;
+            background: var(--surface-lighter);
+            transition: all 0.2s;
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary);
+            background: var(--primary-lighter);
         }
 
         .file-upload input {
             display: none;
         }
 
+        .file-upload p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
         .worker-fields {
             display: none;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
         }
 
         .worker-fields.show {
             display: block;
         }
 
-        .success-message h2 {
-            color: var(--primary);
-            margin-bottom: 1rem;
-        }
-
-        .checked-pass {
-            margin-top: 1rem;
-            display:none;
-        }
-
-        .checked-pass p {
-            color: green;
-            font-size: 0.9rem;
-        }
-
-        .checked-pass.show {
-            display:block;
-        }
-
-        .checking-password {
-            margin-top: 1rem;
-            display:block;
-        }
-
-        .password-error {
-            margin-top: 1rem;
-            display:none;
-        }
-
-        .phone-hint {
+        .password-helper {
             margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+        }
+
+        .password-helper.error {
             color: #DC2626;
         }
 
+        .password-helper.success {
+            color: #059669;
+        }
+
+        .lang-btns {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .lang-btns a {
+            padding: 0.55rem 1rem;
+            border: 1px solid var(--border);
+            background: var(--surface-light);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .lang-btns a:hover {
+            border-color: var(--primary);
+            background: var(--primary-lighter);
+        }
+
+        .lang-btns a.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
         @media (max-width: 640px) {
-            .form-row {
-                grid-template-columns: 1fr;
+            header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .header-nav {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .signup-wrapper {
+                padding: 1rem;
+            }
+
+            .signup-container {
+                padding: 1.5rem;
+            }
+
+            .signup-header .logo-text {
+                font-size: 2rem;
+            }
+
+            .signup-header h1 {
+                font-size: 1.25rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="signup-container">
-        <div class="signup-card">
+    <header>
+        <div class="header-brand">
+            <div class="logo">FLIX</div>
+        </div>
+        <nav class="header-nav">
+            <a href="../../index.php?lang=<?php echo $lang; ?>">
+                <?php echo $lang === 'ar' ? 'الرئيسية' : 'Home'; ?>
+            </a>
+            <a href="login.php?lang=<?php echo $lang; ?>">
+                <?php echo $lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'; ?>
+            </a>
+        </nav>
+    </header>
+
+    <div class="signup-wrapper">
+        <div class="signup-container">
             <?php if ($success): ?>
                 <div class="success-message">
                     <h2><?php echo $lang === 'ar' ? 'تم التسجيل بنجاح!' : 'Registration Successful!'; ?></h2>
@@ -461,12 +640,13 @@ foreach ($services as $service) {
                         ? ($type === 'worker' ? 'تم تقديم طلبك للموافقة. ستتلقى بريدًا إلكترونيًا عند الموافقة.' : 'حسابك جاهز للاستخدام')
                         : ($type === 'worker' ? 'Your application has been submitted for approval.' : 'Your account is ready to use'); 
                     ?></p>
-                    <a href="login.php?lang=<?php echo $lang; ?>" class="btn btn-primary" style="display: inline-block; margin-top: 1rem;">
+                    <a href="login.php?lang=<?php echo $lang; ?>" class="btn-back">
                         <?php echo $lang === 'ar' ? 'العودة إلى تسجيل الدخول' : 'Back to Login'; ?>
                     </a>
                 </div>
             <?php else: ?>
                 <div class="signup-header">
+                    <div class="logo-text">FLIX</div>
                     <h1><?php echo $lang === 'ar' ? 'إنشاء حساب جديد' : 'Create New Account'; ?></h1>
                 </div>
 
@@ -481,103 +661,74 @@ foreach ($services as $service) {
                 <?php endif; ?>
 
                 <div class="type-tabs">
-                    <div class="flex items-center space-x-2 space-x-reverse">
-                        <input type="radio" id="user" name="role" value="user" checked class="w-4 h-4" onclick="switchType('user')">
-                        <label for="user" class="text-gray-700"><?php echo $lang === 'ar'?'عميل': 'user' ?></label>
-                        <input type="radio" id="worker" name="role" value="worker" class="w-4 h-4" onclick="switchType('worker')">
-                        <label for="worker" class="text-gray-700"><?php echo $lang === 'ar'?'عامل': 'worker' ?></label>
-                    </div><br>
+                    <button class="type-tab active" onclick="switchType('user', this)">
+                        <?php echo $lang === 'ar' ? 'عميل' : 'Customer'; ?>
+                    </button>
+                    <button class="type-tab" onclick="switchType('worker', this)">
+                        <?php echo $lang === 'ar' ? 'عامل' : 'Service Provider'; ?>
+                    </button>
                 </div>
 
                 <form method="POST" enctype="multipart/form-data" id="signupForm">
                     <input type="hidden" name="type" value="user" id="typeInput">
 
-                    <!-- Common Fields -->
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label><?php echo $lang === 'ar' ? 'الاسم الكامل' : 'Full Name'; ?> *</label>
-                            <input type="text" name="fullName" required>
-                        </div>
+                    <div class="form-group">
+                        <label><?php echo $lang === 'ar' ? 'الاسم الكامل' : 'Full Name'; ?> *</label>
+                        <input type="text" name="fullName" placeholder="<?php echo $lang === 'ar' ? 'أحمد محمد' : 'John Doe'; ?>" required>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label><?php echo $lang === 'ar' ? 'رقم الهاتف' : 'Phone Number'; ?> *</label>
-                            <input type="tel" name="phoneNumber" placeholder="+201001234567" id="phone" required>
-                        </div><br>
-                        <div id="phone_hint" class="phone-hint">
-                            <p><?php echo $lang === 'ar' 
-                                ? 'يرجى إدخال رقم هاتف مصري صالح يبدأ بـ 010، 011، 012، أو 015.'
-                                : 'Please enter a valid Egyptian phone number starting with 010, 011, 012, or 015.';
-                            ?></p>
-                        </div>
-                        <div class="form-group">
-                            <label><?php echo $lang === 'ar' ? 'كلمة المرور' : 'Password'; ?> *</label>
-                            <input type="password" name="password" id="password" required>
-                        </div>
+                    <div class="form-group">
+                        <label><?php echo $lang === 'ar' ? 'رقم الهاتف' : 'Phone Number'; ?> *</label>
+                        <input type="tel" name="phoneNumber" placeholder="+20 1001234567" id="phone" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><?php echo $lang === 'ar' ? 'كلمة المرور' : 'Password'; ?> *</label>
+                        <input type="password" name="password" id="password" placeholder="<?php echo $lang === 'ar' ? 'أدخل كلمة مرور قوية' : 'Enter a strong password'; ?>" required>
+                        <div id="passwordHint" class="password-helper"><?php echo $lang === 'ar' ? 'الحد الأدنى 8 أحرف' : 'Minimum 8 characters'; ?></div>
                     </div>
 
                     <div class="form-group">
                         <label><?php echo $lang === 'ar' ? 'تأكيد كلمة المرور' : 'Confirm Password'; ?> *</label>
-                        <input type="password" name="confirmPassword" id="confirmPassword" required>
-                    </div>
-
-                    <div class="checked-pass">
-                        <p><?php echo $lang === 'ar' ? 'كلمة المرور متطابقة مع تأكيد كلمة المرور' : 'Password match the confirm password'; ?><br><br></p>
-                    </div>
-
-                    <div id="checking_password" class="checking-password">
-                        <p><?php echo $lang === 'ar' 
-                            ? 'ملاحظة: يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل.' 
-                            : 'Note: Password must be at least 8 characters.';
-                        ?></p>
-                    </div><br>
-
-                    <div id="password_error" class="password-error">
-                        <p style="color: #DC2626;"><?php echo $lang === 'ar' ? 'يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل.' : 'Password must be at least 8 characters.'; ?></p>
+                        <input type="password" name="confirmPassword" id="confirmPassword" placeholder="<?php echo $lang === 'ar' ? 'أعد إدخال كلمة المرور' : 'Re-enter your password'; ?>" required>
                     </div>
 
                     <!-- Worker-Specific Fields -->
                     <div id="workerFields" class="worker-fields">
                         <div class="form-group">
                             <label><?php echo $lang === 'ar' ? 'رقم بطاقة الهوية' : 'ID Card Number'; ?> *</label>
-                            <input type="text" name="national_id" id="national-id">
+                            <input type="text" name="national_id" placeholder="<?php echo $lang === 'ar' ? '123456789012345' : '12345678901234'; ?>">
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
                                 <label><?php echo $lang === 'ar' ? 'العنوان السكني' : 'Residential Address'; ?> *</label>
-                                <input type="text" name="residentialLocation" >
-                            </div>
-                            <div class="form-group">
-                                <label><?php echo $lang === 'ar' ? 'منطقة العمل' : 'Work Area'; ?> *</label>
-                                <select name="workLocation" >
-                                    <option value="6th of October City">6th of October City</option>
-                                    <option value="Sheikh Zayed">Sheikh Zayed</option>
-                                </select>
+                                <input type="text" name="residentialLocation" placeholder="<?php echo $lang === 'ar' ? 'العنوان' : 'Address'; ?>">
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label><?php echo $lang === 'ar' ? 'التخصصات' : 'Specializations'; ?> *</label>
-                            <?php foreach ($services as $service): ?>
-                                <div class="checkbox-item">
-                                    <input
-                                        type="checkbox"
-                                        name="specializations[]"
-                                        value="<?php echo htmlspecialchars($service['name_en']); ?>"
-                                        id="spec_<?php echo $service['id']; ?>"
-                                    ><br><br>
+                            <label><?php echo $lang === 'ar' ? 'منطقة العمل' : 'Work Area'; ?> *</label>
+                            <select name="workLocation">
+                                <option value="6th of October City">6th of October City</option>
+                                <option value="Sheikh Zayed">Sheikh Zayed</option>
+                                <option value="Cairo">Cairo</option>
+                                <option value="Giza">Giza</option>
+                            </select>
+                        </div>
 
-                                <label for="spec_<?php echo $service['id']; ?>">
-                                    <?php
-                                        echo $lang === 'ar'
-                                        ? htmlspecialchars($service['name_ar'])
-                                        : htmlspecialchars($service['name_en']);
-                                    ?>
-                                </label><br><br>
-                                </div>
-                            <?php endforeach; ?>
+                        <div class="form-group">
+                            <label><?php echo $lang === 'ar' ? 'التخصصات' : 'Specializations'; ?> *</label>
+                            <div class="checkbox-group">
+                                <?php foreach ($services as $service): ?>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" name="specializations[]" value="<?php echo htmlspecialchars($service['name_en']); ?>" id="spec_<?php echo $service['id']; ?>">
+                                        <label for="spec_<?php echo $service['id']; ?>">
+                                            <?php echo $lang === 'ar' ? htmlspecialchars($service['name_ar']) : htmlspecialchars($service['name_en']); ?>
+                                        </label>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -585,7 +736,7 @@ foreach ($services as $service) {
                             <div class="file-upload" onclick="document.getElementById('idCardFront').click()">
                                 <p><?php echo $lang === 'ar' ? 'اضغط لتحميل الصورة' : 'Click to upload'; ?></p>
                             </div>
-                            <input type="file" id="idCardFront" name="idCardFront" accept="image/jpeg,image/png" >
+                            <input type="file" id="idCardFront" name="idCardFront" accept="image/jpeg,image/png">
                         </div>
 
                         <div class="form-group">
@@ -593,7 +744,7 @@ foreach ($services as $service) {
                             <div class="file-upload" onclick="document.getElementById('idCardBack').click()">
                                 <p><?php echo $lang === 'ar' ? 'اضغط لتحميل الصورة' : 'Click to upload'; ?></p>
                             </div>
-                            <input type="file" id="idCardBack" name="idCardBack" accept="image/jpeg,image/png" >
+                            <input type="file" id="idCardBack" name="idCardBack" accept="image/jpeg,image/png">
                         </div>
 
                         <div class="form-group">
@@ -601,7 +752,7 @@ foreach ($services as $service) {
                             <div class="file-upload" onclick="document.getElementById('criminalRecord').click()">
                                 <p><?php echo $lang === 'ar' ? 'اضغط لتحميل الملف' : 'Click to upload'; ?></p>
                             </div>
-                            <input type="file" id="criminalRecord" name="criminalRecord" accept="image/jpeg,image/png,application/pdf" >
+                            <input type="file" id="criminalRecord" name="criminalRecord" accept="image/jpeg,image/png,application/pdf">
                         </div>
                     </div>
 
@@ -616,16 +767,22 @@ foreach ($services as $service) {
                         </a>
                     </div>
                 </form>
+
+                <div class="lang-btns">
+                    <a href="./signup.php?lang=en" class="<?php echo $lang === 'en' ? 'active' : ''; ?>">English</a>
+                    <a href="./signup.php?lang=ar" class="<?php echo $lang === 'ar' ? 'active' : ''; ?>">العربية</a>
+                </div>
             <?php endif; ?>
         </div>
     </div>
 
     <script>
-function switchType(type) {
+function switchType(type, btn) {
     document.getElementById('typeInput').value = type;
+    document.querySelectorAll('.type-tab').forEach(el => el.classList.remove('active'));
+    btn.classList.add('active');
 
     const workerFields = document.getElementById('workerFields');
-
     const requiredFiles = [
         document.getElementById('idCardFront'),
         document.getElementById('idCardBack'),
@@ -634,97 +791,39 @@ function switchType(type) {
 
     if (type === 'worker') {
         workerFields.classList.add('show');
-        requiredFiles.forEach(file => {
-            if (file) file.required = true;
-        });
+        requiredFiles.forEach(file => file.required = true);
     } else {
         workerFields.classList.remove('show');
-        requiredFiles.forEach(file => {
-            if (file) file.required = false;
-        });
+        requiredFiles.forEach(file => file.required = false);
     }
 }
 
-// Password Elements
 const password = document.getElementById('password');
 const confirmPassword = document.getElementById('confirmPassword');
-const checkIcon = document.querySelector('.checked-pass');
-const passwordError = document.getElementById('password_error');
-
-// إنشاء رسالة عدم التطابق إذا لم تكن موجودة
-let mismatchError = document.getElementById('password_mismatch');
-
-if (!mismatchError) {
-    mismatchError = document.createElement('div');
-    mismatchError.id = 'password_mismatch';
-    mismatchError.style.display = 'none';
-    mismatchError.style.color = '#DC2626';
-    mismatchError.style.marginTop = '10px';
-
-    mismatchError.textContent =
-        "<?php echo $lang === 'ar' ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'; ?>";
-
-    passwordError.insertAdjacentElement('afterend', mismatchError);
-}
+const passwordHint = document.getElementById('passwordHint');
+const lang = "<?php echo $lang; ?>";
 
 function validatePassword() {
     const pass = password.value;
     const confirm = confirmPassword.value;
 
-    checkIcon.classList.remove('show');
-    passwordError.style.display = 'none';
-    mismatchError.style.display = 'none';
-
-    if (!pass && !confirm) {
-        return;
-    }
-
-    // أقل من 8 أحرف
-    if (pass.length > 0 && pass.length < 8) {
-        passwordError.style.display = 'block';
-        return;
-    }
-
-    // لا نتحقق من التطابق إلا إذا المستخدم كتب في الحقلين
-    if (pass && confirm) {
-
-        if (pass !== confirm) {
-            mismatchError.style.display = 'block';
-            return;
-        }
-
-        checkIcon.classList.add('show');
+    if (pass.length < 8) {
+        passwordHint.textContent = lang === 'ar' ? 'يجب أن تحتوي على 8 أحرف على الأقل' : 'Must be at least 8 characters';
+        passwordHint.classList.add('error');
+        passwordHint.classList.remove('success');
+    } else if (confirm && pass !== confirm) {
+        passwordHint.textContent = lang === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match';
+        passwordHint.classList.add('error');
+        passwordHint.classList.remove('success');
+    } else if (confirm && pass === confirm && pass.length >= 8) {
+        passwordHint.textContent = lang === 'ar' ? '✓ كلمات المرور متطابقة' : '✓ Passwords match';
+        passwordHint.classList.add('success');
+        passwordHint.classList.remove('error');
     }
 }
 
-// Phone Validation
-const phone = document.getElementById('phone');
-const phoneHint = document.getElementById('phone_hint');
-
-function validatePhone() {
-    const phonePattern = /^01[0125][0-9]{8}$/;
-
-    if (!phone.value) return;
-
-    if (!phonePattern.test(phone.value)) {
-        phoneHint.style.display = 'block';
-
-        phone.focus();
-    }
-        else {
-            phoneHint.style.display = 'none';
-        }
-}
-
-// Events
 password.addEventListener('input', validatePassword);
 confirmPassword.addEventListener('input', validatePassword);
-
-// التحقق عند مغادرة الحقل وليس أثناء كل حرف
-phone.addEventListener('input', validatePhone);
-
-// تشغيل أولي عند تحميل الصفحة
-validatePassword();
-</script>
+    </script>
 </body>
 </html>
