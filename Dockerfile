@@ -7,10 +7,11 @@ RUN apk add --no-cache \
     sqlite \
     sqlite-dev \
     supervisor \
-    curl
+    curl \
+    postgresql-dev
 
 # Install required PHP extensions
-RUN docker-php-ext-install pdo pdo_sqlite
+RUN docker-php-ext-install pdo pdo_sqlite pdo_pgsql
 
 # Create PHP-FPM config for production
 RUN cat > /usr/local/etc/php-fpm.d/www.conf << 'EOF'
