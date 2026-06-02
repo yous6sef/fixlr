@@ -29,7 +29,7 @@ EOF
 WORKDIR /var/www/html
 
 # Copy all application files
-COPY flix/ /var/www/html/
+COPY . /var/www/html/
 
 # Create required directories with proper permissions
 RUN mkdir -p /var/www/html/uploads/workers && \
