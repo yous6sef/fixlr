@@ -28,11 +28,16 @@ $_SESSION['lang'] = $lang;
     <meta name="description" content="<?php echo htmlspecialchars($siteDescription); ?>">
     <meta name="keywords" content="<?php echo htmlspecialchars($siteKeywords); ?>">
     <meta name="author" content="FLIX">
+    <meta name="robots" content="index,follow">
+    <meta name="googlebot" content="index,follow">
     <link rel="canonical" href="<?php echo htmlspecialchars($pageUrl); ?>">
     <meta property="og:locale" content="<?php echo $lang === 'ar' ? 'ar_AR' : 'en_US'; ?>">
     <meta property="og:title" content="<?php echo htmlspecialchars($siteTitle); ?>">
     <meta property="og:description" content="<?php echo htmlspecialchars($siteDescription); ?>">
     <meta property="og:image" content="<?php echo htmlspecialchars($previewImage); ?>">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="<?php echo htmlspecialchars($siteSlogan); ?>">
     <meta property="og:type" content="website">
     <meta property="og:url" content="<?php echo htmlspecialchars($pageUrl); ?>">
@@ -43,7 +48,10 @@ $_SESSION['lang'] = $lang;
     <meta name="twitter:image" content="<?php echo htmlspecialchars($previewImage); ?>">
     <meta name="twitter:image:alt" content="<?php echo htmlspecialchars($siteSlogan); ?>">
     <meta name="theme-color" content="#1A6B4A">
-    <link rel="icon" href="public/images/logoflix.png" type="image/png">
+    <link rel="shortcut icon" href="<?php echo htmlspecialchars($pageUrl . 'logoc.jpeg'); ?>" type="image/jpeg">
+    <link rel="icon" href="<?php echo htmlspecialchars($pageUrl . 'logoc.jpeg'); ?>" type="image/jpeg">
+    <link rel="apple-touch-icon" href="<?php echo htmlspecialchars($pageUrl . 'logoc.jpeg'); ?>">
+    <link rel="mask-icon" href="<?php echo htmlspecialchars($pageUrl . 'logoc.jpeg'); ?>" color="#1A6B4A">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
