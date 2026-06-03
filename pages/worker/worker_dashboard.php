@@ -7,11 +7,36 @@ include('../../core/lang.php');
 include('../../core/db.php');
 $lang = $_GET['lang'] ?? 'en';
 
+$user_id = $_SESSION['user_id'];
 
 $stmt = $conn->prepare("SELECT name FROM workers WHERE id = :id");
-$stmt->bindParam(':id', $_SESSION['user_id']);
+$stmt->bindParam(':id', $user_id);
 $stmt->execute();
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+$worker = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$stmt = $conn->prepare("SELECT total_completed_tasks FROM workers WHERE id = :id");
+$stmt->bindParam(':id', $user_id);
+$stmt->execute();
+$total_completed_tasks = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$stmt = $conn->prepare("SELECT city,specialization,average_rating FROM workers WHERE id = :id");
+$stmt->bindParam(':id', $user_id);
+$stmt->execute();
+$worker2 = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$worker_city = $worker2[0]['city'];
+$worker_specialization = $worker2[0]['specialization'];
+$worker_rating = $worker2[0]['average_rating'] ?? 0;
+
+$stmt = $conn->prepare("SELECT * FROM service_requests WHERE city = :city AND specialization = :specialization AND status = 'REQUESTED' LIMIT 20");
+$stmt->bindParam(':city', $worker_city);
+$stmt->bindParam(':specialization', $worker_specialization);
+$stmt->execute();
+$available_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$stmt = $conn->prepare("SELECT * FROM service_requests WHERE id = :worker_id");
+$stmt->bindParam(':worker_id', $user_id);
+$stmt->execute();
+$ongoing_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
@@ -29,39 +54,41 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
         </div>
 
         <div class="page-header">
-            <h1><?php echo $lang === 'ar' ? 'مرحبا ' . htmlspecialchars($user['name']) : 'Hi ' . htmlspecialchars($user['name']); ?></h1>
+            <h1><?php echo $lang === 'ar' ? 'مرحبا ' . htmlspecialchars($worker[0]['name']) : 'Hi ' . htmlspecialchars($worker[0]['name']); ?></h1>
             <p><?php echo $lang === 'ar' ? 'الطلبات المتاحة' : 'Available Opportunities'; ?></p>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-value">12</div>
+                <div class="stat-value"><?php echo count($available_requests); ?></div>
                 <div class="stat-label"><?php echo $lang === 'ar' ? 'متاح' : 'Available'; ?></div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">3</div>
+                <div class="stat-value"><?php echo count($ongoing_requests); ?></div>
                 <div class="stat-label"><?php echo $lang === 'ar' ? 'جاري' : 'Ongoing'; ?></div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">24</div>
+                <div class="stat-value"><?php echo htmlspecialchars($total_completed_tasks['total_completed_tasks']); ?></div>
                 <div class="stat-label"><?php echo $lang === 'ar' ? 'مكتمل' : 'Completed'; ?></div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">4.8</div>
+                <div class="stat-value"><?php echo htmlspecialchars($worker_rating); ?></div>
                 <div class="stat-label"><?php echo $lang === 'ar' ? 'التقييم' : 'Rating'; ?></div>
             </div>
         </div>
 
         <div class="card">
             <h3><?php echo $lang === 'ar' ? 'الطلبات المتاحة' : 'Available Jobs'; ?></h3>
+            <?php foreach ($available_requests as $request): ?>
             <div class="provider-card">
                 <div class="provider-avatar" style="background: #E8F5EE;">P1</div>
                 <div class="provider-info">
-                    <div class="provider-name"><?php echo $lang === 'ar' ? 'أنابيب - تسرب مياه' : 'Plumbing - Water Leak'; ?></div>
-                    <div class="provider-role"><?php echo $lang === 'ar' ? 'حي النيل • الآن' : 'Nile Area • Now'; ?></div>
+                    <div class="provider-name"><?php echo $request['problem_description']; ?></div>
+                    <div class="provider-role"><?php echo $request['address_description']; ?></div>
                 </div>
                 <div class="provider-price">300 EGP</div>
             </div>
+            <?php endforeach; ?>
         </div>
 
         <div class="card">

@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $workerStmt->execute([
                         $fullName,
                         $national_id,
-                        json_encode($specializations),
+                        $specializations[0] ?? '', // For simplicity, only storing the first specialization
                         $residentialLocation,
                         $workLocation,
                         $phoneNumber,
@@ -722,7 +722,7 @@ foreach ($services as $service) {
                             <div class="checkbox-group">
                                 <?php foreach ($services as $service): ?>
                                     <div class="checkbox-item">
-                                        <input type="checkbox" name="specializations[]" value="<?php echo htmlspecialchars($service['name_en']); ?>" id="spec_<?php echo $service['id']; ?>">
+                                        <input type="radio" name="specializations[]" value="<?php echo htmlspecialchars($service['name_en']); ?>" id="spec_<?php echo $service['id']; ?>">
                                         <label for="spec_<?php echo $service['id']; ?>">
                                             <?php echo $lang === 'ar' ? htmlspecialchars($service['name_ar']) : htmlspecialchars($service['name_en']); ?>
                                         </label>
