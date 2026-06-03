@@ -74,7 +74,7 @@ $_SESSION['lang'] = $lang;
     </script>
     <title><?php echo $siteTitle; ?></title>
     <link rel="stylesheet" href="public/css/app.css">
-    <link rel="sitemap" type="application/xml" title="Sitemap" href="<?php echo htmlspecialchars($pageUrl . 'sitemap.xml.php'); ?>">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="<?php echo htmlspecialchars($pageUrl . 'sitemap.xml'); ?>">
     <style>
         :root {
             --primary: #1A6B4A;
