@@ -7,6 +7,22 @@ $pages = [
     '/pages/user/signup.php',
     '/pages/user/order.php',
     '/pages/user/user_dashboard.php',
+    '/pages/user/track.php',
+    '/pages/user/profile.php',
+    '/pages/user/user_requests.php',
+    '/pages/user/receipt.php',
+    '/pages/user/payments.php',
+    '/pages/user/request_detail.php',
+    '/pages/user/new_request.php',
+    '/pages/worker/worker_dashboard.php',
+    '/pages/worker/worker_available_requests.php',
+    '/pages/worker/worker_orders.php',
+    '/pages/worker/worker_profile.php',
+    '/pages/worker/worker_payments.php',
+    '/pages/worker/worker_receipt.php',
+    '/pages/worker/worker_track.php',
+    '/pages/user/login.php?lang=en',
+    '/pages/user/login.php?lang=ar',
 ];
 
 header('Content-Type: application/xml; charset=utf-8');
