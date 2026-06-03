@@ -9,7 +9,32 @@ $_SESSION['lang'] = $lang;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang === 'ar' ? 'فليكس - خدمات المنزل' : 'Flix - Home Services Marketplace'; ?></title>
+    <?php
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+        $pageUrl = rtrim($baseUrl, '/') . '/';
+        $previewImage = $pageUrl . 'logoc.jpeg';
+        $siteTitle = $lang === 'ar' ? 'فليكس - خدمات المنزل' : 'Flix - Home Services Marketplace';
+        $siteDescription = $lang === 'ar'
+            ? 'فليكس يربط المستخدمين بالفنيين المحليين لصيانة وإصلاح المنزل بسرعة وسهولة.'
+            : 'FLIX connects users with trusted local repair and maintenance professionals for homes.';
+        $siteSlogan = $lang === 'ar'
+            ? 'خدمات منزلية فورية، بثقة وسرعة.'
+            : 'Instant home service, trusted and fast.';
+    ?>
+    <meta name="description" content="<?php echo htmlspecialchars($siteDescription); ?>">
+    <meta property="og:title" content="<?php echo htmlspecialchars($siteTitle); ?>">
+    <meta property="og:description" content="<?php echo htmlspecialchars($siteDescription); ?>">
+    <meta property="og:image" content="<?php echo htmlspecialchars($previewImage); ?>">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<?php echo htmlspecialchars($pageUrl); ?>">
+    <meta property="og:site_name" content="FLIX">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?php echo htmlspecialchars($siteTitle); ?>">
+    <meta name="twitter:description" content="<?php echo htmlspecialchars($siteDescription); ?>">
+    <meta name="twitter:image" content="<?php echo htmlspecialchars($previewImage); ?>">
+    <meta name="twitter:image:alt" content="<?php echo htmlspecialchars($siteSlogan); ?>">
+    <title><?php echo $siteTitle; ?></title>
     <link rel="stylesheet" href="public/css/app.css">
     <style>
         :root {
