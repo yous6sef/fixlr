@@ -21,11 +21,19 @@ $_SESSION['lang'] = $lang;
         $siteSlogan = $lang === 'ar'
             ? 'خدمات منزلية فورية، بثقة وسرعة.'
             : 'Instant home service, trusted and fast.';
+        $siteKeywords = $lang === 'ar'
+            ? 'خدمات منزلية, صيانة المنزل, فنيين محليين, إصلاحات, منصة فليكس'
+            : 'home services, home repair, handyman services, local professionals, home maintenance, FLIX marketplace';
     ?>
     <meta name="description" content="<?php echo htmlspecialchars($siteDescription); ?>">
+    <meta name="keywords" content="<?php echo htmlspecialchars($siteKeywords); ?>">
+    <meta name="author" content="FLIX">
+    <link rel="canonical" href="<?php echo htmlspecialchars($pageUrl); ?>">
+    <meta property="og:locale" content="<?php echo $lang === 'ar' ? 'ar_AR' : 'en_US'; ?>">
     <meta property="og:title" content="<?php echo htmlspecialchars($siteTitle); ?>">
     <meta property="og:description" content="<?php echo htmlspecialchars($siteDescription); ?>">
     <meta property="og:image" content="<?php echo htmlspecialchars($previewImage); ?>">
+    <meta property="og:image:alt" content="<?php echo htmlspecialchars($siteSlogan); ?>">
     <meta property="og:type" content="website">
     <meta property="og:url" content="<?php echo htmlspecialchars($pageUrl); ?>">
     <meta property="og:site_name" content="FLIX">
@@ -34,8 +42,31 @@ $_SESSION['lang'] = $lang;
     <meta name="twitter:description" content="<?php echo htmlspecialchars($siteDescription); ?>">
     <meta name="twitter:image" content="<?php echo htmlspecialchars($previewImage); ?>">
     <meta name="twitter:image:alt" content="<?php echo htmlspecialchars($siteSlogan); ?>">
+    <meta name="theme-color" content="#1A6B4A">
+    <link rel="icon" href="public/images/logoflix.png" type="image/png">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "FLIX",
+      "url": "<?php echo addslashes($pageUrl); ?>",
+      "logo": "<?php echo addslashes($previewImage); ?>",
+      "description": "<?php echo addslashes($siteDescription); ?>"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "<?php echo addslashes($siteTitle); ?>",
+      "description": "<?php echo addslashes($siteDescription); ?>",
+      "url": "<?php echo addslashes($pageUrl); ?>",
+      "inLanguage": "<?php echo $lang; ?>"
+    }
+    </script>
     <title><?php echo $siteTitle; ?></title>
     <link rel="stylesheet" href="public/css/app.css">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="<?php echo htmlspecialchars($pageUrl . 'sitemap.xml.php'); ?>">
     <style>
         :root {
             --primary: #1A6B4A;
