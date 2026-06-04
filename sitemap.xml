@@ -1,92 +1,92 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://your-domain.com/</loc>
+    <loc>https://flix-eg.up.railway.app/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/user/login.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/user/login.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/user/signup.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/user/signup.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/user/order.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/user/order.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/user/user_dashboard.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/user/user_dashboard.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/user/track.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/user/track.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/user/profile.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/user/profile.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/user/user_requests.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/user/user_requests.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/user/receipt.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/user/receipt.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/user/payments.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/user/payments.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/user/request_detail.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/user/request_detail.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/worker/worker_dashboard.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/worker/worker_dashboard.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/worker/worker_available_requests.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/worker/worker_available_requests.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/worker/worker_orders.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/worker/worker_orders.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/worker/worker_profile.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/worker/worker_profile.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/worker/worker_payments.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/worker/worker_payments.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/worker/worker_receipt.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/worker/worker_receipt.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/pages/worker/worker_track.php</loc>
+    <loc>https://flix-eg.up.railway.app/pages/worker/worker_track.php</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
