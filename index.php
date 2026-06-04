@@ -25,13 +25,26 @@ $_SESSION['lang'] = $lang;
             ? 'خدمات منزلية, صيانة المنزل, فنيين محليين, إصلاحات, منصة فليكس'
             : 'home services, home repair, handyman services, local professionals, home maintenance, FLIX marketplace';
     ?>
+    <?php
+        $alternateEn = $pageUrl;
+        $alternateAr = $pageUrl . '?lang=ar';
+        $currentUrl = $lang === 'ar' ? $pageUrl . '?lang=ar' : $pageUrl;
+        $metaKeywords = $lang === 'ar'
+            ? 'خدمات منزلية, صيانة المنزل, فنيين محليين, إصلاحات, منصة فليكس'
+            : 'home services, home repair, handyman services, local professionals, home maintenance, FLIX marketplace';
+        $ogLocale = $lang === 'ar' ? 'ar_AR' : 'en_US';
+    ?>
     <meta name="description" content="<?php echo htmlspecialchars($siteDescription); ?>">
-    <meta name="keywords" content="<?php echo htmlspecialchars($siteKeywords); ?>">
+    <meta name="keywords" content="<?php echo htmlspecialchars($metaKeywords); ?>">
     <meta name="author" content="FLIX">
     <meta name="robots" content="index,follow">
     <meta name="googlebot" content="index,follow">
-    <link rel="canonical" href="<?php echo htmlspecialchars($pageUrl); ?>">
-    <meta property="og:locale" content="<?php echo $lang === 'ar' ? 'ar_AR' : 'en_US'; ?>">
+    <link rel="canonical" href="<?php echo htmlspecialchars($currentUrl); ?>">
+    <link rel="alternate" hreflang="en" href="<?php echo htmlspecialchars($alternateEn); ?>">
+    <link rel="alternate" hreflang="ar" href="<?php echo htmlspecialchars($alternateAr); ?>">
+    <link rel="alternate" hreflang="x-default" href="<?php echo htmlspecialchars($alternateEn); ?>">
+    <meta property="og:locale" content="<?php echo $ogLocale; ?>">
+    <meta property="og:locale:alternate" content="<?php echo $lang === 'ar' ? 'en_US' : 'ar_AR'; ?>">
     <meta property="og:title" content="<?php echo htmlspecialchars($siteTitle); ?>">
     <meta property="og:description" content="<?php echo htmlspecialchars($siteDescription); ?>">
     <meta property="og:image" content="<?php echo htmlspecialchars($previewImage); ?>">
@@ -40,7 +53,7 @@ $_SESSION['lang'] = $lang;
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="<?php echo htmlspecialchars($siteSlogan); ?>">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="<?php echo htmlspecialchars($pageUrl); ?>">
+    <meta property="og:url" content="<?php echo htmlspecialchars($currentUrl); ?>">
     <meta property="og:site_name" content="FLIX">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="<?php echo htmlspecialchars($siteTitle); ?>">
