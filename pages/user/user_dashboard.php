@@ -68,7 +68,10 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang === 'ar' ? 'لوحة التحكم' : 'Dashboard'; ?> - FLIX</title>
+    <?php
+        $pageTitle = $lang === 'ar' ? 'لوحة التحكم' : 'Dashboard';
+        include('../../core/seo.php');
+    ?>
     <link rel="stylesheet" href="../../public/css/app.css">
     <style>
         body { padding-bottom: 100px; }

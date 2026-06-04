@@ -206,7 +206,10 @@ foreach ($services as $service) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang === 'ar' ? 'إنشاء حساب' : 'Sign Up'; ?> - FLIX</title>
+    <?php
+        $pageTitle = $lang === 'ar' ? 'إنشاء حساب' : 'Sign Up';
+        include('../../core/seo.php');
+    ?>
     <link rel="stylesheet" href="../../public/css/app.css">
     <style>
         :root {
