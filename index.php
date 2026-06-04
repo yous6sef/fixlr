@@ -34,58 +34,13 @@ $_SESSION['lang'] = $lang;
             : 'home services, home repair, handyman services, local professionals, home maintenance, FLIX marketplace';
         $ogLocale = $lang === 'ar' ? 'ar_AR' : 'en_US';
     ?>
-    <meta name="description" content="<?php echo htmlspecialchars($siteDescription); ?>">
-    <meta name="keywords" content="<?php echo htmlspecialchars($metaKeywords); ?>">
-    <meta name="author" content="FLIX">
-    <meta name="robots" content="index,follow">
-    <meta name="googlebot" content="index,follow">
-    <link rel="canonical" href="<?php echo htmlspecialchars($currentUrl); ?>">
-    <link rel="alternate" hreflang="en" href="<?php echo htmlspecialchars($alternateEn); ?>">
-    <link rel="alternate" hreflang="ar" href="<?php echo htmlspecialchars($alternateAr); ?>">
-    <link rel="alternate" hreflang="x-default" href="<?php echo htmlspecialchars($alternateEn); ?>">
-    <meta property="og:locale" content="<?php echo $ogLocale; ?>">
-    <meta property="og:locale:alternate" content="<?php echo $lang === 'ar' ? 'en_US' : 'ar_AR'; ?>">
-    <meta property="og:title" content="<?php echo htmlspecialchars($siteTitle); ?>">
-    <meta property="og:description" content="<?php echo htmlspecialchars($siteDescription); ?>">
-    <meta property="og:image" content="<?php echo htmlspecialchars($previewImage); ?>">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="<?php echo htmlspecialchars($siteSlogan); ?>">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="<?php echo htmlspecialchars($currentUrl); ?>">
-    <meta property="og:site_name" content="FLIX">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="<?php echo htmlspecialchars($siteTitle); ?>">
-    <meta name="twitter:description" content="<?php echo htmlspecialchars($siteDescription); ?>">
-    <meta name="twitter:image" content="<?php echo htmlspecialchars($previewImage); ?>">
-    <meta name="twitter:image:alt" content="<?php echo htmlspecialchars($siteSlogan); ?>">
-    <meta name="theme-color" content="#1A6B4A">
-    <link rel="shortcut icon" href="<?php echo htmlspecialchars($pageUrl . 'logoc.jpeg'); ?>" type="image/jpeg">
-    <link rel="icon" href="<?php echo htmlspecialchars($pageUrl . 'logoc.jpeg'); ?>" type="image/jpeg">
-    <link rel="apple-touch-icon" href="<?php echo htmlspecialchars($pageUrl . 'logoc.jpeg'); ?>">
-    <link rel="mask-icon" href="<?php echo htmlspecialchars($pageUrl . 'logoc.jpeg'); ?>" color="#1A6B4A">
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "FLIX",
-      "url": "<?php echo addslashes($pageUrl); ?>",
-      "logo": "<?php echo addslashes($previewImage); ?>",
-      "description": "<?php echo addslashes($siteDescription); ?>"
-    }
-    </script>
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebPage",
-      "name": "<?php echo addslashes($siteTitle); ?>",
-      "description": "<?php echo addslashes($siteDescription); ?>",
-      "url": "<?php echo addslashes($pageUrl); ?>",
-      "inLanguage": "<?php echo $lang; ?>"
-    }
-    </script>
-    <title><?php echo $siteTitle; ?></title>
+        <?php
+                // Use centralized SEO include for consistent metadata across pages
+                $pageTitle = $siteTitle;
+                $pageDescription = $siteDescription;
+                $pageKeywords = $metaKeywords;
+                include('core/seo.php');
+        ?>
     <link rel="stylesheet" href="public/css/app.css">
     <link rel="sitemap" type="application/xml" title="Sitemap" href="<?php echo htmlspecialchars($pageUrl . 'sitemap.xml'); ?>">
     <style>
