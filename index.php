@@ -791,7 +791,7 @@ $_SESSION['lang'] = $lang;
         <!-- ===== HEADER ===== -->
         <header>
             <div class="logo-section">
-                <img src="<?php echo $protocol . '://' . $_SERVER['HTTP_HOST'] . '/logoc.jpeg'; ?>" alt="FLIX | فليكس" class="logo">
+                <img src="public/images/logoflix.png" alt="FLIX | فليكس" class="logo">
                 <span class="logo-badge">PRO</span>
             </div>
             <nav class="header-nav">
@@ -807,7 +807,7 @@ $_SESSION['lang'] = $lang;
         <!-- ===== HERO SECTION ===== -->
         <section class="hero">
             <div class="hero-content">
-                <img src="<?php echo $protocol . '://' . $_SERVER['HTTP_HOST'] . '/logoc.jpeg'; ?>" alt="FLIX | فليكس" class="hero-logo">
+                <img src="public/images/logoflix.png" alt="FLIX | فليكس" class="hero-logo">
                 <h1><?php echo $lang === 'ar' ? 'خدماتك المنزلية، بسهولة وثقة' : 'Your Home Services, Made Simple'; ?></h1>
                 <div class="hero-slogan">
                     <span class="slogan-main">
@@ -970,7 +970,7 @@ $_SESSION['lang'] = $lang;
         <footer>
             <div class="footer-content">
                 <div class="footer-section">
-                    <img src="<?php echo $protocol . '://' . $_SERVER['HTTP_HOST'] . '/logoc.jpeg'; ?>" alt="FLIX | فليكس" class="footer-logo">
+                    <img src="public/images/logoflix.png" alt="FLIX | فليكس" class="footer-logo">
                     <ul style="margin-top: 1rem;">
                         <li><?php echo $lang === 'ar' ? 'منصة خدمات منزلية موثوقة' : 'Trusted home services platform'; ?></li>
                         <li><?php echo $lang === 'ar' ? 'نخدم آلاف العملاء' : 'Serving thousands daily'; ?></li>
