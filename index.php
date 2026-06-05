@@ -14,16 +14,16 @@ $_SESSION['lang'] = $lang;
         $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
         $pageUrl = rtrim($baseUrl, '/') . '/';
         $previewImage = $pageUrl . 'logoc.jpeg';
-        $siteTitle = 'FLIX | فليكس';
+        $siteTitle = $lang === 'ar' ? 'فليكس - خدمات المنزل' : 'Flix - Home Services Marketplace';
         $siteDescription = $lang === 'ar'
-            ? 'فليكس هو السوق الرائد للخدمات المنزلية في مصر. احجز سباكين، كهربائيين، نجارين، عمال نظافة، وفنيين موثوقين لصيانة وإصلاح المنزل بسرعة وأمان.'
-            : 'FLIX is Egypt’s leading home services marketplace. Book trusted plumbers, electricians, carpenters, cleaners, and repair professionals fast with secure service and support.';
+            ? 'فليكس يربط المستخدمين بالفنيين المحليين لصيانة وإصلاح المنزل بسرعة وسهولة.'
+            : 'FLIX connects users with trusted local repair and maintenance professionals for homes.';
         $siteSlogan = $lang === 'ar'
-            ? 'خدمات منزلية محترفة بسرعة وثقة.'
-            : 'Professional home services fast and trusted.';
+            ? 'خدمات منزلية فورية، بثقة وسرعة.'
+            : 'Instant home service, trusted and fast.';
         $siteKeywords = $lang === 'ar'
-            ? 'فليكس, خدمات منزلية, صيانة المنزل, سباكين, كهربائيين, نجارين, عمال نظافة, إصلاحات المنزل, فنيين محليين, سوق الخدمات'
-            : 'FLIX, home services, home repair, plumbers, electricians, carpenters, cleaners, handyman, maintenance, service marketplace, local technicians, Egypt home services';
+            ? 'خدمات منزلية, صيانة المنزل, فنيين محليين, إصلاحات, منصة فليكس'
+            : 'home services, home repair, handyman services, local professionals, home maintenance, FLIX marketplace';
     ?>
     <?php
         $alternateEn = $pageUrl;
@@ -653,11 +653,6 @@ $_SESSION['lang'] = $lang;
             margin-bottom: 0.5rem;
         }
 
-        img[alt="FLIX | فليكس"] {
-            max-width: 100%;
-            height: auto;
-        }
-
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             header {
@@ -791,7 +786,7 @@ $_SESSION['lang'] = $lang;
         <!-- ===== HEADER ===== -->
         <header>
             <div class="logo-section">
-                <img src="public/images/logoflix.png" alt="FLIX | فليكس" class="logo">
+                <img src="public/images/logoflix.png" alt="FLIX Logo" class="logo">
                 <span class="logo-badge">PRO</span>
             </div>
             <nav class="header-nav">
@@ -807,7 +802,7 @@ $_SESSION['lang'] = $lang;
         <!-- ===== HERO SECTION ===== -->
         <section class="hero">
             <div class="hero-content">
-                <img src="public/images/logoflix.png" alt="FLIX | فليكس" class="hero-logo">
+                <img src="public/images/logoflix.png" alt="FLIX Logo" class="hero-logo">
                 <h1><?php echo $lang === 'ar' ? 'خدماتك المنزلية، بسهولة وثقة' : 'Your Home Services, Made Simple'; ?></h1>
                 <div class="hero-slogan">
                     <span class="slogan-main">
@@ -970,7 +965,7 @@ $_SESSION['lang'] = $lang;
         <footer>
             <div class="footer-content">
                 <div class="footer-section">
-                    <img src="public/images/logoflix.png" alt="FLIX | فليكس" class="footer-logo">
+                    <img src="public/images/logoflix.png" alt="FLIX Logo" class="footer-logo">
                     <ul style="margin-top: 1rem;">
                         <li><?php echo $lang === 'ar' ? 'منصة خدمات منزلية موثوقة' : 'Trusted home services platform'; ?></li>
                         <li><?php echo $lang === 'ar' ? 'نخدم آلاف العملاء' : 'Serving thousands daily'; ?></li>

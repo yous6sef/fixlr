@@ -25,12 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $address_description = trim($_POST['address_description']);
     $problem_description = trim($_POST['problem_description']);
     $city = trim($_POST['city']);
-
-    // Validate required fields
-    if (empty($specialization)) $errors[] = $lang === 'ar' ? 'نوع الخدمة مطلوب' : 'Service type is required';
-    if (empty($address)) $errors[] = $lang === 'ar' ? 'العنوان مطلوب' : 'Address is required';
-    if (empty($problem_description)) $errors[] = $lang === 'ar' ? 'وصف المشكلة مطلوب' : 'Problem description is required';
-    if (empty($city)) $errors[] = $lang === 'ar' ? 'المدينة مطلوبة' : 'City is required';
+    $budget = trim($_POST['budget']);
 
     // Validate Google Maps link if provided
     if (!empty($google_maps_link)) {
@@ -49,11 +44,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $query = "INSERT INTO service_requests (
                 user_id, city, specialization, problem_description,
                 status, address, google_maps_link,
-                address_description, username, created_at, updated_at
+                address_description, budget, username, created_at, updated_at
             ) VALUES (
                 :user_id, :city, :specialization, :problem_description,
                 'REQUESTED', :address, :googleMapsLink,
-                :addressDescription, :username, NOW(), NOW()
+                :addressDescription, :budget, :username, NOW(), NOW()
             ) RETURNING id";
 
             $stmt = $conn->prepare($query);
@@ -65,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':address' => $address,
                 ':googleMapsLink' => $google_maps_link,
                 ':addressDescription' => $address_description,
+                ':budget' => $budget,
                 ':username' => $name
             ]);
 
@@ -190,6 +186,11 @@ foreach ($services as $service) {
                         <option value="6th of October City"><?php echo $lang === 'ar' ? 'السادس من اكتوبر' : '6th of October City'; ?></option>
                         <option value="Sheikh Zayed"><?php echo $lang === 'ar' ? 'الشيخ زايد' : 'Sheikh Zayed'; ?></option>
                     </select>
+                </div><br>
+
+                <div>
+                    <label><?php echo $lang === 'ar' ? 'ادخل السعر الذي ستدفعه' : 'make a price you want to pay'; ?></label><br><br>
+                    <input type="number" name="budget" placeholder="<?php echo $lang === 'ar' ? 'السعر بالجنيه المصري' : 'Price in EGP'; ?>" min="200" required style="width: 100%; padding: 0.75rem; border: 1px solid #D4D3D0; border-radius: 8px;">
                 </div><br>
 
                 <button type="submit" class="btn btn-primary"><?php echo $lang === 'ar' ? 'إنشاء الطلب' : 'Create Request'; ?></button>
