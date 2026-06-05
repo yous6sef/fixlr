@@ -56,7 +56,7 @@ try {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     $totalSpent = floatval($row['sum'] ?? 0.00);
 
-    $stmt = $conn->prepare("SELECT * FROM service_requests WHERE user_id = ? ORDER BY created_at DESC LIMIT 5");
+    $stmt = $conn->prepare("SELECT * FROM service_requests WHERE user_id = ? LIMIT 5");
     $stmt->execute([$userId]);
     $recentRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {

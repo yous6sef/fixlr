@@ -1,6 +1,6 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'worker') { header('Location: ../user/login.php'); exit(); }
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'worker') { header('Location: ../user/login.php'); exit(); }
 include('../../core/lang.php');
 $lang = $_GET['lang'] ?? 'en';
 ?>

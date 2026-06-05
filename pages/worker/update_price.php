@@ -1,36 +1,36 @@
 <?php
 session_start();
-include("core/db.php");
-include("core/config.php");
+include("../../core/db.php");
+include("../../core/config.php");
 
 // 1. Auth Check
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'worker') {
     header("Location: pages/user/login.php");
     exit();
 }
 
 $id = $_SESSION['user_id'];
 // Get order_id from URL
-$order_id = isset($_GET['order_id']) ? $_GET['order_id'] : null ;
+$order_id = $_GET['order_id'] ;
 
 if (!$order_id) {
     die("خطأ: رقم الطلب غير مفقود.");
 }
 
-$st = $conn->prepare("SELECT * FROM service_requests WHERE id = :id");
+$st = $conn->prepare("SELECT checking_fee FROM service_requests WHERE id = :id");
 $st->bindParam(':id', $order_id, PDO::PARAM_INT);
 $st->execute();
-$order = $st->fetch(PDO::FETCH_ASSOC);
+$order_bud = $st->fetch(PDO::FETCH_ASSOC);
+$order_budget = $order_bud['checking_fee'] ?? 0;
 
-if($order){
-    $order_budget = $order['budget'];
-}
 
 // 2. Fetch Worker Data
-$stmt = $conn->prepare("SELECT * FROM workers WHERE id = :id");
+$stmt = $conn->prepare("SELECT name,average_rating FROM workers WHERE id = :id");
 $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 $stmt->execute();
 $worker = $stmt->fetch(PDO::FETCH_ASSOC);
+$worker_name = $worker['name'];
+$worker_average_rating = $worker['average_rating'] ?? 0;
 
 if (!$worker) {
     die("خطأ: لم يتم العثور على بيانات العامل.");
@@ -41,13 +41,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['price'])) {
     $price = $_POST['price'];
     
     if (is_numeric($price) && $price > 0) {
-        $ss = $conn->prepare("UPDATE service_requests SET worker_price = :price, worker_id = :id, negotiation_state = 'countered', negotiation_started_at = COALESCE(negotiation_started_at, NOW()), negotiation_ended_at = NULL WHERE id = :order_id AND status = 'pending'");
+        $ss = $conn->prepare("UPDATE service_requests SET worker_price = :price, worker_id = :id, status = 'pricing', worker_name = :worker_name, worker_rating = :worker_average_rating WHERE id = :order_id");
         $ss->bindParam(':id', $id, PDO::PARAM_STR);
         $ss->bindParam(':price', $price, PDO::PARAM_STR);
         $ss->bindParam(':order_id', $order_id, PDO::PARAM_INT);
+        $ss->bindParam(':worker_name', $worker_name, PDO::PARAM_STR);
+        $ss->bindParam(':worker_average_rating', $worker_average_rating, PDO::PARAM_STR);
         
         if ($ss->execute() && $ss->rowCount() > 0) {
-            header("Location: pages/worker/worker_dashboard.php?success=1");
+            header("Location: ../../pages/worker/worker_dashboard.php?success=1&");
             exit();
         }
         $error = "تعذر تحديث السعر. ربما تم قبول الطلب أو لم يعد متاحًا.";

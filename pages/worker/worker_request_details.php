@@ -1,8 +1,23 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'worker') { header('Location: ../user/login.php'); exit(); }
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'worker') { header('Location: ../user/login.php'); exit(); }
 include('../../core/lang.php');
+include('../../core/db.php');
 $lang = $_GET['lang'] ?? 'en';
+$user_id = $_SESSION['user_id'];
+
+$stmt = $conn->prepare("SELECT * FROM workers WHERE id = :id");
+$stmt->bindParam(':id', $user_id);
+$stmt->execute();
+$worker = $stmt->fetch(PDO::FETCH_ASSOC);
+$worker_city = $worker['city'];
+$worker_specialization = $worker['specialization'];
+
+$stmt = $conn->prepare("SELECT * FROM service_requests WHERE city = :city AND specialization = :specialization AND status = 'REQUESTED' LIMIT 20");
+$stmt->bindParam(':city', $worker_city);
+$stmt->bindParam(':specialization', $worker_specialization);
+$stmt->execute();
+$available_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
@@ -25,31 +40,24 @@ $lang = $_GET['lang'] ?? 'en';
 
         <div class="card">
             <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <?php foreach ($available_requests as $request): ?>
                 <div class="provider-card">
                     <div class="provider-avatar">R1</div>
                     <div class="provider-info">
-                        <div class="provider-name"><?php echo $lang === 'ar' ? 'أنابيب - تسرب مياه' : 'Plumbing - Water Leak'; ?></div>
-                        <div class="provider-role"><?php echo $lang === 'ar' ? 'حي النيل • الآن' : 'Nile Area • Now'; ?></div>
+                        <div class="provider-name"><?php echo htmlspecialchars($request['problem_description']); ?></div>
+                        <div class="provider-role"><?php echo htmlspecialchars($request['address_description']); ?></div>
                     </div>
-                    <div class="provider-price">300 EGP</div>
+                    <div class="provider-price"><?php echo htmlspecialchars($request['checking_fee']); ?> EGP</div>
                 </div>
-
+                
                 <button style="background: #1A6B4A; color: white; padding: 0.75rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;">
                     <?php echo $lang === 'ar' ? 'قبول' : 'Accept'; ?>
                 </button>
 
-                <div class="provider-card" style="margin-top: 1rem;">
-                    <div class="provider-avatar" style="background: #FEF3E2; color: #9A6400;">R2</div>
-                    <div class="provider-info">
-                        <div class="provider-name"><?php echo $lang === 'ar' ? 'كهرباء - تبديل مصابيح' : 'Electrical - Lamp Change'; ?></div>
-                        <div class="provider-role"><?php echo $lang === 'ar' ? 'وسط البلد • اليوم' : 'Downtown • Today'; ?></div>
-                    </div>
-                    <div class="provider-price">250 EGP</div>
-                </div>
-
-                <button style="background: #1A6B4A; color: white; padding: 0.75rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;">
-                    <?php echo $lang === 'ar' ? 'قبول' : 'Accept'; ?>
-                </button>
+                <a href="update_price.php?order_id=<?php echo $request['id']; ?>" style="background: orange; color: white; padding: 0.75rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;">
+                    <?php echo $lang === 'ar' ? 'تحديث السعر' : 'Update Price'; ?>
+                </a>
+                <?php endforeach; ?>
             </div>
         </div>
 

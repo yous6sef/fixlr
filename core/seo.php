@@ -15,13 +15,13 @@ $canonical = $protocol . '://' . $host . $requestPath . ($requestQuery ? '?' . $
 $baseNoQuery = $protocol . '://' . $host . $requestPath;
 
 // Page-specific fallbacks
-$pageTitle = $pageTitle ?? $siteTitle ?? ($lang === 'ar' ? 'فليكس - سوق الخدمات المنزلية في مصر' : 'FLIX | Home Services Marketplace in Egypt');
+$pageTitle = $pageTitle ?? $siteTitle ?? ($lang === 'ar' ? 'فليكس - خدمات المنزل' : 'Flix - Home Services Marketplace');
 $pageDescription = $pageDescription ?? $siteDescription ?? ($lang === 'ar'
-    ? 'فليكس هو السوق الرائد للخدمات المنزلية في مصر. احجز سباكين، كهربائيين، نجارين، عمال نظافة، وفنيين موثوقين لصيانة وإصلاح المنزل بسرعة وأمان.'
-    : 'FLIX is Egypt’s leading home services marketplace. Book trusted plumbers, electricians, carpenters, cleaners, and repair professionals fast with secure service and support.');
+    ? 'فليكس يربط المستخدمين بالفنيين المحليين لصيانة وإصلاح المنزل بسرعة وسهولة.'
+    : 'FLIX connects users with trusted local repair and maintenance professionals for homes.');
 $pageKeywords = $pageKeywords ?? $siteKeywords ?? ($lang === 'ar'
-    ? 'فليكس, خدمات منزلية, صيانة المنزل, سباكين, كهربائيين, نجارين, عمال نظافة, إصلاحات المنزل, فنيين محليين, سوق الخدمات'
-    : 'FLIX, home services, home repair, plumbers, electricians, carpenters, cleaners, handyman, maintenance, service marketplace, local technicians, Egypt home services');
+    ? 'خدمات منزلية, صيانة المنزل, فنيين محليين, إصلاحات, منصة فليكس'
+    : 'home services, home repair, handyman services, local professionals, home maintenance, FLIX marketplace');
 $previewImage = $previewImage ?? ($protocol . '://' . $host . '/logoc.jpeg');
 
 $alternateEn = $baseNoQuery;
@@ -31,8 +31,6 @@ $alternateAr = $baseNoQuery . (strpos($requestQuery ?? '', 'lang=ar') !== false 
 echo "    <meta name=\"description\" content=\"" . htmlspecialchars($pageDescription) . "\">\n";
 echo "    <meta name=\"keywords\" content=\"" . htmlspecialchars($pageKeywords) . "\">\n";
 echo "    <meta name=\"author\" content=\"FLIX\">\n";
-echo "    <meta name=\"application-name\" content=\"FLIX\">\n";
-echo "    <meta name=\"apple-mobile-web-app-title\" content=\"FLIX\">\n";
 echo "    <meta name=\"robots\" content=\"index,follow\">\n";
 echo "    <meta name=\"googlebot\" content=\"index,follow\">\n";
 echo "    <link rel=\"canonical\" href=\"" . htmlspecialchars($canonical) . "\">\n";
@@ -40,7 +38,6 @@ echo "    <link rel=\"alternate\" hreflang=\"en\" href=\"" . htmlspecialchars($a
 echo "    <link rel=\"alternate\" hreflang=\"ar\" href=\"" . htmlspecialchars($alternateAr) . "\">\n";
 echo "    <link rel=\"alternate\" hreflang=\"x-default\" href=\"" . htmlspecialchars($alternateEn) . "\">\n";
 echo "    <meta property=\"og:locale\" content=\"" . ($lang === 'ar' ? 'ar_AR' : 'en_US') . "\">\n";
-echo "    <meta property=\"og:locale:alternate\" content=\"" . ($lang === 'ar' ? 'en_US' : 'ar_AR') . "\">\n";
 echo "    <meta property=\"og:title\" content=\"" . htmlspecialchars($pageTitle) . "\">\n";
 echo "    <meta property=\"og:description\" content=\"" . htmlspecialchars($pageDescription) . "\">\n";
 echo "    <meta property=\"og:image\" content=\"" . htmlspecialchars($previewImage) . "\">\n";
@@ -57,11 +54,12 @@ echo "    <meta name=\"twitter:description\" content=\"" . htmlspecialchars($pag
 echo "    <meta name=\"twitter:image\" content=\"" . htmlspecialchars($previewImage) . "\">\n";
 echo "    <meta name=\"twitter:image:alt\" content=\"" . htmlspecialchars($pageTitle) . "\">\n";
 echo "    <meta name=\"theme-color\" content=\"#1A6B4A\">\n";
-echo "    <link rel=\"icon\" type=\"image/png\" href=\"/favicon-96x96.png\" sizes=\"96x96\">\n";
-echo "    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\">\n";
-echo "    <link rel=\"shortcut icon\" href=\"/favicon.ico\">\n";
-echo "    <link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\">\n";
-echo "    <link rel=\"manifest\" href=\"/site.webmanifest\">\n";
+echo "    <link rel=\"icon\" type=\"image/png\" href=\"/favicon-96x96.png\" sizes=\"96x96\" />\n";
+echo "    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n";
+echo "    <link rel=\"shortcut icon\" href=\"/favicon.ico\" />\n";
+echo "    <link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\" />\n";
+echo "    <meta name=\"apple-mobile-web-app-title\" content=\"FLIX\" />\n";
+echo "    <link rel=\"manifest\" href=\"/site.webmanifest\" />\n";
 
 // JSON-LD
 $org = [
