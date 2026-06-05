@@ -69,10 +69,7 @@ $_SESSION['lang'] = $lang;
       "url": "<?php echo $pageUrl; ?>",
       "logo": "<?php echo $previewImage; ?>",
       "areaServed": "EG"
-    }
-    </script>
-
-    <!-- 5. Universal Favicon / Web App Icon Implementation -->
+    <!-- Universal Favicon / Web App Icon Implementation -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
@@ -85,6 +82,9 @@ $_SESSION['lang'] = $lang;
         // Include any additional centralized SEO if needed, but primary overrides are set above.
         include('core/seo.php');
     ?>
+
+    <!-- MOVED TO ABSOLUTE BOTTOM OF HEAD TO PREVENT OVERRIDES FROM core/seo.php -->
+    <title>FLIX | فليكس - منصة الخدمات المنزلية</title>
 
     <style>
         :root {
