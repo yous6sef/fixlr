@@ -14,16 +14,16 @@ $_SESSION['lang'] = $lang;
         $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
         $pageUrl = rtrim($baseUrl, '/') . '/';
         $previewImage = $pageUrl . 'logoc.jpeg';
-        $siteTitle = $lang === 'ar' ? 'فليكس - خدمات المنزل' : 'Flix - Home Services Marketplace';
+        $siteTitle = $lang === 'ar' ? 'فليكس - سوق الخدمات المنزلية في مصر' : 'FLIX | Home Services Marketplace in Egypt';
         $siteDescription = $lang === 'ar'
-            ? 'فليكس يربط المستخدمين بالفنيين المحليين لصيانة وإصلاح المنزل بسرعة وسهولة.'
-            : 'FLIX connects users with trusted local repair and maintenance professionals for homes.';
+            ? 'فليكس هو السوق الرائد للخدمات المنزلية في مصر. احجز سباكين، كهربائيين، نجارين، عمال نظافة، وفنيين موثوقين لصيانة وإصلاح المنزل بسرعة وأمان.'
+            : 'FLIX is Egypt’s leading home services marketplace. Book trusted plumbers, electricians, carpenters, cleaners, and repair professionals fast with secure service and support.';
         $siteSlogan = $lang === 'ar'
-            ? 'خدمات منزلية فورية، بثقة وسرعة.'
-            : 'Instant home service, trusted and fast.';
+            ? 'خدمات منزلية محترفة بسرعة وثقة.'
+            : 'Professional home services fast and trusted.';
         $siteKeywords = $lang === 'ar'
-            ? 'خدمات منزلية, صيانة المنزل, فنيين محليين, إصلاحات, منصة فليكس'
-            : 'home services, home repair, handyman services, local professionals, home maintenance, FLIX marketplace';
+            ? 'فليكس, خدمات منزلية, صيانة المنزل, سباكين, كهربائيين, نجارين, عمال نظافة, إصلاحات المنزل, فنيين محليين, سوق الخدمات'
+            : 'FLIX, home services, home repair, plumbers, electricians, carpenters, cleaners, handyman, maintenance, service marketplace, local technicians, Egypt home services';
     ?>
     <?php
         $alternateEn = $pageUrl;
