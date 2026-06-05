@@ -57,12 +57,11 @@ echo "    <meta name=\"twitter:description\" content=\"" . htmlspecialchars($pag
 echo "    <meta name=\"twitter:image\" content=\"" . htmlspecialchars($previewImage) . "\">\n";
 echo "    <meta name=\"twitter:image:alt\" content=\"" . htmlspecialchars($pageTitle) . "\">\n";
 echo "    <meta name=\"theme-color\" content=\"#1A6B4A\">\n";
-echo "    <meta name=\"msapplication-TileImage\" content=\"" . htmlspecialchars($protocol . '://' . $host . '/logoc.jpeg') . "\">\n";
-echo "    <link rel=\"shortcut icon\" href=\"" . htmlspecialchars($protocol . '://' . $host . '/logoc.jpeg') . "\" type=\"image/jpeg\">\n";
-echo "    <link rel=\"icon\" href=\"" . htmlspecialchars($protocol . '://' . $host . '/logoc.jpeg') . "\" type=\"image/jpeg\">\n";
-echo "    <link rel=\"icon\" sizes=\"192x192\" href=\"" . htmlspecialchars($protocol . '://' . $host . '/logoc.jpeg') . "\" type=\"image/jpeg\">\n";
-echo "    <link rel=\"apple-touch-icon\" href=\"" . htmlspecialchars($protocol . '://' . $host . '/logoc.jpeg') . "\">\n";
-echo "    <link rel=\"mask-icon\" href=\"" . htmlspecialchars($protocol . '://' . $host . '/logoc.jpeg') . "\" color=\"#1A6B4A\">\n";
+echo "    <link rel=\"icon\" type=\"image/png\" href=\"/favicon-96x96.png\" sizes=\"96x96\">\n";
+echo "    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\">\n";
+echo "    <link rel=\"shortcut icon\" href=\"/favicon.ico\">\n";
+echo "    <link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\">\n";
+echo "    <link rel=\"manifest\" href=\"/site.webmanifest\">\n";
 
 // JSON-LD
 $org = [
