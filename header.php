@@ -1,0 +1,238 @@
+<?php
+/**
+ * ====================================================================
+ * FLIX Header - Bulletproof Google Search Title & SEO Optimization
+ * ====================================================================
+ * This header file is engineered to prevent Google from mis-indexing
+ * your site title. It prioritizes the <title> tag at the top of <head>,
+ * includes Google's WebSite schema, and provides complete bilingual
+ * SEO and Open Graph support.
+ * 
+ * Usage: Add <?php include('header.php'); ?> right after <head>
+ * ====================================================================
+ */
+
+// Ensure session is started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Detect language preference
+$lang = $_GET['lang'] ?? $_SESSION['lang'] ?? 'en';
+$_SESSION['lang'] = $lang;
+$dir = ($lang === 'ar') ? 'rtl' : 'ltr';
+
+// Detect protocol and host for dynamic URLs
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'flix-eg.up.railway.app';
+$currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$currentQuery = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
+$canonicalUrl = $protocol . '://' . $host . $currentPath . ($currentQuery ? '?' . $currentQuery : '');
+$baseUrl = $protocol . '://' . $host;
+
+// Brand constants
+$siteName = 'FLIX | فليكس';
+$siteNameEn = 'FLIX';
+$siteNameAr = 'فليكس';
+$siteTitle = 'FLIX | فليكس - منصة الخدمات المنزلية';
+
+// Bilingual descriptions
+$descriptionEn = 'FLIX is Egypt\'s leading home services marketplace. Book trusted plumbers, electricians, carpenters, cleaners, and handymen fast and secure. Professional repairs, maintenance, and installation services.';
+$descriptionAr = 'فليكس هو السوق الرائد للخدمات المنزلية في مصر. احجز سباكين وكهربائيين ونجارين وعمال نظافة وفنيين محليين موثوقين بسرعة وأمان. خدمات إصلاح وصيانة واستبدال احترافية.';
+$metaDescription = ($lang === 'ar') ? $descriptionAr : $descriptionEn;
+
+// Bilingual keywords
+$keywordsEn = 'home services, plumber, electrician, carpenter, cleaner, handyman, home repair, maintenance, Egypt, Cairo, installation, FLIX, service marketplace';
+$keywordsAr = 'خدمات منزلية, سباك, كهربائي, نجار, عامل نظافة, فني, إصلاح المنزل, صيانة, مصر, القاهرة, تركيب, فليكس, منصة الخدمات';
+$metaKeywords = ($lang === 'ar') ? $keywordsAr : $keywordsEn;
+
+// OG Image (ensure this file exists in your public directory)
+$ogImage = $baseUrl . '/logoc.jpeg';
+
+// Alternate language URLs
+$urlEn = $baseUrl . $currentPath . (strpos($currentQuery ?? '', 'lang=ar') !== false ? '' : ($currentQuery ? '?' . str_replace('lang=ar', '', $currentQuery) : ''));
+$urlAr = $baseUrl . $currentPath . '?lang=ar';
+
+?>
+<!DOCTYPE html>
+<html lang="<?php echo htmlspecialchars($lang); ?>" dir="<?php echo htmlspecialchars($dir); ?>">
+<head>
+    <!-- ========== CRITICAL: TITLE TAG AT TOP ========== -->
+    <title><?php echo htmlspecialchars($siteTitle); ?></title>
+
+    <!-- ========== CHARACTER ENCODING ========== -->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <!-- ========== PRIMARY META TAGS ========== -->
+    <meta name="description" content="<?php echo htmlspecialchars($metaDescription); ?>">
+    <meta name="keywords" content="<?php echo htmlspecialchars($metaKeywords); ?>">
+    <meta name="author" content="<?php echo htmlspecialchars($siteName); ?>">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="bingbot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="theme-color" content="#1A6B4A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="<?php echo htmlspecialchars($siteNameEn); ?>">
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- ========== CANONICAL & ALTERNATE LINKS ========== -->
+    <link rel="canonical" href="<?php echo htmlspecialchars($canonicalUrl); ?>">
+    <link rel="alternate" hreflang="en" href="<?php echo htmlspecialchars($urlEn); ?>">
+    <link rel="alternate" hreflang="ar" href="<?php echo htmlspecialchars($urlAr); ?>">
+    <link rel="alternate" hreflang="x-default" href="<?php echo htmlspecialchars($urlEn); ?>">
+
+    <!-- ========== OPEN GRAPH (SOCIAL MEDIA) ========== -->
+    <meta property="og:site_name" content="<?php echo htmlspecialchars($siteName); ?>">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<?php echo htmlspecialchars($siteTitle); ?>">
+    <meta property="og:description" content="<?php echo htmlspecialchars($metaDescription); ?>">
+    <meta property="og:url" content="<?php echo htmlspecialchars($canonicalUrl); ?>">
+    <meta property="og:image" content="<?php echo htmlspecialchars($ogImage); ?>">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="<?php echo htmlspecialchars($siteTitle); ?>">
+    <meta property="og:locale" content="<?php echo ($lang === 'ar') ? 'ar_EG' : 'en_US'; ?>">
+    <meta property="og:locale:alternate" content="<?php echo ($lang === 'ar') ? 'en_US' : 'ar_EG'; ?>">
+
+    <!-- ========== TWITTER CARD ========== -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?php echo htmlspecialchars($siteTitle); ?>">
+    <meta name="twitter:description" content="<?php echo htmlspecialchars($metaDescription); ?>">
+    <meta name="twitter:image" content="<?php echo htmlspecialchars($ogImage); ?>">
+    <meta name="twitter:image:alt" content="<?php echo htmlspecialchars($siteTitle); ?>">
+
+    <!-- ========== FAVICON (ROOT-RELATIVE PATHS) ========== -->
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="mask-icon" href="/favicon.svg" color="#1A6B4A">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <!-- ========== GOOGLE WEBSITE SCHEMA (JSON-LD) - CRITICAL FOR GOOGLE SEARCH ========== -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "<?php echo htmlspecialchars($siteName); ?>",
+        "alternateName": ["<?php echo htmlspecialchars($siteNameEn); ?>", "<?php echo htmlspecialchars($siteNameAr); ?>"],
+        "url": "<?php echo htmlspecialchars($baseUrl); ?>/",
+        "description": "<?php echo htmlspecialchars($metaDescription); ?>",
+        "image": {
+            "@type": "ImageObject",
+            "url": "<?php echo htmlspecialchars($ogImage); ?>",
+            "width": 1200,
+            "height": 630
+        },
+        "sameAs": [
+            "https://www.facebook.com/flixegypt",
+            "https://www.instagram.com/flixegypt",
+            "https://www.twitter.com/flixegypt"
+        ],
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "<?php echo htmlspecialchars($baseUrl); ?>/?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+
+    <!-- ========== ORGANIZATION SCHEMA (JSON-LD) ========== -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "<?php echo htmlspecialchars($siteName); ?>",
+        "alternateName": ["<?php echo htmlspecialchars($siteNameEn); ?>", "<?php echo htmlspecialchars($siteNameAr); ?>"],
+        "url": "<?php echo htmlspecialchars($baseUrl); ?>/",
+        "logo": "<?php echo htmlspecialchars($ogImage); ?>",
+        "description": "<?php echo htmlspecialchars($metaDescription); ?>",
+        "image": "<?php echo htmlspecialchars($ogImage); ?>",
+        "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "EG",
+            "addressLocality": "Cairo"
+        },
+        "sameAs": [
+            "https://www.facebook.com/flixegypt",
+            "https://www.instagram.com/flixegypt",
+            "https://www.twitter.com/flixegypt"
+        ],
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "Customer Support",
+            "availableLanguage": ["en", "ar"]
+        }
+    }
+    </script>
+
+    <!-- ========== LOCAL BUSINESS SCHEMA (JSON-LD) ========== -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "<?php echo htmlspecialchars($siteName); ?>",
+        "url": "<?php echo htmlspecialchars($baseUrl); ?>/",
+        "image": "<?php echo htmlspecialchars($ogImage); ?>",
+        "description": "<?php echo htmlspecialchars($metaDescription); ?>",
+        "areaServed": {
+            "@type": "City",
+            "name": "Cairo",
+            "containedInPlace": {
+                "@type": "Country",
+                "name": "Egypt"
+            }
+        },
+        "serviceType": ["Plumbing", "Electrical", "Carpentry", "Cleaning", "Maintenance", "Installation"],
+        "priceRange": "$$"
+    }
+    </script>
+
+    <!-- ========== BREADCRUMB SCHEMA (JSON-LD) ========== -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "<?php echo htmlspecialchars($siteName); ?>",
+                "item": "<?php echo htmlspecialchars($baseUrl); ?>/"
+            }
+        ]
+    }
+    </script>
+
+</head>
+<body>
+<?php
+/**
+ * Close your body tag at the END of your page with </body>
+ * 
+ * To use this header.php file:
+ * 1. Place this file in your root directory or subdirectory
+ * 2. In your main pages (index.php, etc.), replace your existing <head> section with:
+ *    
+ *    <?php include('header.php'); ?>
+ *    
+ * 3. Then continue with your page body content
+ * 4. Close with </body> and </html>
+ * 
+ * This file handles:
+ * ✓ Proper <title> tag positioning at top of head
+ * ✓ Google WebSite schema to override mis-indexed titles
+ * ✓ Complete bilingual SEO (English & Arabic)
+ * ✓ Open Graph for social media
+ * ✓ Structured data for Google rich snippets
+ * ✓ Root-relative favicon paths
+ */
+?>
