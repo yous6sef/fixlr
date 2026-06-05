@@ -9,40 +9,85 @@ $_SESSION['lang'] = $lang;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <?php
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
         $pageUrl = rtrim($baseUrl, '/') . '/';
-        $previewImage = $pageUrl . 'logoc.jpeg';
-        $siteTitle = $lang === 'ar' ? 'فليكس - خدمات المنزل' : 'Flix - Home Services Marketplace';
-        $siteDescription = $lang === 'ar'
-            ? 'فليكس يربط المستخدمين بالفنيين المحليين لصيانة وإصلاح المنزل بسرعة وسهولة.'
-            : 'FLIX connects users with trusted local repair and maintenance professionals for homes.';
-        $siteSlogan = $lang === 'ar'
-            ? 'خدمات منزلية فورية، بثقة وسرعة.'
-            : 'Instant home service, trusted and fast.';
-        $siteKeywords = $lang === 'ar'
-            ? 'خدمات منزلية, صيانة المنزل, فنيين محليين, إصلاحات, منصة فليكس'
-            : 'home services, home repair, handyman services, local professionals, home maintenance, FLIX marketplace';
+        
+        // Ensure preview image points to the exact root logoc.jpeg asset
+        $previewImage = $pageUrl . 'logoc.jpeg'; 
     ?>
-    <?php
-        $alternateEn = $pageUrl;
-        $alternateAr = $pageUrl . '?lang=ar';
-        $currentUrl = $lang === 'ar' ? $pageUrl . '?lang=ar' : $pageUrl;
-        $metaKeywords = $lang === 'ar'
-            ? 'خدمات منزلية, صيانة المنزل, فنيين محليين, إصلاحات, منصة فليكس'
-            : 'home services, home repair, handyman services, local professionals, home maintenance, FLIX marketplace';
-        $ogLocale = $lang === 'ar' ? 'ar_AR' : 'en_US';
-    ?>
-        <?php
-                // Use centralized SEO include for consistent metadata across pages
-                $pageTitle = $siteTitle;
-                $pageDescription = $siteDescription;
-                $pageKeywords = $metaKeywords;
-                include('core/seo.php');
-        ?>
+
+    <!-- 1. THE MAIN FIX: Explicit Title Tag (Forces Google to drop 'FLIX Logo') -->
+    <title>FLIX | فليكس - منصة الخدمات المنزلية</title>
+
+    <!-- 2. High-Performance Bilingual SEO Meta Description -->
+    <meta name="description" content="FLIX | فليكس: منصة موثوقة تربطك بأفضل الحرفيين المحترفين لكل احتياجات منزلك من سباكة، كهرباء، وصيانة. Book top-rated home service professionals in Egypt safely and easily.">
+    <meta name="keywords" content="خدمات منزلية, صيانة المنزل, فنيين محليين, إصلاحات, منصة فليكس, سباكة, كهرباء, home services, home repair, handyman services, local professionals, home maintenance, FLIX marketplace, Egypt">
+    <meta name="author" content="FLIX | فليكس">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+
+    <!-- Language Alternates for Bilingual Targeting -->
+    <link rel="alternate" hreflang="ar" href="<?php echo $pageUrl . '?lang=ar'; ?>">
+    <link rel="alternate" hreflang="en" href="<?php echo $pageUrl . '?lang=en'; ?>">
+    <link rel="alternate" hreflang="x-default" href="<?php echo $pageUrl; ?>">
+
+    <!-- 3. Open Graph / Facebook / WhatsApp Preview Meta -->
+    <meta property="og:site_name" content="FLIX | فليكس">
+    <meta property="og:title" content="FLIX | فليكس - منصة الخدمات المنزلية">
+    <meta property="og:description" content="منصة موثوقة تربطك بأفضل الحرفيين المحترفين لكل احتياجات منزلك. Book top-rated home service professionals safely and easily.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<?php echo $pageUrl; ?>">
+    <meta property="og:image" content="<?php echo $previewImage; ?>">
+    <meta property="og:locale" content="<?php echo $lang === 'ar' ? 'ar_EG' : 'en_US'; ?>">
+    <meta property="og:locale:alternate" content="<?php echo $lang === 'ar' ? 'en_US' : 'ar_EG'; ?>">
+
+    <!-- Twitter Card Meta -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FLIX | فليكس - منصة الخدمات المنزلية">
+    <meta name="twitter:description" content="منصة موثوقة تربطك بأفضل الحرفيين المحترفين. Book top-rated home services in Egypt.">
+    <meta name="twitter:image" content="<?php echo $previewImage; ?>">
+
+    <!-- 4. GOOGLE SITE NAME SCHEMA (JSON-LD) - CRUCIAL FOR FIXING THE TITLE -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "FLIX | فليكس",
+      "alternateName": ["FLIX", "فليكس", "تطبيق فليكس", "Flix Home Services"],
+      "url": "<?php echo $pageUrl; ?>",
+      "description": "منصة الخدمات المنزلية الرائدة في مصر. The leading home services platform in Egypt."
+    }
+    </script>
+    
+    <!-- Organization Schema to lock in the Logo -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "FLIX | فليكس",
+      "url": "<?php echo $pageUrl; ?>",
+      "logo": "<?php echo $previewImage; ?>",
+      "areaServed": "EG",
+      "description": "منصة موثوقة تربطك بأفضل الحرفيين المحترفين."
+    }
+    </script>
+
+    <!-- 5. Universal Favicon / Web App Icon Implementation -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+
+    <!-- Stylesheets & Sitemap -->
     <link rel="stylesheet" href="public/css/app.css">
     <link rel="sitemap" type="application/xml" title="Sitemap" href="<?php echo htmlspecialchars($pageUrl . 'sitemap.xml'); ?>">
+
+    <?php
+        // Include any additional centralized SEO if needed, but primary overrides are set above.
+        include('core/seo.php');
+    ?>
+
     <style>
         :root {
             --primary: #1A6B4A;
@@ -111,14 +156,6 @@ $_SESSION['lang'] = $lang;
             width: 50px;
             height: 50px;
             object-fit: contain;
-        }
-
-        .logo-badge {
-            font-size: 0.75rem;
-            background: rgba(255,255,255,0.2);
-            padding: 0.25rem 0.6rem;
-            border-radius: 6px;
-            backdrop-filter: blur(10px);
         }
 
         .logo-badge {
@@ -786,6 +823,7 @@ $_SESSION['lang'] = $lang;
         <!-- ===== HEADER ===== -->
         <header>
             <div class="logo-section">
+                <!-- IMPORTANT: Keep alt text descriptive but Google will now use the schema/title instead -->
                 <img src="public/images/logoflix.png" alt="FLIX Logo" class="logo">
                 <span class="logo-badge">PRO</span>
             </div>
