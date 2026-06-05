@@ -56,8 +56,7 @@ $_SESSION['lang'] = $lang;
       "@type": "WebSite",
       "name": "FLIX | فليكس",
       "alternateName": ["FLIX", "فليكس", "تطبيق فليكس", "Flix Home Services"],
-      "url": "<?php echo $pageUrl; ?>",
-      "description": "منصة الخدمات المنزلية الرائدة في مصر. The leading home services platform in Egypt."
+      "url": "<?php echo $pageUrl; ?>"
     }
     </script>
     
@@ -69,8 +68,7 @@ $_SESSION['lang'] = $lang;
       "name": "FLIX | فليكس",
       "url": "<?php echo $pageUrl; ?>",
       "logo": "<?php echo $previewImage; ?>",
-      "areaServed": "EG",
-      "description": "منصة موثوقة تربطك بأفضل الحرفيين المحترفين."
+      "areaServed": "EG"
     }
     </script>
 
@@ -129,6 +127,19 @@ $_SESSION['lang'] = $lang;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+        }
+
+        /* ===== SEO UTILITIES ===== */
+        .visually-hidden {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
         }
 
         /* ===== HEADER ===== */
@@ -819,12 +830,15 @@ $_SESSION['lang'] = $lang;
     </style>
 </head>
 <body>
+    <!-- THE NUCLEAR SEO FIX: Visually hidden H1 right at the start of the body so Google reads it first -->
+    <h1 class="visually-hidden">FLIX | فليكس - منصة الخدمات المنزلية الموثوقة في مصر</h1>
+
     <div class="page-wrapper">
         <!-- ===== HEADER ===== -->
         <header>
             <div class="logo-section">
-                <!-- IMPORTANT: Keep alt text descriptive but Google will now use the schema/title instead -->
-                <img src="public/images/logoflix.png" alt="FLIX Logo" class="logo">
+                <!-- IMPORTANT: Empty alt text so Google CANNOT read "FLIX Logo" anymore -->
+                <img src="public/images/logoflix.png" alt="" aria-hidden="true" class="logo">
                 <span class="logo-badge">PRO</span>
             </div>
             <nav class="header-nav">
@@ -840,8 +854,9 @@ $_SESSION['lang'] = $lang;
         <!-- ===== HERO SECTION ===== -->
         <section class="hero">
             <div class="hero-content">
-                <img src="public/images/logoflix.png" alt="FLIX Logo" class="hero-logo">
-                <h1><?php echo $lang === 'ar' ? 'خدماتك المنزلية، بسهولة وثقة' : 'Your Home Services, Made Simple'; ?></h1>
+                <!-- Empty alt text here too -->
+                <img src="public/images/logoflix.png" alt="" aria-hidden="true" class="hero-logo">
+                <h2 style="font-size: clamp(2rem, 8vw, 3.5rem); margin-bottom: 0.5rem; font-weight: 800; letter-spacing: -0.5px;"><?php echo $lang === 'ar' ? 'خدماتك المنزلية، بسهولة وثقة' : 'Your Home Services, Made Simple'; ?></h2>
                 <div class="hero-slogan">
                     <span class="slogan-main">
                         <?php echo $lang === 'ar' ? 'فليكس وبس 🚀' : 'Just Flix it 🚀'; ?>
@@ -1003,7 +1018,8 @@ $_SESSION['lang'] = $lang;
         <footer>
             <div class="footer-content">
                 <div class="footer-section">
-                    <img src="public/images/logoflix.png" alt="FLIX Logo" class="footer-logo">
+                    <!-- Empty alt text here too -->
+                    <img src="public/images/logoflix.png" alt="" aria-hidden="true" class="footer-logo">
                     <ul style="margin-top: 1rem;">
                         <li><?php echo $lang === 'ar' ? 'منصة خدمات منزلية موثوقة' : 'Trusted home services platform'; ?></li>
                         <li><?php echo $lang === 'ar' ? 'نخدم آلاف العملاء' : 'Serving thousands daily'; ?></li>
