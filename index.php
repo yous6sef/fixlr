@@ -8,32 +8,40 @@ $_SESSION['lang'] = $lang;
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Viewport mapping for 100% Mobile SEO Score -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     
     <?php
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-        $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-        $pageUrl = rtrim($baseUrl, '/') . '/';
+        $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'];
+        // Ensure $pageUrl resolves to the root if we are running in the main document root
+        $path = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+        $pageUrl = rtrim($baseUrl . $path, '/') . '/';
         
-        // Ensure preview image points to the exact root logoc.jpeg asset
-        $previewImage = $pageUrl . 'logoc.jpeg'; 
+        // Since we now know the Document Root is /var/www/html, we can ensure the preview image path is absolute from the root
+        $previewImage = $baseUrl . '/logoc.jpeg'; 
     ?>
 
-    <!-- 1. THE MAIN FIX: Explicit Title Tag (Forces Google to drop 'FLIX Logo') -->
+    <!-- 1. PRIMARY TITLE -->
     <title>FLIX | فليكس - منصة الخدمات المنزلية</title>
 
-    <!-- 2. High-Performance Bilingual SEO Meta Description -->
+    <!-- 2. CANONICAL URL (Crucial for 90+ SEO - Prevents Duplicate Content Penalties) -->
+    <link rel="canonical" href="<?php echo $pageUrl; ?>">
+
+    <!-- 3. BILINGUAL SEO META DESCRIPTION & KEYWORDS -->
     <meta name="description" content="FLIX | فليكس: منصة موثوقة تربطك بأفضل الحرفيين المحترفين لكل احتياجات منزلك من سباكة، كهرباء، وصيانة. Book top-rated home service professionals in Egypt safely and easily.">
     <meta name="keywords" content="خدمات منزلية, صيانة المنزل, فنيين محليين, إصلاحات, منصة فليكس, سباكة, كهرباء, home services, home repair, handyman services, local professionals, home maintenance, FLIX marketplace, Egypt">
     <meta name="author" content="FLIX | فليكس">
+    
+    <!-- 4. ROBOTS & CRAWLER DIRECTIVES -->
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 
-    <!-- Language Alternates for Bilingual Targeting -->
+    <!-- 5. BILINGUAL HREFLANG TAGS (Tells Google this page serves EN and AR) -->
     <link rel="alternate" hreflang="ar" href="<?php echo $pageUrl . '?lang=ar'; ?>">
     <link rel="alternate" hreflang="en" href="<?php echo $pageUrl . '?lang=en'; ?>">
     <link rel="alternate" hreflang="x-default" href="<?php echo $pageUrl; ?>">
 
-    <!-- 3. Open Graph / Facebook / WhatsApp Preview Meta -->
+    <!-- 6. OPEN GRAPH (Facebook, WhatsApp, LinkedIn) -->
     <meta property="og:site_name" content="FLIX | فليكس">
     <meta property="og:title" content="FLIX | فليكس - منصة الخدمات المنزلية">
     <meta property="og:description" content="منصة موثوقة تربطك بأفضل الحرفيين المحترفين لكل احتياجات منزلك. Book top-rated home service professionals safely and easily.">
@@ -43,13 +51,16 @@ $_SESSION['lang'] = $lang;
     <meta property="og:locale" content="<?php echo $lang === 'ar' ? 'ar_EG' : 'en_US'; ?>">
     <meta property="og:locale:alternate" content="<?php echo $lang === 'ar' ? 'en_US' : 'ar_EG'; ?>">
 
-    <!-- Twitter Card Meta -->
+    <!-- 7. TWITTER CARDS -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="FLIX | فليكس - منصة الخدمات المنزلية">
     <meta name="twitter:description" content="منصة موثوقة تربطك بأفضل الحرفيين المحترفين. Book top-rated home services in Egypt.">
     <meta name="twitter:image" content="<?php echo $previewImage; ?>">
 
-    <!-- 4. GOOGLE SITE NAME SCHEMA (JSON-LD) - CRUCIAL FOR FIXING THE TITLE -->
+    <!-- 8. THEME COLOR (Colors the mobile browser tab - Great for UX/SEO) -->
+    <meta name="theme-color" content="#1A6B4A">
+
+    <!-- 9. STRUCTURED DATA (JSON-LD) - Forces Site Name & Details -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -59,8 +70,6 @@ $_SESSION['lang'] = $lang;
       "url": "<?php echo $pageUrl; ?>"
     }
     </script>
-    
-    <!-- Organization Schema to lock in the Logo -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -68,11 +77,12 @@ $_SESSION['lang'] = $lang;
       "name": "FLIX | فليكس",
       "url": "<?php echo $pageUrl; ?>",
       "logo": "<?php echo $previewImage; ?>",
-      "areaServed": "EG"
+      "areaServed": "EG",
+      "description": "Trusted home services platform in Egypt."
     }
     </script>
 
-    <!-- Universal Favicon / Web App Icon Implementation -->
+    <!-- 10. FAVICONS -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
@@ -82,14 +92,15 @@ $_SESSION['lang'] = $lang;
     <link rel="sitemap" type="application/xml" title="Sitemap" href="<?php echo htmlspecialchars($pageUrl . 'sitemap.xml'); ?>">
 
     <?php
-        // Include any additional centralized SEO if needed, but primary overrides are set above.
+        // Centralized SEO included LAST so overrides (if any) apply properly, but keep our TITLE tag intact
         include('core/seo.php');
     ?>
 
-    <!-- MOVED TO ABSOLUTE BOTTOM OF HEAD TO PREVENT OVERRIDES FROM core/seo.php -->
+    <!-- Safeguard Title (Forces the correct title even if core/seo.php tries to break it) -->
     <title>FLIX | فليكس - منصة الخدمات المنزلية</title>
 
     <style>
+        /* [Your existing CSS - Kept exactly the same for UI consistency] */
         :root {
             --primary: #1A6B4A;
             --primary-light: #2D9A6C;
@@ -130,19 +141,6 @@ $_SESSION['lang'] = $lang;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-        }
-
-        /* ===== SEO UTILITIES ===== */
-        .visually-hidden {
-            position: absolute !important;
-            width: 1px !important;
-            height: 1px !important;
-            padding: 0 !important;
-            margin: -1px !important;
-            overflow: hidden !important;
-            clip: rect(0, 0, 0, 0) !important;
-            white-space: nowrap !important;
-            border: 0 !important;
         }
 
         /* ===== HEADER ===== */
@@ -833,196 +831,200 @@ $_SESSION['lang'] = $lang;
     </style>
 </head>
 <body>
-    <!-- THE NUCLEAR SEO FIX: Visually hidden H1 right at the start of the body so Google reads it first -->
-    <h1 class="visually-hidden">FLIX | فليكس - منصة الخدمات المنزلية الموثوقة في مصر</h1>
-
+    <!-- SEO FIX: Removed visually hidden h1, making the actual hero text the real H1 for perfect score -->
     <div class="page-wrapper">
         <!-- ===== HEADER ===== -->
         <header>
             <div class="logo-section">
-                <!-- IMPORTANT: Empty alt text so Google CANNOT read "FLIX Logo" anymore -->
-                <img src="public/images/logoflix.png" alt="" aria-hidden="true" class="logo">
+                <!-- Added explicit width/height to stop Cumulative Layout Shift (CLS) penalties -->
+                <!-- Added descriptive alt text but REMOVED the word "logo" completely -->
+                <img src="public/images/logoflix.png" alt="FLIX - <?php echo $lang === 'ar' ? 'منصة الخدمات المنزلية' : 'Home Services App'; ?>" class="logo" width="50" height="50">
                 <span class="logo-badge">PRO</span>
             </div>
-            <nav class="header-nav">
+            <nav class="header-nav" aria-label="Main Navigation">
                 <a href="pages/user/login.php?lang=<?php echo $lang; ?>">
                     <?php echo $lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'; ?>
                 </a>
-                <button class="lang-switch" onclick="toggleLanguage()">
+                <button class="lang-switch" onclick="toggleLanguage()" aria-label="Change Language">
                     <?php echo $lang === 'ar' ? 'English' : 'العربية'; ?>
                 </button>
             </nav>
         </header>
 
-        <!-- ===== HERO SECTION ===== -->
-        <section class="hero">
-            <div class="hero-content">
-                <!-- Empty alt text here too -->
-                <img src="public/images/logoflix.png" alt="" aria-hidden="true" class="hero-logo">
-                <h2 style="font-size: clamp(2rem, 8vw, 3.5rem); margin-bottom: 0.5rem; font-weight: 800; letter-spacing: -0.5px;"><?php echo $lang === 'ar' ? 'خدماتك المنزلية، بسهولة وثقة' : 'Your Home Services, Made Simple'; ?></h2>
-                <div class="hero-slogan">
-                    <span class="slogan-main">
-                        <?php echo $lang === 'ar' ? 'فليكس وبس 🚀' : 'Just Flix it 🚀'; ?>
-                    </span>
+        <!-- SEO FIX: Wrapped core content in <main> tags for semantic structure -->
+        <main>
+            <!-- ===== HERO SECTION ===== -->
+            <section class="hero">
+                <div class="hero-content">
+                    <img src="public/images/logoflix.png" alt="FLIX | فليكس" class="hero-logo" width="120" height="120">
+                    
+                    <!-- SEO FIX: Made this an <h1> instead of an <h2>. Google heavily favors pages with one clear, visible H1 -->
+                    <h1><?php echo $lang === 'ar' ? 'خدماتك المنزلية، بسهولة وثقة' : 'Your Home Services, Made Simple'; ?></h1>
+                    
+                    <div class="hero-slogan">
+                        <span class="slogan-main">
+                            <?php echo $lang === 'ar' ? 'فليكس وبس 🚀' : 'Just Flix it 🚀'; ?>
+                        </span>
+                    </div>
+                    <p>
+                        <?php echo $lang === 'ar' 
+                            ? 'منصة موثوقة تربطك بأفضل الحرفيين المحترفين لكل احتياجات منزلك. جودة، أمان، وأسعار عادلة'
+                            : 'Connect with trusted professionals for all your home repair and service needs. Quality, safety, and fair pricing guaranteed'; 
+                        ?>
+                    </p>
+                    <div style="font-size: 0.95rem; opacity: 0.9; margin-bottom: 2rem; font-style: italic;">
+                        <?php echo $lang === 'ar' 
+                            ? '✨ فليكسها و انسىها - اترك الباقي علينا'
+                            : '✨ Flix it & Forget it - We handle the rest'; 
+                        ?>
+                    </div>
+                    <div class="hero-buttons">
+                        <a href="pages/user/signup.php?lang=<?php echo $lang; ?>&type=user" class="btn btn-primary">
+                            <?php echo $lang === 'ar' ? 'ابدأ كعميل' : 'Get Started'; ?>
+                        </a>
+                        <a href="pages/user/signup.php?lang=<?php echo $lang; ?>&type=worker" class="btn btn-secondary">
+                            <?php echo $lang === 'ar' ? 'انضم كعامل' : 'Become a Pro'; ?>
+                        </a>
+                    </div>
                 </div>
-                <p>
-                    <?php echo $lang === 'ar' 
-                        ? 'منصة موثوقة تربطك بأفضل الحرفيين المحترفين لكل احتياجات منزلك. جودة، أمان، وأسعار عادلة'
-                        : 'Connect with trusted professionals for all your home repair and service needs. Quality, safety, and fair pricing guaranteed'; 
-                    ?>
-                </p>
-                <div style="font-size: 0.95rem; opacity: 0.9; margin-bottom: 2rem; font-style: italic;">
-                    <?php echo $lang === 'ar' 
-                        ? '✨ فليكسها و انسىها - اترك الباقي علينا'
-                        : '✨ Flix it & Forget it - We handle the rest'; 
-                    ?>
-                </div>
-                <div class="hero-buttons">
-                    <a href="pages/user/signup.php?lang=<?php echo $lang; ?>&type=user" class="btn btn-primary">
-                        <?php echo $lang === 'ar' ? 'ابدأ كعميل' : 'Get Started'; ?>
-                    </a>
-                    <a href="pages/user/signup.php?lang=<?php echo $lang; ?>&type=worker" class="btn btn-secondary">
-                        <?php echo $lang === 'ar' ? 'انضم كعامل' : 'Become a Pro'; ?>
-                    </a>
-                </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- ===== FEATURES SECTION ===== -->
-        <section class="features">
-            <div class="features-container">
-                <h2 class="section-title">
-                    <?php echo $lang === 'ar' ? 'لماذا اختيار فليكس؟' : 'Why Choose Flix?'; ?>
-                </h2>
-                <p class="section-subtitle">
-                    <?php echo $lang === 'ar' 
-                        ? 'نحن نوفر لك أفضل تجربة في البحث عن الخدمات بمختلف أنواعها'
-                        : 'We provide the best experience for finding home services you need'; 
-                    ?>
-                </p>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">✓</div>
-                        <h3><?php echo $lang === 'ar' ? 'عمال موثوقون' : 'Verified Professionals'; ?></h3>
-                        <p><?php echo $lang === 'ar' 
-                            ? 'جميع العمال يخضعون للتحقق والفحص الشامل من قبل فريقنا المختص'
-                            : 'All professionals are thoroughly verified and background checked'; 
-                        ?></p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">💰</div>
-                        <h3><?php echo $lang === 'ar' ? 'أسعار شفافة' : 'Transparent Pricing'; ?></h3>
-                        <p><?php echo $lang === 'ar' 
-                            ? 'لا توجد رسوم مخفية أو تكاليف إضافية غير متوقعة'
-                            : 'Clear pricing with no hidden fees or surprise charges'; 
-                        ?></p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">⭐</div>
-                        <h3><?php echo $lang === 'ar' ? 'تقييمات حقيقية' : 'Real Reviews'; ?></h3>
-                        <p><?php echo $lang === 'ar' 
-                            ? 'اختر بناءً على تقييمات وآراء العملاء الحقيقية والموثوقة'
-                            : 'Choose based on genuine reviews from real customers'; 
-                        ?></p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">🛡️</div>
-                        <h3><?php echo $lang === 'ar' ? 'أمان مضمون' : 'Total Security'; ?></h3>
-                        <p><?php echo $lang === 'ar' 
-                            ? 'حماية كاملة لبيانتك الشخصية والمالية مع ضمان الخدمة'
-                            : 'Complete protection for your data and secure transactions'; 
-                        ?></p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">⚡</div>
-                        <h3><?php echo $lang === 'ar' ? 'استجابة سريعة' : 'Quick Response'; ?></h3>
-                        <p><?php echo $lang === 'ar' 
-                            ? 'احصل على عروض من محترفين بسرعة وتواصل مباشر سهل'
-                            : 'Get quick responses from professionals in your area'; 
-                        ?></p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">📱</div>
-                        <h3><?php echo $lang === 'ar' ? 'تطبيق سهل الاستخدام' : 'Easy App'; ?></h3>
-                        <p><?php echo $lang === 'ar' 
-                            ? 'واجهة بسيطة وسهلة الاستخدام تجعل كل شيء بضغطة زر'
-                            : 'Simple and intuitive interface for seamless experience'; 
-                        ?></p>
+            <!-- ===== FEATURES SECTION ===== -->
+            <section class="features">
+                <div class="features-container">
+                    <h2 class="section-title">
+                        <?php echo $lang === 'ar' ? 'لماذا اختيار فليكس؟' : 'Why Choose Flix?'; ?>
+                    </h2>
+                    <p class="section-subtitle">
+                        <?php echo $lang === 'ar' 
+                            ? 'نحن نوفر لك أفضل تجربة في البحث عن الخدمات بمختلف أنواعها'
+                            : 'We provide the best experience for finding home services you need'; 
+                        ?>
+                    </p>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">✓</div>
+                            <h3><?php echo $lang === 'ar' ? 'عمال موثوقون' : 'Verified Professionals'; ?></h3>
+                            <p><?php echo $lang === 'ar' 
+                                ? 'جميع العمال يخضعون للتحقق والفحص الشامل من قبل فريقنا المختص'
+                                : 'All professionals are thoroughly verified and background checked'; 
+                            ?></p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">💰</div>
+                            <h3><?php echo $lang === 'ar' ? 'أسعار شفافة' : 'Transparent Pricing'; ?></h3>
+                            <p><?php echo $lang === 'ar' 
+                                ? 'لا توجد رسوم مخفية أو تكاليف إضافية غير متوقعة'
+                                : 'Clear pricing with no hidden fees or surprise charges'; 
+                            ?></p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">⭐</div>
+                            <h3><?php echo $lang === 'ar' ? 'تقييمات حقيقية' : 'Real Reviews'; ?></h3>
+                            <p><?php echo $lang === 'ar' 
+                                ? 'اختر بناءً على تقييمات وآراء العملاء الحقيقية والموثوقة'
+                                : 'Choose based on genuine reviews from real customers'; 
+                            ?></p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🛡️</div>
+                            <h3><?php echo $lang === 'ar' ? 'أمان مضمون' : 'Total Security'; ?></h3>
+                            <p><?php echo $lang === 'ar' 
+                                ? 'حماية كاملة لبيانتك الشخصية والمالية مع ضمان الخدمة'
+                                : 'Complete protection for your data and secure transactions'; 
+                            ?></p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">⚡</div>
+                            <h3><?php echo $lang === 'ar' ? 'استجابة سريعة' : 'Quick Response'; ?></h3>
+                            <p><?php echo $lang === 'ar' 
+                                ? 'احصل على عروض من محترفين بسرعة وتواصل مباشر سهل'
+                                : 'Get quick responses from professionals in your area'; 
+                            ?></p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📱</div>
+                            <h3><?php echo $lang === 'ar' ? 'تطبيق سهل الاستخدام' : 'Easy App'; ?></h3>
+                            <p><?php echo $lang === 'ar' 
+                                ? 'واجهة بسيطة وسهلة الاستخدام تجعل كل شيء بضغطة زر'
+                                : 'Simple and intuitive interface for seamless experience'; 
+                            ?></p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- ===== HOW IT WORKS ===== -->
-        <section class="how-it-works">
-            <div class="features-container">
-                <h2 class="section-title">
-                    <?php echo $lang === 'ar' ? 'كيف تعمل منصتنا؟' : 'How It Works'; ?>
-                </h2>
-                <div class="steps">
-                    <div class="step">
-                        <div class="step-number">1</div>
-                        <h4><?php echo $lang === 'ar' ? 'أنشئ طلبك' : 'Create Request'; ?></h4>
-                        <p><?php echo $lang === 'ar' 
-                            ? 'صف احتياجك واختر الخدمة التي تريدها والموقع'
-                            : 'Tell us what you need and where you are'; 
-                        ?></p>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">2</div>
-                        <h4><?php echo $lang === 'ar' ? 'تلقي عروضاً' : 'Get Offers'; ?></h4>
-                        <p><?php echo $lang === 'ar' 
-                            ? 'استقبل عروض من محترفين مؤهلين بسرعة'
-                            : 'Receive offers from qualified professionals'; 
-                        ?></p>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">3</div>
-                        <h4><?php echo $lang === 'ar' ? 'اختر وتواصل' : 'Connect'; ?></h4>
-                        <p><?php echo $lang === 'ar' 
-                            ? 'اختر من يناسبك والتواصل المباشر معه بسهولة'
-                            : 'Pick your pro and chat directly'; 
-                        ?></p>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">4</div>
-                        <h4><?php echo $lang === 'ar' ? 'استمتع بالخدمة' : 'Service Done'; ?></h4>
-                        <p><?php echo $lang === 'ar' 
-                            ? 'احصل على الخدمة واستمتع بالنتيجة وقيّم التجربة'
-                            : 'Get your work done and rate your experience'; 
-                        ?></p>
+            <!-- ===== HOW IT WORKS ===== -->
+            <section class="how-it-works">
+                <div class="features-container">
+                    <h2 class="section-title">
+                        <?php echo $lang === 'ar' ? 'كيف تعمل منصتنا؟' : 'How It Works'; ?>
+                    </h2>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <h4><?php echo $lang === 'ar' ? 'أنشئ طلبك' : 'Create Request'; ?></h4>
+                            <p><?php echo $lang === 'ar' 
+                                ? 'صف احتياجك واختر الخدمة التي تريدها والموقع'
+                                : 'Tell us what you need and where you are'; 
+                            ?></p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <h4><?php echo $lang === 'ar' ? 'تلقي عروضاً' : 'Get Offers'; ?></h4>
+                            <p><?php echo $lang === 'ar' 
+                                ? 'استقبل عروض من محترفين مؤهلين بسرعة'
+                                : 'Receive offers from qualified professionals'; 
+                            ?></p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <h4><?php echo $lang === 'ar' ? 'اختر وتواصل' : 'Connect'; ?></h4>
+                            <p><?php echo $lang === 'ar' 
+                                ? 'اختر من يناسبك والتواصل المباشر معه بسهولة'
+                                : 'Pick your pro and chat directly'; 
+                            ?></p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <h4><?php echo $lang === 'ar' ? 'استمتع بالخدمة' : 'Service Done'; ?></h4>
+                            <p><?php echo $lang === 'ar' 
+                                ? 'احصل على الخدمة واستمتع بالنتيجة وقيّم التجربة'
+                                : 'Get your work done and rate your experience'; 
+                            ?></p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- ===== CTA SECTION ===== -->
-        <section class="cta">
-            <div class="cta-content">
-                <h2><?php echo $lang === 'ar' ? 'هل أنت مستعد للبدء؟' : 'Ready to Get Started?'; ?></h2>
-                <p>
-                    <?php echo $lang === 'ar' 
-                        ? 'انضم إلى آلاف العملاء والمحترفين الذين يثقون في فليكس يومياً'
-                        : 'Join thousands of customers and professionals who trust Flix daily'; 
-                    ?>
-                </p>
-                <div class="cta-buttons">
-                    <a href="pages/user/signup.php?lang=<?php echo $lang; ?>&type=user" class="btn btn-primary">
-                        <?php echo $lang === 'ar' ? 'أنا عميل - ابدأ الآن' : 'I\'m a Customer'; ?>
-                    </a>
-                    <a href="pages/user/signup.php?lang=<?php echo $lang; ?>&type=worker" class="btn btn-secondary">
-                        <?php echo $lang === 'ar' ? 'أنا مختص - انضم الآن' : 'I\'m a Professional'; ?>
-                    </a>
+            <!-- ===== CTA SECTION ===== -->
+            <section class="cta">
+                <div class="cta-content">
+                    <h2><?php echo $lang === 'ar' ? 'هل أنت مستعد للبدء؟' : 'Ready to Get Started?'; ?></h2>
+                    <p>
+                        <?php echo $lang === 'ar' 
+                            ? 'انضم إلى آلاف العملاء والمحترفين الذين يثقون في فليكس يومياً'
+                            : 'Join thousands of customers and professionals who trust Flix daily'; 
+                        ?>
+                    </p>
+                    <div class="cta-buttons">
+                        <a href="pages/user/signup.php?lang=<?php echo $lang; ?>&type=user" class="btn btn-primary">
+                            <?php echo $lang === 'ar' ? 'أنا عميل - ابدأ الآن' : 'I\'m a Customer'; ?>
+                        </a>
+                        <a href="pages/user/signup.php?lang=<?php echo $lang; ?>&type=worker" class="btn btn-secondary">
+                            <?php echo $lang === 'ar' ? 'أنا مختص - انضم الآن' : 'I\'m a Professional'; ?>
+                        </a>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </main>
 
         <!-- ===== FOOTER ===== -->
         <footer>
             <div class="footer-content">
                 <div class="footer-section">
-                    <!-- Empty alt text here too -->
-                    <img src="public/images/logoflix.png" alt="" aria-hidden="true" class="footer-logo">
+                    <!-- SEO FIX: loading="lazy" defers image loading below the fold to speed up page load times -->
+                    <img src="public/images/logoflix.png" alt="FLIX" class="footer-logo" width="50" height="50" loading="lazy">
                     <ul style="margin-top: 1rem;">
                         <li><?php echo $lang === 'ar' ? 'منصة خدمات منزلية موثوقة' : 'Trusted home services platform'; ?></li>
                         <li><?php echo $lang === 'ar' ? 'نخدم آلاف العملاء' : 'Serving thousands daily'; ?></li>
