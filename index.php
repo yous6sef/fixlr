@@ -6,43 +6,8 @@ $_SESSION['lang'] = $lang;
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <?php
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-        $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-        $pageUrl = rtrim($baseUrl, '/') . '/';
-        $previewImage = $pageUrl . 'logoc.jpeg';
-        $siteTitle = $lang === 'ar' ? 'فليكس - خدمات المنزل' : 'Flix - Home Services Marketplace';
-        $siteDescription = $lang === 'ar'
-            ? 'فليكس يربط المستخدمين بالفنيين المحليين لصيانة وإصلاح المنزل بسرعة وسهولة.'
-            : 'FLIX connects users with trusted local repair and maintenance professionals for homes.';
-        $siteSlogan = $lang === 'ar'
-            ? 'خدمات منزلية فورية، بثقة وسرعة.'
-            : 'Instant home service, trusted and fast.';
-        $siteKeywords = $lang === 'ar'
-            ? 'خدمات منزلية, صيانة المنزل, فنيين محليين, إصلاحات, منصة فليكس'
-            : 'home services, home repair, handyman services, local professionals, home maintenance, FLIX marketplace';
-    ?>
-    <?php
-        $alternateEn = $pageUrl;
-        $alternateAr = $pageUrl . '?lang=ar';
-        $currentUrl = $lang === 'ar' ? $pageUrl . '?lang=ar' : $pageUrl;
-        $metaKeywords = $lang === 'ar'
-            ? 'خدمات منزلية, صيانة المنزل, فنيين محليين, إصلاحات, منصة فليكس'
-            : 'home services, home repair, handyman services, local professionals, home maintenance, FLIX marketplace';
-        $ogLocale = $lang === 'ar' ? 'ar_AR' : 'en_US';
-    ?>
-        <?php
-                // Use centralized SEO include for consistent metadata across pages
-                $pageTitle = $siteTitle;
-                $pageDescription = $siteDescription;
-                $pageKeywords = $metaKeywords;
-                include('core/seo.php');
-        ?>
-    <link rel="stylesheet" href="public/css/app.css">
-    <link rel="sitemap" type="application/xml" title="Sitemap" href="<?php echo htmlspecialchars($pageUrl . 'sitemap.xml'); ?>">
+<?php include('header.php'); ?>
+    <link rel="stylesheet" href="public/css/app.css">">
     <style>
         :root {
             --primary: #1A6B4A;

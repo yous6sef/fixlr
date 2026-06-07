@@ -1,3 +1,87 @@
+# FLIX - SEO-Optimized Robots Configuration
+# This file guides search engines for maximum indexing and ranking
+
+# ============================================================================
+# DEFAULT CRAWLING RULES (All Bots)
+# ============================================================================
 User-agent: *
 Allow: /
+Allow: /*.php
+Allow: /pages/
+Allow: /api/
+Allow: /public/
+Allow: /sitemap.xml
+Allow: /sitemap.xml.php
+Allow: /robots.txt
+
+# Block crawling of sensitive directories
+Disallow: /uploads/
+Disallow: /database/
+Disallow: /node_modules/
+Disallow: /config/
+Disallow: /*.backup
+Disallow: /*test*
+Disallow: /admin/
+Disallow: /*api_*.php
+
+# Block specific files that shouldn't be indexed
+Disallow: /*.(sql|conf|htaccess|env|log)$
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# ============================================================================
+# GOOGLE-SPECIFIC RULES
+# ============================================================================
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+Allow: /api/
+Allow: /pages/
+
+# ============================================================================
+# BING-SPECIFIC RULES
+# ============================================================================
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# ============================================================================
+# FACEBOOK CRAWLER
+# ============================================================================
+User-agent: facebookexternalhit
+Allow: /
+
+# ============================================================================
+# TWITTER CRAWLER
+# ============================================================================
+User-agent: Twitterbot
+Allow: /
+
+# ============================================================================
+# BLOCK BAD BOTS
+# ============================================================================
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+# ============================================================================
+# SITEMAP DECLARATIONS (SEO: Tells Google what to crawl)
+# ============================================================================
 Sitemap: https://flix-eg.up.railway.app/sitemap.xml
+Sitemap: https://flix-eg.up.railway.app/sitemap.xml.php
+
+# ============================================================================
+# KEY SITEMAPS BY LANGUAGE
+# ============================================================================
+# En: https://flix-eg.up.railway.app/sitemap.xml?lang=en
+# Ar: https://flix-eg.up.railway.app/sitemap.xml?lang=ar
+
