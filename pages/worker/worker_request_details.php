@@ -18,6 +18,21 @@ $stmt->bindParam(':city', $worker_city);
 $stmt->bindParam(':specialization', $worker_specialization);
 $stmt->execute();
 $available_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$stmt = $conn->prepare("SELECT * FROM service_requests WHERE worker_id = :worker_id AND status = 'pricing' ");
+$stmt->bindParam(':worker_id', $user_id);
+$stmt->execute();
+$ongoing_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+if(isset($_POST['accept_request'])) {
+    $request_id = $_POST['request_id'];
+    $stmt = $conn->prepare("UPDATE service_requests SET worker_id = :worker_id, status = 'pricing' WHERE id = :request_id");
+    $stmt->bindParam(':worker_id', $user_id);
+    $stmt->bindParam(':request_id', $request_id);
+    $stmt->execute();
+    header('Location: worker_request_details.php?request_id=' . $request_id . '&lang=' . $lang);
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
@@ -41,6 +56,34 @@ $available_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="card">
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 <?php foreach ($available_requests as $request): ?>
+                <div class="provider-card">
+                    <div class="provider-avatar">R1</div>
+                    <div class="provider-info">
+                        <div class="provider-name"><?php echo htmlspecialchars($request['problem_description']); ?></div>
+                        <div class="provider-role"><?php echo htmlspecialchars($request['address_description']); ?></div>
+                    </div>
+                    <div class="provider-price"><?php echo htmlspecialchars($request['checking_fee']); ?> EGP</div>
+                </div>
+                
+                <button style="background: #1A6B4A; color: white; padding: 0.75rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;">
+                    <?php echo $lang === 'ar' ? 'قبول' : 'Accept'; ?>
+                </button>
+
+                <a href="update_price.php?order_id=<?php echo $request['id']; ?>" style="background: orange; color: white; padding: 0.75rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;">
+                    <?php echo $lang === 'ar' ? 'تحديث السعر' : 'Update Price'; ?>
+                </a>
+                <?php endforeach; ?>
+            </div>
+        </div><br><br>
+
+
+        <div class="page-header">
+            <h1><?php echo $lang === 'ar' ? 'الفرص الجارية' : 'Ongoing Opportunities'; ?></h1>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <?php foreach ($ongoing_requests as $request): ?>
                 <div class="provider-card">
                     <div class="provider-avatar">R1</div>
                     <div class="provider-info">

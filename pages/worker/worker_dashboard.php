@@ -23,10 +23,10 @@ $total_completed_tasks = $stmt->fetch(PDO::FETCH_ASSOC);
 $stmt = $conn->prepare("SELECT city,specialization,average_rating FROM workers WHERE id = :id");
 $stmt->bindParam(':id', $user_id);
 $stmt->execute();
-$worker2 = $stmt->fetchAll(PDO::FETCH_ASSOC);
-$worker_city = $worker2[0]['city'];
-$worker_specialization = $worker2[0]['specialization'];
-$worker_rating = $worker2[0]['average_rating'] ?? 0;
+$worker2 = $stmt->fetch(PDO::FETCH_ASSOC);
+$worker_city = $worker2['city'];
+$worker_specialization = $worker2['specialization'];
+$worker_rating = $worker2['average_rating'] ?? 0;
 
 $stmt = $conn->prepare("SELECT id,problem_description,address_description,budget FROM service_requests WHERE city = :city AND specialization = :specialization AND status = 'REQUESTED' LIMIT 20");
 $stmt->bindParam(':city', $worker_city , PDO::PARAM_STR);
@@ -34,7 +34,7 @@ $stmt->bindParam(':specialization', $worker_specialization , PDO::PARAM_STR);
 $stmt->execute();
 $available_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$stmt = $conn->prepare("SELECT * FROM service_requests WHERE worker_id = :worker_id ");
+$stmt = $conn->prepare("SELECT * FROM service_requests WHERE worker_id = :worker_id AND status = 'pricing' ");
 $stmt->bindParam(':worker_id', $user_id);
 $stmt->execute();
 $ongoing_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -84,6 +84,22 @@ $ongoing_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="card">
             <h3><?php echo $lang === 'ar' ? 'الطلبات المتاحة' : 'Available Jobs'; ?></h3>
             <?php foreach ($available_requests as $request): ?>
+            <div class="provider-card">
+                <div class="provider-avatar" style="background: #E8F5EE;"></div>
+                <div class="provider-info">
+                    <a href="./worker_request_details.php?request_id=<?php echo $request['id']; ?>&lang=<?php echo $lang; ?>">
+                    <div class="provider-name"><?php echo $request['problem_description']; ?></div>
+                    <div class="provider-role"><?php echo $request['address_description']; ?></div>
+                    </a>
+                </div>
+                <div class="provider-price"><?php echo $request['budget']; ?> EGP</div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+
+        <div class="card">
+            <h3><?php echo $lang === 'ar' ? 'الطلبات الجارية' : 'Ongoing Jobs'; ?></h3>
+            <?php foreach ($ongoing_requests as $request): ?>
             <div class="provider-card">
                 <div class="provider-avatar" style="background: #E8F5EE;"></div>
                 <div class="provider-info">

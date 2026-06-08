@@ -13,37 +13,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $phone = $_POST['phone'];
   $password = $_POST['password'];
   $role = $_POST['role'];
-  if ($role == "user"){
-  $stm = $conn->prepare("SELECT id, password, role FROM users WHERE phone = :phone");
-  $stm->bindParam(':phone', $phone);
-  $stm->execute();
-  $user = $stm->fetch(PDO::FETCH_ASSOC);
-  }
-  else{
-    $stmt = $conn->prepare("SELECT id, password, role FROM workers WHERE phone = :phone");
-    $stmt->bindParam(':phone', $phone);
-    $stmt->execute();
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-  }
-if ($user && !empty($user['password'])) {
-    if (password_verify($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['role'] = $user['role'];
 
-        if ($user['role'] === 'worker') {
-            header("Location: /pages/worker/worker_dashboard.php?lang=" . $lang);
-            exit();
-        } else {
-            header("Location: user_dashboard.php?lang=" . $lang);
-            exit();
-        }
-    } else {
-        $error = $lang === 'ar' ? 'كلمة المرور غير صحيحة' : 'Incorrect password';
-    }
-} else {
-    $error = $lang === 'ar' ? 'الأسم غير صحيح أو كلمة المرور غير مسجلة' : 'User not found or password not set';
-}
+  if ($role == "user") {
+      $stm = $conn->prepare("SELECT id, password, role FROM users WHERE phone = :phone");
+      $stm->bindParam(':phone', $phone);
+      $stm->execute();
+      $user = $stm->fetch(PDO::FETCH_ASSOC);
 
+      if ($user && !empty($user['password'])) {
+          if (password_verify($password, $user['password'])) {
+              $_SESSION['user_id'] = $user['id'];
+              $_SESSION['role'] = $user['role'];
+              header("Location: user_dashboard.php?lang=" . $lang);
+              exit();
+          } else {
+              $error = $lang === 'ar' ? 'كلمة المرور غير صحيحة' : 'Incorrect password';
+          }
+      } else {
+          $error = $lang === 'ar' ? 'الأسم غير صحيح أو كلمة المرور غير مسجلة' : 'User not found or password not set';
+      }
+  } else {
+      $stmt = $conn->prepare("SELECT id, password, role FROM workers WHERE phone = :phone");
+      $stmt->bindParam(':phone', $phone);
+      $stmt->execute();
+      $worker = $stmt->fetch(PDO::FETCH_ASSOC);
+
+      if ($worker && !empty($worker['password'])) {
+          if (password_verify($password, $worker['password'])) {
+              $_SESSION['user_id'] = $worker['id'];
+              $_SESSION['role'] = $worker['role'];
+              header("Location: ../worker/worker_dashboard.php?lang=" . $lang);
+              exit();
+          } else {
+              $error = $lang === 'ar' ? 'كلمة المرور غير صحيحة' : 'Incorrect password';
+          }
+      } else {
+          $error = $lang === 'ar' ? 'الأسم غير صحيح أو كلمة المرور غير مسجلة' : 'User not found or password not set';
+      }
+  }
 }
 ?>
 <!DOCTYPE html>
