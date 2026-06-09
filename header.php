@@ -84,7 +84,7 @@ $urlAr = $baseUrl . $currentPath . '?lang=ar';
     <meta name="theme-color" content="#1A6B4A">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="<?php echo htmlspecialchars($siteNameEn); ?>">
+    <meta name="apple-mobile-web-app-title" content="FLIX">
     <meta name="format-detection" content="telephone=no">
     <meta name="distribution" content="global">
     <meta name="revisit-after" content="7 days">
@@ -128,13 +128,11 @@ $urlAr = $baseUrl . $currentPath . '?lang=ar';
     <meta name="twitter:image:alt" content="<?php echo htmlspecialchars($siteTitle); ?>">
 
     <!-- ========== FAVICON (ROOT-RELATIVE PATHS) ========== -->
-    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="shortcut icon" href="/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="mask-icon" href="/favicon.svg" color="#1A6B4A">
-    <link rel="manifest" href="/site.webmanifest">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <!-- ========== GOOGLE WEBSITE SCHEMA (JSON-LD) - CRITICAL FOR GOOGLE SEARCH ========== -->
     <script type="application/ld+json">
