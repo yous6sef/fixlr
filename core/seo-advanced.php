@@ -270,6 +270,24 @@ elseif ($pageType === 'home') {
 }
 
 // ========== OUTPUT: META TAGS ==========
+
+function seoAdvancedAlternateUrl($baseUrl, $path, $queryParams, $langCode) {
+    if (!is_array($queryParams)) {
+        $queryParams = [];
+    }
+    $queryParams['lang'] = $langCode;
+    return $baseUrl . $path . '?' . http_build_query($queryParams);
+}
+
+$pageTitle = trim($pageTitle);
+if ($pageTitle === '') {
+    $pageTitle = ($lang === 'ar')
+        ? 'فليكس | منصة الخدمات المنزلية الموثوقة في مصر'
+        : 'FLIX | Trusted Home Services Marketplace in Egypt';
+}
+if (mb_strlen($pageTitle) < 35) {
+    $pageTitle .= ($lang === 'ar') ? ' | فليكس' : ' | FLIX';
+}
 ?>
 <!-- FLIX Advanced SEO - Dynamic Meta Tags -->
 <title><?php echo htmlspecialchars($pageTitle); ?></title>
@@ -279,12 +297,25 @@ elseif ($pageType === 'home') {
 
 <!-- Alternate Language Links (hreflang) -->
 <?php if ($pageType === 'home'): ?>
-<link rel="alternate" hreflang="en" href="<?php echo htmlspecialchars($baseUrl . '/?lang=en'); ?>">
-<link rel="alternate" hreflang="ar" href="<?php echo htmlspecialchars($baseUrl . '/?lang=ar'); ?>">
+<link rel="alternate" hreflang="en-US" href="<?php echo htmlspecialchars(seoAdvancedAlternateUrl($baseUrl, '/', [], 'en')); ?>">
+<link rel="alternate" hreflang="ar-EG" href="<?php echo htmlspecialchars(seoAdvancedAlternateUrl($baseUrl, '/', [], 'ar')); ?>">
 <link rel="alternate" hreflang="x-default" href="<?php echo htmlspecialchars($baseUrl); ?>">
 <?php elseif ($pageType === 'service' && isset($serviceId, $cityId)): ?>
-<link rel="alternate" hreflang="en" href="<?php echo htmlspecialchars($baseUrl . '/services/' . $serviceId . '?city=' . $cityId . '&lang=en'); ?>">
-<link rel="alternate" hreflang="ar" href="<?php echo htmlspecialchars($baseUrl . '/services/' . $serviceId . '?city=' . $cityId . '&lang=ar'); ?>">
+<link rel="alternate" hreflang="en-US" href="<?php echo htmlspecialchars(seoAdvancedAlternateUrl($baseUrl, '/services/' . $serviceId, ['city' => $cityId], 'en')); ?>">
+<link rel="alternate" hreflang="ar-EG" href="<?php echo htmlspecialchars(seoAdvancedAlternateUrl($baseUrl, '/services/' . $serviceId, ['city' => $cityId], 'ar')); ?>">
+<link rel="alternate" hreflang="x-default" href="<?php echo htmlspecialchars($baseUrl . '/services/' . $serviceId . '?city=' . $cityId . '&lang=en'); ?>">
+<?php elseif ($pageType === 'craftsman' && isset($craftsmanId)): ?>
+<link rel="alternate" hreflang="en-US" href="<?php echo htmlspecialchars(seoAdvancedAlternateUrl($baseUrl, '/craftsman/' . $craftsmanId, [], 'en')); ?>">
+<link rel="alternate" hreflang="ar-EG" href="<?php echo htmlspecialchars(seoAdvancedAlternateUrl($baseUrl, '/craftsman/' . $craftsmanId, [], 'ar')); ?>">
+<link rel="alternate" hreflang="x-default" href="<?php echo htmlspecialchars($baseUrl . '/craftsman/' . $craftsmanId . '?lang=en'); ?>">
+<?php elseif ($pageType === 'search'): ?>
+<link rel="alternate" hreflang="en-US" href="<?php echo htmlspecialchars(seoAdvancedAlternateUrl($baseUrl, '/search', ['q' => $_GET['q'] ?? ''], 'en')); ?>">
+<link rel="alternate" hreflang="ar-EG" href="<?php echo htmlspecialchars(seoAdvancedAlternateUrl($baseUrl, '/search', ['q' => $_GET['q'] ?? ''], 'ar')); ?>">
+<link rel="alternate" hreflang="x-default" href="<?php echo htmlspecialchars($baseUrl . '/search?lang=en'); ?>">
+<?php else: ?>
+<link rel="alternate" hreflang="en-US" href="<?php echo htmlspecialchars($baseUrl . '/?lang=en'); ?>">
+<link rel="alternate" hreflang="ar-EG" href="<?php echo htmlspecialchars($baseUrl . '/?lang=ar'); ?>">
+<link rel="alternate" hreflang="x-default" href="<?php echo htmlspecialchars($baseUrl); ?>">
 <?php endif; ?>
 
 <!-- Open Graph Tags (Facebook, WhatsApp, LinkedIn) -->
