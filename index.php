@@ -14,10 +14,10 @@ $_SESSION['lang'] = $lang;
         $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
         $pageUrl = rtrim($baseUrl, '/') . '/';
         $previewImage = $pageUrl . 'logoc.jpeg';
-        $siteTitle = $lang === 'ar' ? 'فليكس - خدمات المنزل' : 'Flix - Home Services Marketplace';
+        $siteTitle = $lang === 'ar' ? 'فليكس - منصة خدمات منزلية موثوقة بأسعار عادلة | احجز الآن' : 'FLIX - Trusted Home Services Marketplace | Book Professionals Fast';
         $siteDescription = $lang === 'ar'
-            ? 'فليكس يربط المستخدمين بالفنيين المحليين لصيانة وإصلاح المنزل بسرعة وسهولة.'
-            : 'FLIX connects users with trusted local repair and maintenance professionals for homes.';
+            ? 'فليكس أفضل منصة خدمات منزلية موثوقة - تواصل مع عمال محترفين وموثوقين. صيانة وإصلاح بجودة مضمونة وأسعار شفافة عادلة.'
+            : 'FLIX - Top-rated home services marketplace connecting you with verified, professional workers for plumbing, electrical, repairs & maintenance. Fair pricing & quality guaranteed.';
         $siteSlogan = $lang === 'ar'
             ? 'خدمات منزلية فورية، بثقة وسرعة.'
             : 'Instant home service, trusted and fast.';
@@ -41,8 +41,9 @@ $_SESSION['lang'] = $lang;
                 $pageKeywords = $metaKeywords;
                 include('core/seo.php');
         ?>
-    <link rel="stylesheet" href="public/css/app.css">
-    <link rel="sitemap" type="application/xml" title="Sitemap" href="<?php echo htmlspecialchars($pageUrl . 'sitemap.xml'); ?>">
+    <link rel="stylesheet" href="public/css/app.css" media="all" as="style">
+    <link rel="sitemap" type="application/xml" href="<?php echo htmlspecialchars($pageUrl . 'sitemap.xml'); ?>">
+    <link rel="sitemap" type="application/xml" href="<?php echo htmlspecialchars($pageUrl . 'sitemap-ar.xml'); ?>" hreflang="ar">
     <style>
         :root {
             --primary: #1A6B4A;
@@ -829,6 +830,32 @@ $_SESSION['lang'] = $lang;
                         <?php echo $lang === 'ar' ? 'انضم كعامل' : 'Become a Pro'; ?>
                     </a>
                 </div>
+
+                <!-- Content Introduction Section -->
+                <div style="margin-top: 3rem; text-align: left; background: rgba(255,255,255,0.95); padding: 2rem; border-radius: 12px; color: #141714; max-width: 900px;">
+                    <h2 style="font-size: 1.3rem; margin-bottom: 1rem; color: #141714;">
+                        <?php echo $lang === 'ar' ? 'ما هي فليكس وكيف تعمل؟' : 'What is FLIX and How Does it Work?'; ?>
+                    </h2>
+                    <p style="margin-bottom: 1rem; line-height: 1.8;">
+                        <?php echo $lang === 'ar' 
+                            ? 'فليكس هي منصة خدمات منزلية ثورية تجمع بين الذكاء الاصطناعي والتقنية الحديثة لتوفير تجربة استثنائية في البحث عن الخدمات المنزلية. سواء كنت تحتاج إلى فني كهرباء، سباك، نجار، أو أي خدمة أخرى، فليكس تربطك بأفضل المحترفين في مدينتك مباشرة. نحن نفهم أن جودة الخدمة وموثوقية العامل من أهم الأمور لك ولعائلتك. لذلك، نقوم بعملية تحقق شاملة من جميع العمال على منصتنا، بما فيها فحوصات الخلفية والتحقق من البيانات والشهادات المهنية.'
+                            : 'FLIX is a revolutionary home services marketplace that combines artificial intelligence with modern technology to deliver an exceptional experience in finding home services. Whether you need an electrician, plumber, carpenter, or any other service, FLIX connects you directly with the best professionals in your city. We understand that service quality and worker reliability are paramount for you and your family. That\'s why we conduct comprehensive verification of all professionals on our platform, including background checks, credential verification, and professional certifications.'; 
+                        ?>
+                    </p>
+                    <p style="margin-bottom: 1rem; line-height: 1.8;">
+                        <?php echo $lang === 'ar' 
+                            ? 'منصتنا توفر واجهة بسيطة وسهلة الاستخدام تمكنك من طلب الخدمة في ثوان معدودة. بعد وصف احتياجاتك، ستتلقى عروضاً من محترفين مؤهلين في غضون دقائق. يمكنك مقارنة الأسعار والتقييمات والتعليقات، واختيار من تفضل. ثم تتواصل مباشرة مع العامل، وتحدد الموعد والسعر، وتستمتع بالخدمة. كل شيء موثق وآمن على المنصة.'
+                            : 'Our platform provides a simple and user-friendly interface that lets you request a service in seconds. After describing your needs, you\'ll receive offers from qualified professionals within minutes. You can compare prices, ratings, and reviews, then choose who you prefer. Direct communication with the professional happens on our platform for complete transparency and safety. Everything is documented and secure, giving you full peace of mind.'; 
+                        ?>
+                    </p>
+                    <p style="line-height: 1.8;">
+                        <?php echo $lang === 'ar' 
+                            ? 'فليكس ليست فقط منصة - هي شريك موثوق لك وعائلتك. نحن نضمن رضاك عن الخدمة بنسبة 100٪، وإذا لم تكن راضياً، نعيد أموالك. مع آلاف العملاء الراضين والمحترفين المتميزين، فليكس هي الاختيار الأول لخدمات المنزل في مصر.'
+                            : 'FLIX is not just a platform - it\'s a trusted partner for you and your family. We guarantee 100% satisfaction with our service quality. If you\'re not satisfied, we refund your money. With thousands of satisfied customers and outstanding professionals, FLIX is the #1 choice for home services in Egypt.'; 
+                        ?>
+                    </p>
+                </div>
+
             </div>
         </section>
 
