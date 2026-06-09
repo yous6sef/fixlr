@@ -1001,5 +1001,77 @@ $_SESSION['lang'] = $lang;
             window.location.href = `?lang=${newLang}`;
         }
     </script>
+
+    <!-- SEO: FAQ Schema for Rich Snippets -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "<?php echo $lang === 'ar' ? 'كيف أبدأ مع فليكس؟' : 'How do I get started with FLIX?'; ?>",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "<?php echo $lang === 'ar' ? 'انشئ حسابا، صف احتياجاتك، وتلقى عروضا من محترفين موثوقين بسرعة.' : 'Sign up, describe your needs, and receive offers from verified professionals instantly.'; ?>"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "<?php echo $lang === 'ar' ? 'هل جميع العمال موثوقون؟' : 'Are all professionals verified?'; ?>",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "<?php echo $lang === 'ar' ? 'نعم، جميع العمال يخضعون للتحقق الشامل والفحص من قبل فريقنا.' : 'Yes, all professionals are thoroughly verified and background checked by our team.'; ?>"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "<?php echo $lang === 'ar' ? 'كم تبلغ رسوم الخدمة؟' : 'What are the service fees?'; ?>",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "<?php echo $lang === 'ar' ? 'رسوم الفحص الافتراضية 200 جنيه مصري. الأسعار شفافة بلا رسوم مخفية.' : 'Default checking fee is 200 EGP. All pricing is transparent with no hidden fees.'; ?>"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "<?php echo $lang === 'ar' ? 'ما الخدمات المتاحة؟' : 'What services are available?'; ?>",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "<?php echo $lang === 'ar' ? 'نوفر خدمات الكهرباء والسباكة والنجارة والصيانة العامة والتنظيف والمزيد.' : 'We offer electrical, plumbing, carpentry, general maintenance, cleaning, HVAC and more.'; ?>"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "<?php echo $lang === 'ar' ? 'هل يمكنني أن أصبح عاملا؟' : 'Can I become a professional on FLIX?'; ?>",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "<?php echo $lang === 'ar' ? 'نعم! انضم كعامل وابدأ في تقديم الخدمات. التحقق سريع وسهل.' : 'Yes! Sign up as a professional and start earning. Verification is quick and easy.'; ?>"
+                }
+            }
+        ]
+    }
+    </script>
+
+    <!-- SEO: Breadcrumb Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "<?php echo $lang === 'ar' ? 'الرئيسية' : 'Home'; ?>",
+                "item": "<?php echo $protocol . '://' . $_SERVER['HTTP_HOST']; ?>"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "<?php echo $lang === 'ar' ? 'الخدمات' : 'Services'; ?>",
+                "item": "<?php echo $protocol . '://' . $_SERVER['HTTP_HOST']; ?>/#features"
+            }
+        ]
+    }
+    </script>
 </body>
 </html>
