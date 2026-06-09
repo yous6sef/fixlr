@@ -25,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $address_description = trim($_POST['address_description']);
     $problem_description = trim($_POST['problem_description']);
     $city = trim($_POST['city']);
-    $budget = trim($_POST['budget']);
 
     // Validate Google Maps link if provided
     if (!empty($google_maps_link)) {
@@ -44,11 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $query = "INSERT INTO service_requests (
                 user_id, city, specialization, problem_description,
                 status, address, google_maps_link,
-                address_description, budget, username, created_at, updated_at
+                address_description, username, created_at, updated_at
             ) VALUES (
                 :user_id, :city, :specialization, :problem_description,
                 'REQUESTED', :address, :googleMapsLink,
-                :addressDescription, :budget, :username, NOW(), NOW()
+                :addressDescription, :username, NOW(), NOW()
             ) RETURNING id";
 
             $stmt = $conn->prepare($query);
@@ -60,7 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':address' => $address,
                 ':googleMapsLink' => $google_maps_link,
                 ':addressDescription' => $address_description,
-                ':budget' => $budget,
                 ':username' => $name
             ]);
 
@@ -110,6 +108,10 @@ foreach ($services as $service) {
 
         <div class="page-header">
             <h1><?php echo $lang === 'ar' ? 'طلب خدمة جديد' : 'New Service Request'; ?></h1>
+        </div>
+
+        <div class="alert alert-info" style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; color: #1D4ED8; padding: 1rem; margin-bottom: 1rem;">
+            <?php echo $lang === 'ar' ? 'ملاحظة: هناك رسوم فحص افتراضية بقيمة 200 جنيه مصري.' : 'Note: There is a default checking fee of 200 EGP.'; ?>
         </div>
 
         <div class="card">
@@ -188,13 +190,8 @@ foreach ($services as $service) {
                     </select>
                 </div><br>
 
-                <div>
-                    <label><?php echo $lang === 'ar' ? 'ادخل السعر الذي ستدفعه' : 'make a price you want to pay'; ?></label><br><br>
-                    <input type="number" name="budget" placeholder="<?php echo $lang === 'ar' ? 'السعر بالجنيه المصري' : 'Price in EGP'; ?>" min="200" required style="width: 100%; padding: 0.75rem; border: 1px solid #D4D3D0; border-radius: 8px;">
-                </div><br>
-
                 <button type="submit" class="btn btn-primary"><?php echo $lang === 'ar' ? 'إنشاء الطلب' : 'Create Request'; ?></button>
-                <a href="pages/user/user_dashboard.php?lang=<?php echo $lang; ?>" class="btn btn-secondary" style="text-align: center;"><?php echo $lang === 'ar' ? 'إلغاء' : 'Cancel'; ?></a>
+                <a href="./user_dashboard.php?lang=<?php echo $lang; ?>" class="btn btn-secondary" style="text-align: center;"><?php echo $lang === 'ar' ? 'إلغاء' : 'Cancel'; ?></a>
             </form>
         <?php endif; ?>
         </div>

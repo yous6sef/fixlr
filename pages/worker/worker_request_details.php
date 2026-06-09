@@ -69,9 +69,6 @@ if(isset($_POST['accept_request'])) {
                     <?php echo $lang === 'ar' ? 'قبول' : 'Accept'; ?>
                 </button>
 
-                <a href="update_price.php?order_id=<?php echo $request['id']; ?>" style="background: orange; color: white; padding: 0.75rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;">
-                    <?php echo $lang === 'ar' ? 'تحديث السعر' : 'Update Price'; ?>
-                </a>
                 <?php endforeach; ?>
             </div>
         </div><br><br>

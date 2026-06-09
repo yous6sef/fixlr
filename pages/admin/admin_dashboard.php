@@ -7,19 +7,19 @@ $lang = $_GET['lang'] ?? $_SESSION['lang'] ?? 'en';
 $_SESSION['lang'] = $lang;
 
 // Check if admin
-if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../user/login.php?lang=' . $lang);
     exit;
 }
 
 $connection = $conn;
 
-$adminQuery = "SELECT fullName FROM users WHERE id = $1";
-$adminResult = pg_query_params($connection, $adminQuery, [$_SESSION['user_id']]);
-$admin = pg_fetch_assoc($adminResult);
+$stmt = $conn->prepare("SELECT name FROM users WHERE id = ?");
+$stmt->execute([$_SESSION['user_id']]);
+$admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$admin) {
-    $admin = ['fullName' => 'Admin'];
+    $admin = ['name' => 'Admin'];
 }
 
 $stats = [
@@ -46,10 +46,8 @@ if (isset($_POST['action'])) {
     
     if ($action === 'approve_worker') {
     $workerId = $_POST['workerId'];
-    $result = pg_query_params($connection,
-        "UPDATE workers SET status = 'APPROVED', approvedAt = NOW() WHERE id = $1",
-        [$workerId]
-    );
+    $stmt = $conn->prepare("UPDATE workers SET status = 'APPROVED', approvedAt = NOW(), approvedByAdminId = ? WHERE id = ?");
+    $result = $stmt->execute([$_SESSION['user_id'], $workerId]);
     if ($result) {
         $message = $lang === 'ar' ? 'تم الموافقة على العامل' : 'Worker approved successfully';
         $messageType = 'success';
@@ -58,10 +56,8 @@ if (isset($_POST['action'])) {
 elseif ($_POST['action'] === 'reject_worker') {
     $workerId = $_POST['workerId'];
     $reason = $_POST['rejectionReason'] ?? '';
-    $result = pg_query_params($connection,
-        "UPDATE workers SET status = 'REJECTED', rejectedAt = NOW(), rejectionReason = $1 WHERE id = $2",
-        [$reason, $workerId]
-    );
+    $stmt = $conn->prepare("UPDATE workers SET status = 'REJECTED', rejectedAt = NOW(), rejectionReason = ? WHERE id = ?");
+    $result = $stmt->execute([$reason, $workerId]);
     if ($result) {
         $message = $lang === 'ar' ? 'تم رفض العامل' : 'Worker rejected';
         $messageType = 'success';
@@ -69,10 +65,8 @@ elseif ($_POST['action'] === 'reject_worker') {
 }
 elseif ($_POST['action'] === 'verify_payment') {
     $paymentId = $_POST['paymentId'];
-    $result = pg_query_params($connection,
-        "UPDATE payments SET status = 'VERIFIED', verifiedAt = NOW(), verifiedByAdminId = $1 WHERE id = $2",
-        [$_SESSION['user_id'], $paymentId]
-    );
+    $stmt = $conn->prepare("UPDATE payments SET status = 'VERIFIED', verifiedAt = NOW(), verifiedByAdminId = ? WHERE id = ?");
+    $result = $stmt->execute([$_SESSION['user_id'], $paymentId]);
     if ($result) {
         $message = $lang === 'ar' ? 'تم التحقق من الدفع' : 'Payment verified';
         $messageType = 'success';
@@ -81,10 +75,8 @@ elseif ($_POST['action'] === 'verify_payment') {
 elseif ($_POST['action'] === 'reject_payment') {
     $paymentId = $_POST['paymentId'];
     $reason = $_POST['rejectionReason'] ?? '';
-    $result = pg_query_params($connection,
-        "UPDATE payments SET status = 'REJECTED', rejectionReason = $1 WHERE id = $2",
-        [$reason, $paymentId]
-    );
+    $stmt = $conn->prepare("UPDATE payments SET status = 'REJECTED', rejectedAt = NOW(), rejectionReason = ? WHERE id = ?");
+    $result = $stmt->execute([$reason, $paymentId]);
     if ($result) {
         $message = $lang === 'ar' ? 'تم رفض الدفع' : 'Payment rejected';
         $messageType = 'success';
@@ -94,41 +86,40 @@ elseif ($_POST['action'] === 'reject_payment') {
 
 // Get updated system statistics
 $statsQuery = "SELECT 
-    COALESCE((SELECT COUNT(*) FROM users WHERE userType = 'user'), 0) as total_users,
-    COALESCE((SELECT COUNT(*) FROM users WHERE userType = 'worker'), 0) as total_workers,
+    COALESCE((SELECT COUNT(*) FROM users WHERE role = 'user'), 0) as total_users,
+    COALESCE((SELECT COUNT(*) FROM workers WHERE role = 'worker'), 0) as total_workers,
     COALESCE((SELECT COUNT(*) FROM workers WHERE status = 'PENDING_APPROVAL'), 0) as pending_workers,
     COALESCE((SELECT COUNT(*) FROM workers WHERE status = 'APPROVED'), 0) as approved_workers,
-    COALESCE((SELECT COUNT(*) FROM tasks WHERE currentStatus = 'COMPLETED'), 0) as completed_tasks,
-    COALESCE((SELECT SUM(totalPrice) FROM tasks WHERE currentStatus = 'COMPLETED'), 0) as total_revenue,
-    COALESCE((SELECT SUM(pendingRemittance) FROM workers), 0) as pending_remittance";
+    COALESCE((SELECT COUNT(*) FROM service_requests WHERE status = 'COMPLETED'), 0) as completed_tasks,
+    COALESCE((SELECT SUM(total_price) FROM service_requests WHERE status = 'COMPLETED'), 0) as total_revenue";
 
-$statsResult = pg_query($connection, $statsQuery);
-$stats = pg_fetch_assoc($statsResult);
+$stmt = $conn->prepare($statsQuery);
+$stmt->execute();
 
-$pendingWorkersQuery = "SELECT w.id, w.userId, w.idCardNumber, w.idCardFrontUrl, w.idCardBackUrl, 
-                             w.criminalRecordUrl, w.resumeUrl, w.specializations, 
-                             w.residentialLocation, w.workLocation, w.createdAt,
-                             u.fullName, u.email, u.phoneNumber
-                      FROM workers w
-                      JOIN users u ON w.userId = u.id
-                      WHERE w.status = 'PENDING_APPROVAL'
-                      ORDER BY w.createdAt DESC
-                      LIMIT 50";
+$stats = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$pendingWorkersResult = pg_query($connection, $pendingWorkersQuery);
-$pendingWorkers = pg_fetch_all($pendingWorkersResult);
 
-$pendingPaymentsQuery = "SELECT p.id, p.taskId, p.workerId, p.amount, p.transactionId, p.receiptImageUrl, 
-                               p.status, p.createdAt, u.fullName
-                        FROM payments p
-                        JOIN workers w ON p.workerId = w.id
-                        JOIN users u ON w.userId = u.id
-                        WHERE p.status = 'PENDING'
-                        ORDER BY p.createdAt DESC
-                        LIMIT 50";
+$stmt = $conn->prepare("
+    SELECT 
+        workers.id,
+        workers.national_id,
+        workers.id_front_path,
+        workers.id_back_path,
+        workers.certificate_path,
+        workers.cv_path,
+        workers.specialization,
+        workers.location,
+        workers.city,
+        workers.created_at
+    FROM workers
+    LIMIT 50
+");
 
-$pendingPaymentsResult = pg_query($connection, $pendingPaymentsQuery);
-$pendingPayments = pg_fetch_all($pendingPaymentsResult);
+$stmt->execute();
+
+$stmt = $conn->prepare("SELECT * FROM workers WHERE status = 'PENDING_APPROVAL' ORDER BY created_at DESC");
+$stmt->execute();
+$pendingWorkers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
@@ -446,7 +437,7 @@ $pendingPayments = pg_fetch_all($pendingPaymentsResult);
         <div class="header">
             <div>
                 <h1><?php echo $lang === 'ar' ? 'لوحة التحكم الإدارية' : 'Admin Dashboard'; ?></h1>
-                <p><?php echo $lang === 'ar' ? 'مرحبا ' . htmlspecialchars($admin['fullName']) : 'Welcome ' . htmlspecialchars($admin['fullName']); ?></p>
+                <p><?php echo $lang === 'ar' ? 'مرحبا ' . htmlspecialchars($admin['name']) : 'Welcome ' . htmlspecialchars($admin['name']); ?></p>
             </div>
             <a href="../user/logout.php?lang=<?php echo $lang; ?>" class="logout-btn">
                 <?php echo $lang === 'ar' ? 'تسجيل الخروج' : 'Logout'; ?>
@@ -500,64 +491,16 @@ $pendingPayments = pg_fetch_all($pendingPaymentsResult);
                 </div>
             <?php else: ?>
                 <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th><?php echo $lang === 'ar' ? 'الاسم' : 'Name'; ?></th>
-                                <th><?php echo $lang === 'ar' ? 'البريد الإلكتروني' : 'Email'; ?></th>
-                                <th><?php echo $lang === 'ar' ? 'الرقم' : 'ID'; ?></th>
-                                <th><?php echo $lang === 'ar' ? 'التخصصات' : 'Specializations'; ?></th>
-                                <th><?php echo $lang === 'ar' ? 'الوثائق' : 'Documents'; ?></th>
-                                <th><?php echo $lang === 'ar' ? 'الإجراءات' : 'Actions'; ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($pendingWorkers as $worker): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($worker['fullName']); ?></td>
-                                    <td><?php echo htmlspecialchars($worker['email']); ?></td>
-                                    <td><?php echo htmlspecialchars($worker['idCardNumber']); ?></td>
-                                    <td>
-                                        <?php 
-                                        $specs = json_decode($worker['specializations'], true);
-                                        echo implode(', ', $specs ?? []);
-                                        ?>
-                                    </td>
-                                    <td>
-                                        <?php if ($worker['idCardFrontUrl']): ?>
-                                            <a href="<?php echo $worker['idCardFrontUrl']; ?>" class="document-link" target="_blank">
-                                                <?php echo $lang === 'ar' ? 'الوجه' : 'Front'; ?>
-                                            </a><br>
-                                        <?php endif; ?>
-                                        <?php if ($worker['idCardBackUrl']): ?>
-                                            <a href="<?php echo $worker['idCardBackUrl']; ?>" class="document-link" target="_blank">
-                                                <?php echo $lang === 'ar' ? 'الظهر' : 'Back'; ?>
-                                            </a><br>
-                                        <?php endif; ?>
-                                        <?php if ($worker['criminalRecordUrl']): ?>
-                                            <a href="<?php echo $worker['criminalRecordUrl']; ?>" class="document-link" target="_blank">
-                                                <?php echo $lang === 'ar' ? 'السجل' : 'Record'; ?>
-                                            </a>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <form method="POST" style="display: inline;">
-                                                <input type="hidden" name="action" value="approve_worker">
-                                                <input type="hidden" name="workerId" value="<?php echo $worker['id']; ?>">
-                                                <button type="submit" class="btn-small btn-approve">
-                                                    <?php echo $lang === 'ar' ? 'موافقة' : 'Approve'; ?>
-                                                </button>
-                                            </form>
-                                            <button class="btn-small btn-reject" onclick="openRejectModal(<?php echo $worker['id']; ?>, 'worker')">
-                                                <?php echo $lang === 'ar' ? 'رفض' : 'Reject'; ?>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                    <?php foreach ($pendingWorkers as $worker): ?>
+                        <a href="worker_details.php?id=<?php echo $worker['id']; ?>&lang=<?php echo $lang; ?>" class="document-link">
+                        <div class="worker-card">
+                                <?php echo $lang === 'ar' ? 'عرض التفاصيل' : 'View Details'; ?>
+                            <h3><?php echo htmlspecialchars($worker['name']); ?></h3>
+                            <p><?php echo htmlspecialchars($worker['email'] ?? ''); ?></p>
+                            <p><?php echo htmlspecialchars($worker['phone']); ?></p>
+                        </div>
+                    </a>
+                    <?php endforeach; ?>
                 </div>
             <?php endif; ?>
         </div>
