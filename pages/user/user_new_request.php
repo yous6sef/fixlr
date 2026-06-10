@@ -442,7 +442,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_request'])) {
 <body>
     <div class="container">
         <div class="header">
-            <h1>📋 طلب خدمة جديد</h1>
+            <h1>احجز خدمة منزلية متخصصة - فني موثوق في دقائق</h1>
             <p>أخبرنا عن احتياجاتك لنوصلك بأفضل فني متخصص</p>
         </div>
 

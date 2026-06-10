@@ -110,7 +110,7 @@ foreach ($services as $service) {
         </div>
 
         <div class="page-header">
-            <h1><?php echo $lang === 'ar' ? 'طلب خدمة جديد' : 'New Service Request'; ?></h1>
+            <h1><?php echo $lang === 'ar' ? 'طلب خدمة منزلية جديد' : 'Create New Service Request'; ?></h1>
         </div>
 
         <div class="alert alert-info" style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; color: #1D4ED8; padding: 1rem; margin-bottom: 1rem;">

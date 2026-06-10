@@ -16,8 +16,37 @@ $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https'
 $host = $_SERVER['HTTP_HOST'] ?? 'example.com';
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $requestQuery = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
-$canonical = $protocol . '://' . $host . $requestPath . ($requestQuery ? '?' . $requestQuery : '');
-$baseNoQuery = $protocol . '://' . $host . $requestPath;
+
+// Parse query params to handle lang parameter correctly
+$queryParams = [];
+if (!empty($requestQuery)) {
+    parse_str($requestQuery, $queryParams);
+}
+
+// Build URLs: canonical URL respects current language context
+// If lang=ar is in URL, canonical should include it
+// If lang=en or no lang param, canonical is without lang (English default)
+$hasLangInQuery = isset($queryParams['lang']);
+$requestedLang = $queryParams['lang'] ?? 'en';
+
+if ($hasLangInQuery && $requestedLang === 'ar') {
+    // Serving Arabic: canonical includes ?lang=ar
+    $canonical = $protocol . '://' . $host . $requestPath . '?lang=ar';
+} else {
+    // Serving English (default): canonical is without lang param
+    $canonical = $protocol . '://' . $host . $requestPath;
+}
+
+// Remove lang from query for base URL
+$baseQueryParams = $queryParams;
+unset($baseQueryParams['lang']);
+$baseQueryString = http_build_query($baseQueryParams);
+$baseNoQuery = $protocol . '://' . $host . $requestPath . ($baseQueryString ? '?' . $baseQueryString : '');
+
+// Build hreflang alternate URLs (symmetric - each points to the other)
+$alternateEnUrl = $protocol . '://' . $host . $requestPath . ($baseQueryString ? '?' . $baseQueryString : '');
+$alternateArUrl = $protocol . '://' . $host . $requestPath . '?lang=ar' . ($baseQueryString ? '&' . $baseQueryString : '');
+$xDefaultUrl = $protocol . '://' . $host . $requestPath . ($baseQueryString ? '?' . $baseQueryString : '');
 
 // Page-specific fallbacks
 $pageTitle = $pageTitle ?? $siteTitle ?? ($lang === 'ar' ? 'فليكس - سوق الخدمات المنزلية في مصر' : 'FLIX | Home Services Marketplace in Egypt');
@@ -40,20 +69,6 @@ $pageKeywords = $pageKeywords ?? $siteKeywords ?? ($lang === 'ar'
     : 'FLIX, home services, home repair, plumbers, electricians, carpenters, cleaners, handyman, maintenance, service marketplace, local technicians, Egypt home services');
 $previewImage = $previewImage ?? ($protocol . '://' . $host . '/logoc.jpeg');
 
-function seoBuildAlternateUrl($protocol, $host, $path, $currentQuery, $langCode) {
-    $queryParams = [];
-    if (!empty($currentQuery)) {
-        parse_str($currentQuery, $queryParams);
-    }
-    $queryParams['lang'] = $langCode;
-    $queryString = http_build_query($queryParams);
-    return $protocol . '://' . $host . $path . ($queryString ? '?' . $queryString : '');
-}
-
-$alternateEn = seoBuildAlternateUrl($protocol, $host, $requestPath, $requestQuery, 'en');
-$alternateAr = seoBuildAlternateUrl($protocol, $host, $requestPath, $requestQuery, 'ar');
-$xDefaultUrl = $protocol . '://' . $host . '/';
-
 // Ensure the page title is always SEO-friendly
 if (empty($pageTitle)) {
     $pageTitle = ($lang === 'ar') ? 'فليكس - سوق الخدمات المنزلية في مصر' : 'FLIX | Trusted Home Services in Egypt';
@@ -71,8 +86,9 @@ echo "    <meta name=\"apple-mobile-web-app-title\" content=\"FLIX\">\n";
 echo "    <meta name=\"robots\" content=\"index,follow\">\n";
 echo "    <meta name=\"googlebot\" content=\"index,follow\">\n";
 echo "    <link rel=\"canonical\" href=\"" . htmlspecialchars($canonical) . "\">\n";
-echo "    <link rel=\"alternate\" hreflang=\"en-US\" href=\"" . htmlspecialchars($alternateEn) . "\">\n";
-echo "    <link rel=\"alternate\" hreflang=\"ar-EG\" href=\"" . htmlspecialchars($alternateAr) . "\">\n";
+echo "    <!-- Hreflang tags for bilingual support (symmetric links) -->\n";
+echo "    <link rel=\"alternate\" hreflang=\"en\" href=\"" . htmlspecialchars($alternateEnUrl) . "\">\n";
+echo "    <link rel=\"alternate\" hreflang=\"ar\" href=\"" . htmlspecialchars($alternateArUrl) . "\">\n";
 echo "    <link rel=\"alternate\" hreflang=\"x-default\" href=\"" . htmlspecialchars($xDefaultUrl) . "\">\n";
 echo "    <meta property=\"og:locale\" content=\"" . ($lang === 'ar' ? 'ar_EG' : 'en_US') . "\">\n";
 echo "    <meta property=\"og:locale:alternate\" content=\"" . ($lang === 'ar' ? 'en_US' : 'ar_EG') . "\">\n";

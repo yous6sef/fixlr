@@ -56,7 +56,7 @@ function safeEcho($v) { return htmlspecialchars($v ?? ''); }
         </div>
 
         <div class="page-header">
-            <h1><?php echo $lang === 'ar' ? 'تفاصيل الطلب' : 'Request Details'; ?></h1>
+            <h1><?php echo $lang === 'ar' ? 'تفاصيل طلب الخدمة' : 'Service Request Details'; ?></h1>
             <a href="./user_requests.php?lang=<?php echo $lang; ?>" class="btn btn-secondary">
                 <?php echo $lang === 'ar' ? 'رجوع' : 'Back'; ?>
             </a>

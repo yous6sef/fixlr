@@ -89,6 +89,7 @@ try {
         </div>
 
         <div class="page-header">
+            <h1><?php echo $lang === 'ar' ? 'لوحة التحكم - إدارة طلبات الخدمات المنزلية' : 'Dashboard - Manage Your Service Requests'; ?></h1>
             <div class="header-content">
                 <div class="greeting"><?php echo $lang === 'ar' ? 'صباح الخير' : 'Good morning'; ?></div>
                 <div class="user-name"><?php echo htmlspecialchars($name); ?></div>

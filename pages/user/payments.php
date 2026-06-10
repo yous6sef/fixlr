@@ -23,7 +23,7 @@ $lang = $_GET['lang'] ?? 'en';
         </div>
 
         <div class="page-header">
-            <h1><?php echo $lang === 'ar' ? 'السجل المالي' : 'Payment History'; ?></h1>
+            <h1><?php echo $lang === 'ar' ? 'السجل المالي والفواتير' : 'Payment History & Invoices'; ?></h1>
         </div>
 
         <div class="card">

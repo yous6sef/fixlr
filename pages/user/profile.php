@@ -32,7 +32,7 @@ $user_joined = $user['created_at'] ?? '';
         </div>
 
         <div class="page-header">
-            <h1><?php echo $lang === 'ar' ? 'الملف الشخصي' : 'My Profile'; ?></h1>
+            <h1><?php echo $lang === 'ar' ? 'الملف الشخصي - بيانات الحساب' : 'My Profile - Account Information'; ?></h1>
         </div>
 
         <div class="card">

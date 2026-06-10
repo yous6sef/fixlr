@@ -48,7 +48,7 @@ try {
         </div>
 
         <div class="page-header">
-            <h1><?php echo $lang === 'ar' ? 'طلباتي' : 'My Requests'; ?></h1>
+            <h1><?php echo $lang === 'ar' ? 'طلباتي - سجل الخدمات المنزلية' : 'My Requests - Service History'; ?></h1>
         </div>
 
         <div class="card">

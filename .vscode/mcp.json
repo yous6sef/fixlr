@@ -4,9 +4,18 @@
       "type": "http",
       "url": "https://www.rampify.dev/api/mcp",
       "headers": {
-        "Authorization": "REDACTED",
-        "X-Rampify-Project": "REDACTED"
+        "Authorization": "Bearer YOUR_RAMPIFY_TOKEN",
+        "X-Rampify-Project": "32f92cf9-e538-4694-920d-a8d5e023d5ba"
       }
+    },
+    "my-mcp-server-7b2bdc8a": {
+      "url": "https://www.rampify.dev/api/mcp",
+      "type": "http"
+    },
+    "Rampify": {
+      "type": "http",
+      "url": "https://www.rampify.dev/api/mcp"
     }
-  }
+  },
+  "inputs": []
 }

@@ -58,7 +58,8 @@ $ongoing_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
 
         <div class="page-header">
-            <h1><?php echo $lang === 'ar' ? 'مرحبا ' . htmlspecialchars($worker[0]['name']) : 'Hi ' . htmlspecialchars($worker[0]['name']); ?></h1>
+            <h1><?php echo $lang === 'ar' ? 'لوحة الفني - إدارة الطلبات والأرباح' : 'Professional Dashboard - Manage Jobs & Earnings'; ?></h1>
+            <p class="subtitle"><?php echo $lang === 'ar' ? 'مرحبا ' . htmlspecialchars($worker[0]['name']) : 'Welcome, ' . htmlspecialchars($worker[0]['name']); ?></p>
             <p><?php echo $lang === 'ar' ? 'الطلبات المتاحة' : 'Available Opportunities'; ?></p>
         </div>
 

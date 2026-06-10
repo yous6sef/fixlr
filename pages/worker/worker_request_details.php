@@ -55,7 +55,7 @@ if(isset($_POST['accept_request'])) {
         </div>
 
         <div class="page-header">
-            <h1><?php echo $lang === 'ar' ? 'الفرص المتاحة' : 'Available Opportunities'; ?></h1>
+            <h1><?php echo $lang === 'ar' ? 'الفرص المتاحة - طلبات الخدمات الجديدة' : 'Available Opportunities - New Requests'; ?></h1>
         </div>
 
         <div class="card">
