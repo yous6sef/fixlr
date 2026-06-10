@@ -65,7 +65,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['price'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flix | تعديل السعر</title>
+    <?php
+        $pageTitle = $lang === 'ar' ? 'تعديل عرض السعر' : 'Update Service Price';
+        $pageDescription = $lang === 'ar' ? 'عدل سعر الخدمة للعميل' : 'Submit your final service price quote';
+        include('../../core/seo.php');
+    ?>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter Font -->

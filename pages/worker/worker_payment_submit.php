@@ -133,7 +133,10 @@ foreach ($revenues as $revenue) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الدفع والعمولات</title>
+    <?php
+        $pageTitle = $lang === 'ar' ? 'سحب الأرباح وبيانات البنك' : 'Withdraw Earnings - Bank Details';
+        include('../../core/seo.php');
+    ?>
     <style>
         * {
             margin: 0;

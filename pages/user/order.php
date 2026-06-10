@@ -96,7 +96,10 @@ foreach ($services as $service) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang === 'ar' ? 'طلب جديد' : 'New Request'; ?> - FLIX</title>
+    <?php
+        $pageTitle = $lang === 'ar' ? 'طلب خدمة منزلية جديد' : 'New Home Service Request';
+        include('../../core/seo.php');
+    ?>
     <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 <body>

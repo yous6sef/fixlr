@@ -25,7 +25,10 @@ $progressValue = 60;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فليكس | تتبع الخدمة - الفني</title>
+    <?php
+        $pageTitle = $lang === 'ar' ? 'تتبع الفني بالوقت الفعلي - الخريطة' : 'Technician Tracking Map - Real Time';
+        include('../../core/seo.php');
+    ?>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>

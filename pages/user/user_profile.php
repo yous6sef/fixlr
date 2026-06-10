@@ -23,7 +23,10 @@ if (!$user) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الملف الشخصي</title>
+    <?php
+        $pageTitle = $lang === 'ar' ? 'ملفي الشخصي - البيانات والإعدادات' : 'My Profile - Account Settings';
+        include('../../core/seo.php');
+    ?>
     <style>
         body {
             font-family: 'Cairo', sans-serif;

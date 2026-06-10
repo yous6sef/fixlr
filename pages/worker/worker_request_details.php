@@ -39,7 +39,12 @@ if(isset($_POST['accept_request'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang === 'ar' ? 'فرص متاحة' : 'Available Opportunities'; ?> - FLIX</title>
+    <?php
+        $pageTitle = isset($_GET['request_id']) 
+            ? ($lang === 'ar' ? 'فرصة خدمة #' . intval($_GET['request_id']) : 'Service Opportunity #' . intval($_GET['request_id']))
+            : ($lang === 'ar' ? 'تفاصيل الفرصة' : 'Opportunity Details');
+        include('../../core/seo.php');
+    ?>
     <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 <body>

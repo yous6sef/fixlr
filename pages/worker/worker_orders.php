@@ -9,7 +9,10 @@ $lang = $_GET['lang'] ?? 'en';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang === 'ar' ? 'طلباتي' : 'My Jobs'; ?> - FLIX</title>
+    <?php
+        $pageTitle = $lang === 'ar' ? 'طلباتي المنزلية - الفعلية والمختتمة' : 'My Jobs - Active & Completed Orders';
+        include('../../core/seo.php');
+    ?>
     <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 <body>

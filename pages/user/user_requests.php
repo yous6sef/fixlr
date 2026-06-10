@@ -34,7 +34,10 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang === 'ar' ? 'طلباتي' : 'My Requests'; ?> - FLIX</title>
+    <?php
+        $pageTitle = $lang === 'ar' ? 'سجل طلباتي الاردات' : 'My Service Requests - History & Status';
+        include('../../core/seo.php');
+    ?>
     <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 <body>

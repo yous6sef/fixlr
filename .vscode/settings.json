@@ -19,5 +19,7 @@
             ".continue/**/*.yaml"
         ],
         "file:///c:/Users/fathy/.vscode/extensions/continue.continue-1.2.22-win32-x64/config-yaml-schema.json": "file:///c%3A/Users/fathy/.continue/config.yaml"
-    }
+    },
+    "rampify.clientId": "32f92cf9-e538-4694-920d-a8d5e023d5ba",
+    "rampify.domain": ""
 }

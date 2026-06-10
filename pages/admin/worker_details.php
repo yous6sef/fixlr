@@ -40,7 +40,12 @@ function esc($s) { return htmlspecialchars($s ?? ''); }
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title><?php echo $lang === 'ar' ? 'تفاصيل العامل' : 'Worker Details'; ?> - Admin</title>
+    <?php
+        $pageTitle = isset($worker) && !empty($worker['name']) 
+            ? ($lang === 'ar' ? 'تفاصيل الفني - ' . htmlspecialchars($worker['name']) : 'Worker Details - ' . htmlspecialchars($worker['name']))
+            : ($lang === 'ar' ? 'تفاصيل الفني' : 'Worker Details');
+        include('../../core/seo.php');
+    ?>
     <link rel="stylesheet" href="../../public/css/app.css">
     <style>
         .details-container { max-width:1100px; margin:2rem auto; padding:1.5rem; }

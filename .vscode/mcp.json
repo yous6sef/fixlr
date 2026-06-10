@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "rampify": {
+      "type": "http",
+      "url": "https://www.rampify.dev/api/mcp",
+      "headers": {
+        "Authorization": "REDACTED",
+        "X-Rampify-Project": "REDACTED"
+      }
+    }
+  }
+}

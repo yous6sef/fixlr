@@ -45,7 +45,7 @@ $ongoing_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php
-        $pageTitle = $lang === 'ar' ? 'لوحة التحكم' : 'Dashboard';
+        $pageTitle = $lang === 'ar' ? 'لوحة تحكم الفني - إدارة الطلبات والأرباح' : 'Professional Dashboard - Manage Jobs & Earnings';
         include('../../core/seo.php');
     ?>
     <link rel="stylesheet" href="../../public/css/app.css">

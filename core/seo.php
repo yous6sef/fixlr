@@ -7,6 +7,11 @@ if (!isset($lang)) {
     $lang = $_GET['lang'] ?? $_SESSION['lang'] ?? 'en';
 }
 
+// Include unique title generator
+if (!function_exists('seoGenerateUniqueTitle')) {
+    include_once(__DIR__ . '/seo-unique-titles.php');
+}
+
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'example.com';
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
@@ -16,6 +21,17 @@ $baseNoQuery = $protocol . '://' . $host . $requestPath;
 
 // Page-specific fallbacks
 $pageTitle = $pageTitle ?? $siteTitle ?? ($lang === 'ar' ? 'فليكس - سوق الخدمات المنزلية في مصر' : 'FLIX | Home Services Marketplace in Egypt');
+
+// Use unique title generator if title is still generic or not explicitly set
+if (empty($pageTitle) || $pageTitle === $siteTitle || (strpos($pageTitle, 'Dashboard') !== false && empty($forcedPageTitle))) {
+    $requestPath = $_SERVER['REQUEST_URI'] ?? '/';
+    $currentQuery = parse_url($requestPath, PHP_URL_QUERY);
+    $queryParams = [];
+    if (!empty($currentQuery)) {
+        parse_str($currentQuery, $queryParams);
+    }
+    $pageTitle = seoGenerateUniqueTitle($lang, $GLOBALS['conn'] ?? null, $requestPath, $queryParams);
+}
 $pageDescription = $pageDescription ?? $siteDescription ?? ($lang === 'ar'
     ? 'فليكس هو السوق الرائد للخدمات المنزلية في مصر. احجز سباكين، كهربائيين، نجارين، عمال نظافة، وفنيين موثوقين لصيانة وإصلاح المنزل بسرعة وأمان.'
     : 'FLIX is Egypt’s leading home services marketplace. Book trusted plumbers, electricians, carpenters, cleaners, and repair professionals fast with secure service and support.');

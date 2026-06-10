@@ -10,7 +10,10 @@ $request_id = $_GET['id'] ?? 1;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang === 'ar' ? 'الإيصال' : 'Receipt'; ?> - FLIX</title>
+    <?php
+        $pageTitle = $lang === 'ar' ? 'إيصال الخدمة' : 'Service Receipt';
+        include('../../core/seo.php');
+    ?>
     <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 <body>

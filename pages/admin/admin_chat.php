@@ -33,7 +33,11 @@ $messages = $messagesStmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فليكس | دردشة الطلب <?= htmlspecialchars($request['id']) ?></title>
+    <?php
+        $pageTitle = 'دردشة دعم الطلب #' . (isset($request['id']) ? intval($request['id']) : '') . ' | فليكس';
+        $pageDescription = 'دردشة دعم وتنسيق الطلب مع العميل والفني';
+        include('../../core/seo.php');
+    ?>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>body { font-family: 'Cairo', sans-serif; background: #f8fafc; }</n    .glass-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }</n    </style>

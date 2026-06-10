@@ -79,7 +79,10 @@ $recentReviews = $reviewsStmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فليكس | الملف الشخصي - الفني</title>
+    <?php
+        $pageTitle = $lang === 'ar' ? 'ملفي المهني - بيانات التخصص' : 'Professional Profile - Skills & Details';
+        include('../../core/seo.php');
+    ?>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>body { font-family: 'IBM Plex Sans Arabic', sans-serif; background: #f8fafc; color: #1e293b; }</style>

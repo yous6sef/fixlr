@@ -62,7 +62,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php
-        $pageTitle = $lang === 'ar' ? 'تسجيل الدخول' : 'Login';
+        $pageTitle = $lang === 'ar' ? 'تسجيل الدخول - فليكس' : 'Login - FLIX';
+        $pageDescription = $lang === 'ar' ? 'سجل دخولك لطلب خدمات منزلية موثوقة' : 'Sign in to book trusted home services';
+        include('../../core/seo.php');
         include('../../core/seo.php');
     ?>
     <link rel="stylesheet" href="../../public/css/app.css">

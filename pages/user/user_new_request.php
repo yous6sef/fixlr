@@ -91,7 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_request'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>طلب خدمة جديد - فليكس</title>
+    <?php
+        $lang = 'ar';
+        $pageTitle = 'طلب خدمة منزلية جديدة - احجز فنياً موثوقاً | فليكس';
+        $pageDescription = 'قدم طلب خدمة منزلية الآن واحصل على فني متخصص موثوق خلال 30-45 دقيقة فقط. خدمات سباكة وكهرباء ونجارة وتنظيف وصيانة بأسعار شفافة وآمنة.';
+        include('../../core/seo.php');
+    ?>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -577,5 +582,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_request'])) {
             }
         });
     </script>
+
+    <?php
+        // Include FAQ generator and display FAQ for thin content fix
+        include('../../core/seo-dynamic-faq.php');
+        
+        // Determine selected service name for FAQ context
+        $selectedServiceName = '';
+        if ($selectedServiceType) {
+            foreach ($services as $service) {
+                if ($service['id'] == $selectedServiceType) {
+                    $selectedServiceName = $service['name_ar'];
+                    break;
+                }
+            }
+        }
+        
+        // Generate and display FAQ
+        echo seoGenerateDynamicFaq('ar', $conn, $selectedServiceType, $selectedServiceName);
+    ?>
 </body>
 </html>

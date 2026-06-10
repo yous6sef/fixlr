@@ -18,7 +18,10 @@ $user_joined = $user['created_at'] ?? '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang === 'ar' ? 'الملف الشخصي' : 'Profile'; ?> - FLIX</title>
+    <?php
+        $pageTitle = $lang === 'ar' ? 'الملف الشخصي - إدارة بياناتك' : 'User Profile - Manage Your Account';
+        include('../../core/seo.php');
+    ?>
     <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 <body>

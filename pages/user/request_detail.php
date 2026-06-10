@@ -40,7 +40,12 @@ function safeEcho($v) { return htmlspecialchars($v ?? ''); }
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang === 'ar' ? 'تفاصيل الطلب' : 'Request Details'; ?> - FLIX</title>
+    <?php
+        $pageTitle = isset($_GET['id']) 
+            ? ($lang === 'ar' ? 'تفاصيل الطلب #' . intval($_GET['id']) : 'Request Details #' . intval($_GET['id']))
+            : ($lang === 'ar' ? 'تفاصيل الطلب' : 'Request Details');
+        include('../../core/seo.php');
+    ?>
     <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 <body>
