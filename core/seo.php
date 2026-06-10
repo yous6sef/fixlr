@@ -2,6 +2,16 @@
 // Centralized SEO include: outputs title, meta tags, hreflang, OG, Twitter, and JSON-LD
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+// Initialize SEO variables (prevent undefined variable warnings)
+if (!isset($siteTitle)) $siteTitle = '';
+if (!isset($siteDescription)) $siteDescription = '';
+if (!isset($siteKeywords)) $siteKeywords = '';
+if (!isset($pageTitle)) $pageTitle = '';
+if (!isset($pageDescription)) $pageDescription = '';
+if (!isset($pageKeywords)) $pageKeywords = '';
+if (!isset($previewImage)) $previewImage = '';
+if (!isset($forcedPageTitle)) $forcedPageTitle = '';
+
 // Ensure $lang is available
 if (!isset($lang)) {
     $lang = $_GET['lang'] ?? $_SESSION['lang'] ?? 'en';
