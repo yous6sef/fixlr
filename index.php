@@ -855,7 +855,7 @@ $_SESSION['lang'] = $lang;
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon">💰</div>
-                        <h3><?php echo $lang === 'ar' ? 'أسعار شفافة' : 'Transparent Pricing'; ?></h3>
+                        <h3><?php echo $lang === 'ar' ? 'أسعار واضحة' : 'Transparent Pricing'; ?></h3>
                         <p><?php echo $lang === 'ar' 
                             ? 'لا توجد رسوم مخفية أو تكاليف إضافية غير متوقعة'
                             : 'Clear pricing with no hidden fees or surprise charges'; 
