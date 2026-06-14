@@ -2,12 +2,15 @@
 session_start();
 include("../../core/db.php");
 include("../../core/config.php");
+include('../../core/lang.php');
 
 // 1. Auth Check
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'worker') {
     header("Location: pages/user/login.php");
     exit();
 }
+
+$lang = $_GET['lang'] ?? 'en';
 
 $id = $_SESSION['user_id'];
 // Get order_id from URL
@@ -41,12 +44,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['price'])) {
     $price = $_POST['price'];
     
     if (is_numeric($price) && $price > 0) {
-        $ss = $conn->prepare("UPDATE service_requests SET worker_price = :price, worker_id = :id, status = 'pricing', worker_name = :worker_name, worker_rating = :worker_average_rating WHERE id = :order_id");
-        $ss->bindParam(':id', $id, PDO::PARAM_STR);
+        $ss = $conn->prepare("
+    INSERT INTO service_requests (user_id, worker_id, worker_price, worker_name, status, worker_rating, problem_description, address)
+    SELECT user_id, :worker_id, :price, :worker_name, status, :worker_average_rating, problem_description, address
+    FROM service_requests
+    WHERE id = :order_id
+");
+
+        $ss->bindParam(':worker_id', $id, PDO::PARAM_STR);
         $ss->bindParam(':price', $price, PDO::PARAM_STR);
         $ss->bindParam(':order_id', $order_id, PDO::PARAM_INT);
         $ss->bindParam(':worker_name', $worker_name, PDO::PARAM_STR);
         $ss->bindParam(':worker_average_rating', $worker_average_rating, PDO::PARAM_STR);
+
         
         if ($ss->execute() && $ss->rowCount() > 0) {
             header("Location: ../../pages/worker/worker_dashboard.php?success=1&");
@@ -61,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['price'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -70,131 +80,71 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['price'])) {
         $pageDescription = $lang === 'ar' ? 'عدل سعر الخدمة للعميل' : 'Submit your final service price quote';
         include('../../core/seo.php');
     ?>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-
+    <link rel="stylesheet" href="../../public/css/app.css">
 </head>
-
-<style>
-        /* Custom Styles for Glossy Look */
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f0f4ff 0%, #e0f2f1 100%);
-        }
-        .neon-shadow-cta {
-            box-shadow: 0 0 20px rgba(52, 211, 163, 0.7);
-        }
-        .glass-card {
-            background-color: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-        }
-        .sidebar {
-            min-height: calc(100vh - 4rem); 
-            max-height: calc(100vh - 4rem);
-            overflow-y: auto;
-        }
-        /* Custom scrollbar for better look */
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .sidebar::-webkit-scrollbar-thumb {
-            background-color: #a5b4fc; /* Indigo 300 */
-            border-radius: 3px;
-        }
-        .sidebar::-webkit-scrollbar-track {
-            background-color: #e0e7ff; /* Indigo 100 */
-        }
-        /* Modal Backdrop */
-        .modal-backdrop {
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        /* Bottom Navigation Bar Styles */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-top: 1px solid rgba(165, 180, 252, 0.3);
-            z-index: 40;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-        }
-        .bottom-nav-container {
-            max-width: 7xl;
-            margin: 0 auto;
-            padding: 0.75rem 1rem;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-        }
-        .nav-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            border-radius: 1rem;
-            font-weight: 600;
-            font-size: 0.875rem;
-            transition: all 0.3s duration;
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            color: #4b5563;
-        }
-        .nav-btn:hover {
-            background: rgba(165, 180, 252, 0.1);
-            color: #4f46e5;
-            transform: translateY(-2px);
-        }
-        .nav-btn.active {
-            background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
-        }
-        /* Adjust main content to account for bottom nav */
-        body {
-            padding-bottom: 6rem;
-        }
-        .logout{
-            color: red;
-            font-style: italic;
-            
-        }
-    </style>
-
 <body>
+    <div class="page-container">
+        <div class="lang-switcher">
+            <a href="?lang=en&order_id=<?php echo htmlspecialchars($order_id); ?>" class="<?php echo $lang === 'en' ? 'active' : ''; ?>">English</a>
+            <a href="?lang=ar&order_id=<?php echo htmlspecialchars($order_id); ?>" class="<?php echo $lang === 'ar' ? 'active' : ''; ?>">العربية</a>
+        </div>
 
-    <div id="counter-offer-modal" class="fixed inset-0 z-[110] items-center justify-center modal-backdrop transition-opacity duration-300">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-lg mx-4 glass-card border border-indigo-200/50" dir="rtl">
-            <h3 class="text-xl font-bold text-indigo-700 mb-4 border-b pb-2">تقديم عرض سعر مضاد</h3>
-            <p class="text-sm text-gray-600 mb-4">
-                الرجاء إدخال السعر الجديد الذي تقترحه لهذه الخدمة.
-            </p>
-            <div id="original-price-display" class="mb-4 p-3 bg-indigo-50 rounded-lg text-sm font-semibold text-indigo-700">
-                السعر الأصلي المطلوب: <span id="original-price-value" class="mr-1"></span> <?= htmlspecialchars($order_budget) ?> EGP
-            </div>
-            <form method="post" action="?order_id=<?php echo $order_id; ?>">
-            <div class="mb-6">
-                <label for="new-price" class="block text-sm font-medium text-gray-700 mb-2">السعر الجديد (EGP):</label>
-                <input type="number" name="price" id="price" placeholder="أدخل السعر المقترح" min="1" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" required>
-            </div>
+        <div class="page-header">
+            <h1><?php echo $lang === 'ar' ? 'تعديل عرض السعر' : 'Update Service Price'; ?></h1>
+            <p><?php echo $lang === 'ar' ? 'قدم سعرك النهائي للخدمة' : 'Submit your final service price quote'; ?></p>
+        </div>
 
-            <div class="flex justify-end space-x-3 space-x-reverse">
-                <a href="pages/worker/worker_dashboard.php"
-                class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-xl hover:bg-gray-400 transition duration-300">
-                    إلغاء
-                </a>
-                <button id="submit-counter-offer" type="submit" data-request-id="" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition duration-300 shadow-md shadow-indigo-500/50">
-                    إرسال العرض
-                </button>
-            </div>
+        <div class="card">
+            <?php if (!empty($error)): ?>
+                <div style="background: #FEE2E2; border: 1px solid #FECACA; color: #991B1B; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem;">
+                    <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="post" action="?order_id=<?php echo htmlspecialchars($order_id); ?>&lang=<?php echo htmlspecialchars($lang); ?>">
+                <div class="form-group">
+                    <label class="form-label" for="price">
+                        <?php echo $lang === 'ar' ? 'السعر الجديد (EGP)' : 'New Price (EGP)'; ?>
+                    </label>
+                    <input 
+                        type="number" 
+                        name="price" 
+                        id="price" 
+                        placeholder="<?php echo $lang === 'ar' ? 'أدخل السعر المقترح' : 'Enter your proposed price'; ?>" 
+                        min="1" 
+                        step="0.01"
+                        class="form-input" 
+                        required
+                    >
+                    <div style="font-size: 0.8rem; color: #8A9389; margin-top: 0.5rem;">
+                        <?php echo $lang === 'ar' ? 'يجب أن يكون السعر أكبر من صفر' : 'Price must be greater than zero'; ?>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <a href="../../pages/worker/worker_dashboard.php?lang=<?php echo htmlspecialchars($lang); ?>" class="btn btn-secondary" style="flex: 1;">
+                        <?php echo $lang === 'ar' ? 'إلغاء' : 'Cancel'; ?>
+                    </a>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <?php echo $lang === 'ar' ? 'إرسال العرض' : 'Submit Offer'; ?>
+                    </button>
+                </div>
             </form>
+        </div>
+
+        <div class="card">
+            <h3><?php echo $lang === 'ar' ? 'ملاحظات مهمة' : 'Important Notes'; ?></h3>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                <li style="padding: 0.5rem 0; color: #4A5249; font-size: 0.95rem; border-bottom: 1px solid #F7F8F6;">
+                    • <?php echo $lang === 'ar' ? 'تأكد من صحة السعر قبل الإرسال' : 'Double-check your price before submitting'; ?>
+                </li>
+                <li style="padding: 0.5rem 0; color: #4A5249; font-size: 0.95rem; border-bottom: 1px solid #F7F8F6;">
+                    • <?php echo $lang === 'ar' ? 'لا يمكن تعديل السعر بعد القبول' : 'Price cannot be modified after acceptance'; ?>
+                </li>
+                <li style="padding: 0.5rem 0; color: #4A5249; font-size: 0.95rem;">
+                    • <?php echo $lang === 'ar' ? 'سيتم إخطار العميل بعرضك' : 'Customer will be notified of your offer'; ?>
+                </li>
+            </ul>
         </div>
     </div>
 </body>

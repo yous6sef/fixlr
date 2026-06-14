@@ -428,6 +428,12 @@ $_SESSION['lang'] = $lang;
             font-size: 2rem;
             margin-bottom: 1.5rem;
             box-shadow: 0 4px 12px rgba(26, 107, 74, 0.1);
+            color: var(--primary);
+        }
+
+        .feature-icon svg {
+            width: 40px;
+            height: 40px;
         }
 
         .feature-card h3 {
@@ -806,7 +812,10 @@ $_SESSION['lang'] = $lang;
                 <h1><?php echo $lang === 'ar' ? 'خدماتك المنزلية، بسهولة وثقة' : 'Your Home Services, Made Simple'; ?></h1>
                 <div class="hero-slogan">
                     <span class="slogan-main">
-                        <?php echo $lang === 'ar' ? 'فليكس وبس 🚀' : 'Just Flix it 🚀'; ?>
+                        <?php echo $lang === 'ar' ? 'فليكس وبس' : 'Just Flix it'; ?>
+                        <svg style="width: 24px; height: 24px; margin-left: 8px; display: inline-block; vertical-align: middle;" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                        </svg>
                     </span>
                 </div>
                 <p>
@@ -846,7 +855,11 @@ $_SESSION['lang'] = $lang;
                 </p>
                 <div class="features-grid">
                     <div class="feature-card">
-                        <div class="feature-icon">✓</div>
+                        <div class="feature-icon">
+                            <svg fill="currentColor" viewBox="0 0 24 24" style="width: 100%; height: 100%;">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                            </svg>
+                        </div>
                         <h3><?php echo $lang === 'ar' ? 'عمال موثوقون' : 'Verified Professionals'; ?></h3>
                         <p><?php echo $lang === 'ar' 
                             ? 'جميع العمال يخضعون للتحقق والفحص الشامل من قبل فريقنا المختص'
@@ -854,7 +867,11 @@ $_SESSION['lang'] = $lang;
                         ?></p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">💰</div>
+                        <div class="feature-icon">
+                            <svg fill="currentColor" viewBox="0 0 24 24" style="width: 100%; height: 100%;">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-13c-2.76 0-5 2.24-5 5h2c0-1.66 1.34-3 3-3s3 1.34 3 3-1.34 3-3 3c-1.66 0-3 1.34-3 3h-2c0-2.76 2.24-5 5-5z"/>
+                            </svg>
+                        </div>
                         <h3><?php echo $lang === 'ar' ? 'أسعار واضحة' : 'Transparent Pricing'; ?></h3>
                         <p><?php echo $lang === 'ar' 
                             ? 'لا توجد رسوم مخفية أو تكاليف إضافية غير متوقعة'
@@ -862,7 +879,11 @@ $_SESSION['lang'] = $lang;
                         ?></p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">⭐</div>
+                        <div class="feature-icon">
+                            <svg fill="currentColor" viewBox="0 0 24 24" style="width: 100%; height: 100%;">
+                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2l-2.81 6.63L2 9.24l5.46 4.73L5.82 21 12 17.27z"/>
+                            </svg>
+                        </div>
                         <h3><?php echo $lang === 'ar' ? 'تقييمات حقيقية' : 'Real Reviews'; ?></h3>
                         <p><?php echo $lang === 'ar' 
                             ? 'اختر بناءً على تقييمات وآراء العملاء الحقيقية والموثوقة'
@@ -870,7 +891,11 @@ $_SESSION['lang'] = $lang;
                         ?></p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">🛡️</div>
+                        <div class="feature-icon">
+                            <svg fill="currentColor" viewBox="0 0 24 24" style="width: 100%; height: 100%;">
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                            </svg>
+                        </div>
                         <h3><?php echo $lang === 'ar' ? 'أمان مضمون' : 'Total Security'; ?></h3>
                         <p><?php echo $lang === 'ar' 
                             ? 'حماية كاملة لبيانتك الشخصية والمالية مع ضمان الخدمة'
@@ -878,7 +903,11 @@ $_SESSION['lang'] = $lang;
                         ?></p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">⚡</div>
+                        <div class="feature-icon">
+                            <svg fill="currentColor" viewBox="0 0 24 24" style="width: 100%; height: 100%;">
+                                <path d="M7 2v11h3v9l7-12h-4l3-8z"/>
+                            </svg>
+                        </div>
                         <h3><?php echo $lang === 'ar' ? 'استجابة سريعة' : 'Quick Response'; ?></h3>
                         <p><?php echo $lang === 'ar' 
                             ? 'احصل على عروض من محترفين بسرعة وتواصل مباشر سهل'
@@ -886,7 +915,11 @@ $_SESSION['lang'] = $lang;
                         ?></p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">📱</div>
+                        <div class="feature-icon">
+                            <svg fill="currentColor" viewBox="0 0 24 24" style="width: 100%; height: 100%;">
+                                <path d="M17 2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm5-3H7V4h10v13z"/>
+                            </svg>
+                        </div>
                         <h3><?php echo $lang === 'ar' ? 'تطبيق سهل الاستخدام' : 'Easy App'; ?></h3>
                         <p><?php echo $lang === 'ar' 
                             ? 'واجهة بسيطة وسهلة الاستخدام تجعل كل شيء بضغطة زر'

@@ -95,6 +95,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Passwords do not match';
     }
 
+    // Check if phone number already exists in the database
+    if (!empty($phoneNumber)) {
+        $checkPhoneQuery = "
+            SELECT id FROM users WHERE phone = ?
+            UNION
+            SELECT id FROM workers WHERE phone = ?
+        ";
+        $checkPhoneStmt = $connection->prepare($checkPhoneQuery);
+        $checkPhoneStmt->execute([$phoneNumber, $phoneNumber]);
+        $existingPhone = $checkPhoneStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($existingPhone) {
+            $errors[] = 'This phone number is already registered in the system';
+        }
+    }
+
     if (empty($errors)) {
         try {
             $connection->beginTransaction();

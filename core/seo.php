@@ -83,7 +83,7 @@ $previewImage = $previewImage ?? ($protocol . '://' . $host . '/logoc.jpeg');
 if (empty($pageTitle)) {
     $pageTitle = ($lang === 'ar') ? 'فليكس - سوق الخدمات المنزلية في مصر' : 'FLIX | Trusted Home Services in Egypt';
 }
-if (mb_strlen($pageTitle) < 35) {
+if (strlen($pageTitle) < 35) {
     $pageTitle .= ($lang === 'ar') ? ' | فليكس' : ' | FLIX';
 }
 

@@ -67,44 +67,15 @@ if(isset($_POST['accept_request'])) {
                         <div class="provider-name"><?php echo htmlspecialchars($request['problem_description']); ?></div>
                         <div class="provider-role"><?php echo htmlspecialchars($request['address_description']); ?></div>
                     </div>
-                    <div class="provider-price"><?php echo htmlspecialchars($request['checking_fee']); ?> EGP</div>
                 </div>
-                
-                <button style="background: #1A6B4A; color: white; padding: 0.75rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;">
-                    <?php echo $lang === 'ar' ? 'قبول' : 'Accept'; ?>
-                </button>
+
+                <a href="update_price.php?order_id=<?php echo $request['id']; ?>" style="background: orange; color: white; padding: 0.75rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;">
+                    <?php echo $lang === 'ar' ? 'اضافة السعر' : 'Add Price'; ?>
+                </a>
 
                 <?php endforeach; ?>
             </div>
         </div><br><br>
-
-
-        <div class="page-header">
-            <h1><?php echo $lang === 'ar' ? 'الفرص الجارية' : 'Ongoing Opportunities'; ?></h1>
-        </div>
-
-        <div class="card">
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <?php foreach ($ongoing_requests as $request): ?>
-                <div class="provider-card">
-                    <div class="provider-avatar">R1</div>
-                    <div class="provider-info">
-                        <div class="provider-name"><?php echo htmlspecialchars($request['problem_description']); ?></div>
-                        <div class="provider-role"><?php echo htmlspecialchars($request['address_description']); ?></div>
-                    </div>
-                    <div class="provider-price"><?php echo htmlspecialchars($request['checking_fee']); ?> EGP</div>
-                </div>
-                
-                <button style="background: #1A6B4A; color: white; padding: 0.75rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;">
-                    <?php echo $lang === 'ar' ? 'قبول' : 'Accept'; ?>
-                </button>
-
-                <a href="update_price.php?order_id=<?php echo $request['id']; ?>" style="background: orange; color: white; padding: 0.75rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;">
-                    <?php echo $lang === 'ar' ? 'تحديث السعر' : 'Update Price'; ?>
-                </a>
-                <?php endforeach; ?>
-            </div>
-        </div>
 
         <div style="padding-bottom: 100px;"></div>
     </div>
