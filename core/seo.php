@@ -67,6 +67,7 @@ if ($hasLangInQuery && $requestedLang === 'ar') {
     // Serving English (default): canonical is without lang param (base query only)
     $canonical = $protocol . '://' . $host . $requestPath . 
         ($baseQueryString ? '?' . $baseQueryString : '');
+}
 
 // Build hreflang alternate URLs (symmetric - each points to the other)
 $alternateEnUrl = $protocol . '://' . $host . $requestPath . 
