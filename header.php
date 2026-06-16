@@ -33,9 +33,36 @@ $dir = ($lang === 'ar') ? 'rtl' : 'ltr';
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'flix-eg.up.railway.app';
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
-$currentQuery = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
-$canonicalUrl = $protocol . '://' . $host . $currentPath . ($currentQuery ? '?' . $currentQuery : '');
+$queryString = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY) ?? '';
 $baseUrl = $protocol . '://' . $host;
+
+// ========== CANONICAL URL NORMALIZATION ==========
+// Parse query parameters and remove tracking/duplicate params
+$queryParams = [];
+if (!empty($queryString)) {
+    parse_str($queryString, $queryParams);
+}
+
+// Remove language parameter from query for canonical calculation
+unset($queryParams['lang']);
+
+// Remove tracking parameters that don't affect content
+$trackingParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid', 'msclkid', '__s'];
+foreach ($trackingParams as $param) {
+    unset($queryParams[$param]);
+}
+
+// Build canonical URL
+$canonicalQuery = http_build_query($queryParams);
+$canonicalUrl = $protocol . '://' . $host . $currentPath;
+if (!empty($canonicalQuery)) {
+    $canonicalUrl .= '?' . $canonicalQuery;
+}
+
+// If language is Arabic, add lang=ar to canonical
+if ($lang === 'ar') {
+    $canonicalUrl .= (strpos($canonicalUrl, '?') !== false ? '&' : '?') . 'lang=ar';
+}
 
 // Brand constants
 $siteName = 'FLIX | فليكس';
@@ -56,9 +83,13 @@ $metaKeywords = ($lang === 'ar') ? $keywordsAr : $keywordsEn;
 // OG Image (ensure this file exists in your public directory)
 $ogImage = $baseUrl . '/logoc.jpeg';
 
-// Alternate language URLs
-$urlEn = $baseUrl . $currentPath . (strpos($currentQuery ?? '', 'lang=ar') !== false ? '' : ($currentQuery ? '?' . str_replace('lang=ar', '', $currentQuery) : ''));
-$urlAr = $baseUrl . $currentPath . '?lang=ar';
+// ========== ALTERNATE LANGUAGE URLs ==========
+// Build clean alternate URLs
+$baseQueryString = http_build_query($queryParams);
+$baseUrl_withQuery = $baseUrl . $currentPath . (empty($baseQueryString) ? '' : '?' . $baseQueryString);
+
+$urlEn = $baseUrl_withQuery; // English version without lang param (canonical)
+$urlAr = $baseUrl_withQuery . (strpos($baseUrl_withQuery, '?') !== false ? '&' : '?') . 'lang=ar'; // Arabic version with lang=ar
 
 ?>
 <!DOCTYPE html>

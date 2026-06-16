@@ -33,30 +33,47 @@ if (!empty($requestQuery)) {
     parse_str($requestQuery, $queryParams);
 }
 
-// Build URLs: canonical URL respects current language context
+// Build URLs: canonical URL respects current language context and removes tracking parameters
 // If lang=ar is in URL, canonical should include it
 // If lang=en or no lang param, canonical is without lang (English default)
-$hasLangInQuery = isset($queryParams['lang']);
-$requestedLang = $queryParams['lang'] ?? 'en';
 
-if ($hasLangInQuery && $requestedLang === 'ar') {
-    // Serving Arabic: canonical includes ?lang=ar
-    $canonical = $protocol . '://' . $host . $requestPath . '?lang=ar';
-} else {
-    // Serving English (default): canonical is without lang param
-    $canonical = $protocol . '://' . $host . $requestPath;
+// Parse all query parameters
+$allQueryParams = [];
+if (!empty($requestQuery)) {
+    parse_str($requestQuery, $allQueryParams);
 }
 
-// Remove lang from query for base URL
-$baseQueryParams = $queryParams;
+// Remove tracking and duplicate parameters
+$trackingParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid', 'msclkid', '__s'];
+foreach ($trackingParams as $param) {
+    unset($allQueryParams[$param]);
+}
+
+// Get language status
+$hasLangInQuery = isset($allQueryParams['lang']);
+$requestedLang = $allQueryParams['lang'] ?? 'en';
+
+// Remove lang parameter for canonical base calculation
+$baseQueryParams = $allQueryParams;
 unset($baseQueryParams['lang']);
 $baseQueryString = http_build_query($baseQueryParams);
-$baseNoQuery = $protocol . '://' . $host . $requestPath . ($baseQueryString ? '?' . $baseQueryString : '');
+
+// Build canonical URL
+if ($hasLangInQuery && $requestedLang === 'ar') {
+    // Serving Arabic: canonical includes ?lang=ar
+    $canonical = $protocol . '://' . $host . $requestPath . 
+        ($baseQueryString ? '?' . $baseQueryString . '&lang=ar' : '?lang=ar');
+} else {
+    // Serving English (default): canonical is without lang param (base query only)
+    $canonical = $protocol . '://' . $host . $requestPath . 
+        ($baseQueryString ? '?' . $baseQueryString : '');
 
 // Build hreflang alternate URLs (symmetric - each points to the other)
-$alternateEnUrl = $protocol . '://' . $host . $requestPath . ($baseQueryString ? '?' . $baseQueryString : '');
-$alternateArUrl = $protocol . '://' . $host . $requestPath . '?lang=ar' . ($baseQueryString ? '&' . $baseQueryString : '');
-$xDefaultUrl = $protocol . '://' . $host . $requestPath . ($baseQueryString ? '?' . $baseQueryString : '');
+$alternateEnUrl = $protocol . '://' . $host . $requestPath . 
+    ($baseQueryString ? '?' . $baseQueryString : ''); // English without lang param
+$alternateArUrl = $protocol . '://' . $host . $requestPath . 
+    ($baseQueryString ? '?' . $baseQueryString . '&lang=ar' : '?lang=ar'); // Arabic with lang=ar
+$xDefaultUrl = $alternateEnUrl; // Default to English version
 
 // Page-specific fallbacks
 $pageTitle = $pageTitle ?? $siteTitle ?? ($lang === 'ar' ? 'فليكس - سوق الخدمات المنزلية في مصر' : 'FLIX | Home Services Marketplace in Egypt');

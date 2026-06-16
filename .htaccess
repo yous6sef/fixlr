@@ -17,6 +17,10 @@
     RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
     RewriteRule ^(.*)$ https://%1/$1 [L,R=301]
     
+    # Remove tracking parameters from canonical URL (redirect to clean URL)
+    RewriteCond %{QUERY_STRING} (utm_source|utm_medium|utm_campaign|utm_content|utm_term|gclid|fbclid|msclkid|__s) [NC]
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI}? [L,R=301]
+    
     # Redirect index files to the canonical root URL
     RewriteRule ^index\.(php|html)$ / [R=301,L]
 
