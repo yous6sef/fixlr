@@ -22,7 +22,12 @@ if (!function_exists('seoGenerateUniqueTitle')) {
     include_once(__DIR__ . '/seo-unique-titles.php');
 }
 
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+// Fix: Check X-Forwarded-Proto first (Railway sets this for HTTPS)
+$protocol = isset($_SERVER['X-Forwarded-Proto']) 
+    ? strtolower($_SERVER['X-Forwarded-Proto'])
+    : ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http');
+// FORCE HTTPS for production (Railway uses HTTPS)
+$protocol = 'https';
 $host = $_SERVER['HTTP_HOST'] ?? 'example.com';
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $requestQuery = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);

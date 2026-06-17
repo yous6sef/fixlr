@@ -10,7 +10,12 @@ $_SESSION['lang'] = $lang;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        // Fix: Check X-Forwarded-Proto first (Railway sets this for HTTPS)
+        $protocol = isset($_SERVER['X-Forwarded-Proto']) 
+            ? strtolower($_SERVER['X-Forwarded-Proto'])
+            : ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http');
+        // FORCE HTTPS for production (Railway uses HTTPS)
+        $protocol = 'https';
         $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
         $pageUrl = rtrim($baseUrl, '/') . '/';
         $previewImage = $pageUrl . 'logoc.jpeg';

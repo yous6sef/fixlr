@@ -30,7 +30,12 @@ $_SESSION['lang'] = $lang;
 $dir = ($lang === 'ar') ? 'rtl' : 'ltr';
 
 // Detect protocol and host for dynamic URLs
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+// Fix: Check X-Forwarded-Proto first (Railway sets this for HTTPS)
+$protocol = isset($_SERVER['X-Forwarded-Proto']) 
+    ? strtolower($_SERVER['X-Forwarded-Proto'])
+    : ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http');
+// FORCE HTTPS for production (Railway uses HTTPS)
+$protocol = 'https';
 $host = $_SERVER['HTTP_HOST'] ?? 'flix-eg.up.railway.app';
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $queryString = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY) ?? '';
