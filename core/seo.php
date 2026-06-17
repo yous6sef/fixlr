@@ -81,8 +81,16 @@ $alternateArUrl = $protocol . '://' . $host . $requestPath .
     ($baseQueryString ? '?' . $baseQueryString . '&lang=ar' : '?lang=ar'); // Arabic with lang=ar
 $xDefaultUrl = $alternateEnUrl; // Default to English version
 
+// Bilingual SEO fallbacks with Egypt home-services keywords (AR + EN)
+$defaultTitleAr = 'فليكس | منصة صيانة منزلية - سباك وكهربائي في مصر';
+$defaultTitleEn = 'FLIX | Home Maintenance Services Egypt - Plumber & Electrician';
+$defaultDescAr = 'منصة صيانة منزلية موثوقة في مصر. احجز سباك، كهربائي، نجار، عامل تنظيف وصيانة منزلية بسرعة وأمان. Home maintenance services Egypt على فليكس.';
+$defaultDescEn = 'Home maintenance services Egypt — book trusted plumber, electrician, carpenter & cleaner fast. منصة صيانة منزلية | سباك | كهربائي | فليكس.';
+$defaultKeywordsAr = 'فليكس, منصة صيانة منزلية, خدمات منزلية, سباك, كهربائي, نجار, عامل تنظيف, صيانة المنزل, إصلاحات, مصر, القاهرة, فنيين محليين';
+$defaultKeywordsEn = 'FLIX, home maintenance services Egypt, home services, plumber, electrician, carpenter, cleaner, handyman, maintenance, service marketplace, Egypt, Cairo';
+
 // Page-specific fallbacks
-$pageTitle = $pageTitle ?? $siteTitle ?? ($lang === 'ar' ? 'فليكس - سوق الخدمات المنزلية في مصر' : 'FLIX | Home Services Marketplace in Egypt');
+$pageTitle = $pageTitle ?? $siteTitle ?? ($lang === 'ar' ? $defaultTitleAr : $defaultTitleEn);
 
 // Use unique title generator if title is still generic or not explicitly set
 if (empty($pageTitle) || $pageTitle === $siteTitle || (strpos($pageTitle, 'Dashboard') !== false && empty($forcedPageTitle))) {
@@ -94,12 +102,8 @@ if (empty($pageTitle) || $pageTitle === $siteTitle || (strpos($pageTitle, 'Dashb
     }
     $pageTitle = seoGenerateUniqueTitle($lang, $GLOBALS['conn'] ?? null, $requestPath, $queryParams);
 }
-$pageDescription = $pageDescription ?? $siteDescription ?? ($lang === 'ar'
-    ? 'فليكس هو السوق الرائد للخدمات المنزلية في مصر. احجز سباكين، كهربائيين، نجارين، عمال نظافة، وفنيين موثوقين لصيانة وإصلاح المنزل بسرعة وأمان.'
-    : 'FLIX is Egypt’s leading home services marketplace. Book trusted plumbers, electricians, carpenters, cleaners, and repair professionals fast with secure service and support.');
-$pageKeywords = $pageKeywords ?? $siteKeywords ?? ($lang === 'ar'
-    ? 'فليكس, خدمات منزلية, صيانة المنزل, سباكين, كهربائيين, نجارين, عمال نظافة, إصلاحات المنزل, فنيين محليين, سوق الخدمات'
-    : 'FLIX, home services, home repair, plumbers, electricians, carpenters, cleaners, handyman, maintenance, service marketplace, local technicians, Egypt home services');
+$pageDescription = $pageDescription ?? $siteDescription ?? ($lang === 'ar' ? $defaultDescAr : $defaultDescEn);
+$pageKeywords = $pageKeywords ?? $siteKeywords ?? ($lang === 'ar' ? $defaultKeywordsAr : $defaultKeywordsEn);
 $previewImage = $previewImage ?? ($protocol . '://' . $host . '/logoc.jpeg');
 
 // Ensure the page title is always SEO-friendly
@@ -121,7 +125,9 @@ echo "    <meta name=\"googlebot\" content=\"index,follow\">\n";
 echo "    <link rel=\"canonical\" href=\"" . htmlspecialchars($canonical) . "\">\n";
 echo "    <!-- Hreflang tags for bilingual support (symmetric links) -->\n";
 echo "    <link rel=\"alternate\" hreflang=\"en\" href=\"" . htmlspecialchars($alternateEnUrl) . "\">\n";
+echo "    <link rel=\"alternate\" hreflang=\"en-EG\" href=\"" . htmlspecialchars($alternateEnUrl) . "\">\n";
 echo "    <link rel=\"alternate\" hreflang=\"ar\" href=\"" . htmlspecialchars($alternateArUrl) . "\">\n";
+echo "    <link rel=\"alternate\" hreflang=\"ar-EG\" href=\"" . htmlspecialchars($alternateArUrl) . "\">\n";
 echo "    <link rel=\"alternate\" hreflang=\"x-default\" href=\"" . htmlspecialchars($xDefaultUrl) . "\">\n";
 echo "    <meta property=\"og:locale\" content=\"" . ($lang === 'ar' ? 'ar_EG' : 'en_US') . "\">\n";
 echo "    <meta property=\"og:locale:alternate\" content=\"" . ($lang === 'ar' ? 'en_US' : 'ar_EG') . "\">\n";

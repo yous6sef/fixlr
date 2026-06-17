@@ -1,51 +1,77 @@
+# FLIX Egypt Home Services Platform — Search Engine Crawling Rules
+# https://flix-eg.up.railway.app/
+
 User-agent: *
 Allow: /
-Allow: /public/
+Allow: /index.php
 Allow: /pages/user/login.php
 Allow: /pages/user/signup.php
-Allow: /index.php
+Allow: /public/
+Allow: /sitemap.xml
+Allow: /sitemap.php
+Allow: /robots.txt
+Allow: /favicon.ico
+Allow: /site.webmanifest
 
+# Block sensitive backend, admin, and private user areas
 Disallow: /core/
 Disallow: /database/
-Disallow: /api/v1/database/
+Disallow: /api/
 Disallow: /scripts/
+Disallow: /config/
+Disallow: /lib/
 Disallow: /uploads/
+Disallow: /node_modules/
 Disallow: /pages/admin/
 Disallow: /pages/user/logout.php
-Disallow: /*?*checkout*
-Disallow: /*?*cart*
-Disallow: /*?*admin*
+Disallow: /pages/user/user_dashboard.php
+Disallow: /pages/user/user_requests.php
+Disallow: /pages/user/user_new_request.php
+Disallow: /pages/user/user_profile.php
 Disallow: /pages/user/payments.php
 Disallow: /pages/user/receipt.php
-Disallow: *.php$
-Disallow: /node_modules/
+Disallow: /pages/user/order.php
+Disallow: /pages/user/track.php
+Disallow: /pages/user/profile.php
+Disallow: /pages/user/request_detail.php
+Disallow: /pages/worker/
+Disallow: /ai_suggest.php
+Disallow: /google_ai.php
+Disallow: /events-emitter.php
+Disallow: /order_updates.php
+Disallow: /.env
+Disallow: /.git/
 
-# Crawl Delay
-Crawl-delay: 1
-
-# Google specific
+# Allow all major search engines explicitly
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 0
-Request-rate: 30/1s
 
-# Bing specific
+User-agent: Googlebot-Image
+Allow: /public/
+
 User-agent: Bingbot
 Allow: /
-Crawl-delay: 1
-Request-rate: 30/1s
 
-# Other crawlers
 User-agent: Slurp
+Allow: /
+
 User-agent: DuckDuckBot
 Allow: /
-Crawl-delay: 1
 
-# Block bad bots
+User-agent: Yandex
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+# Block aggressive SEO scrapers
 User-agent: MJ12bot
+Disallow: /
+
 User-agent: SemrushBot
+Disallow: /
+
 User-agent: DotBot
 Disallow: /
 
 Sitemap: https://flix-eg.up.railway.app/sitemap.xml
-Sitemap: https://flix-eg.up.railway.app/sitemap-ar.xml

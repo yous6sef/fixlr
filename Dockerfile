@@ -76,6 +76,13 @@ http {
         add_header X-XSS-Protection "1; mode=block" always;
         server_tokens off;
 
+    # Dynamic sitemap served by PHP generator
+        location = /sitemap.xml {
+            fastcgi_pass 127.0.0.1:9000;
+            fastcgi_param SCRIPT_FILENAME $document_root/sitemap.php;
+            include fastcgi_params;
+        }
+
         # URL rewriting for clean URLs
         location / {
             try_files $uri $uri/ /index.php?$query_string;

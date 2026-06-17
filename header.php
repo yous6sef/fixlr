@@ -73,16 +73,18 @@ if ($lang === 'ar') {
 $siteName = 'FLIX | فليكس';
 $siteNameEn = 'FLIX';
 $siteNameAr = 'فليكس';
-$siteTitle = 'FLIX | فليكس - منصة الخدمات المنزلية';
+$siteTitle = ($lang === 'ar')
+    ? 'فليكس | منصة صيانة منزلية - سباك وكهربائي في مصر'
+    : 'FLIX | Home Maintenance Services Egypt - Plumber & Electrician';
 
-// Bilingual descriptions
-$descriptionEn = 'FLIX is Egypt\'s leading home services marketplace. Book trusted plumbers, electricians, carpenters, cleaners, and handymen fast and secure. Professional repairs, maintenance, and installation services.';
-$descriptionAr = 'فليكس هو السوق الرائد للخدمات المنزلية في مصر. احجز سباكين وكهربائيين ونجارين وعمال نظافة وفنيين محليين موثوقين بسرعة وأمان. خدمات إصلاح وصيانة واستبدال احترافية.';
+// Bilingual descriptions with target keywords (Arabic + English)
+$descriptionEn = 'Home maintenance services Egypt — book trusted plumber, electrician, carpenter & cleaner fast. منصة صيانة منزلية | سباك | كهربائي | FLIX Egypt.';
+$descriptionAr = 'منصة صيانة منزلية موثوقة في مصر. احجز سباك، كهربائي، نجار، عامل تنظيف وصيانة منزلية بسرعة وأمان. Home maintenance services Egypt على فليكس.';
 $metaDescription = ($lang === 'ar') ? $descriptionAr : $descriptionEn;
 
 // Bilingual keywords
-$keywordsEn = 'home services, plumber, electrician, carpenter, cleaner, handyman, home repair, maintenance, Egypt, Cairo, installation, FLIX, service marketplace';
-$keywordsAr = 'خدمات منزلية, سباك, كهربائي, نجار, عامل نظافة, فني, إصلاح المنزل, صيانة, مصر, القاهرة, تركيب, فليكس, منصة الخدمات';
+$keywordsEn = 'home maintenance services Egypt, home services, plumber, electrician, carpenter, cleaner, handyman, maintenance, Egypt, Cairo, FLIX, منصة صيانة منزلية, سباك, كهربائي';
+$keywordsAr = 'منصة صيانة منزلية, خدمات منزلية, سباك, كهربائي, نجار, عامل تنظيف, صيانة المنزل, مصر, القاهرة, فليكس, Home maintenance services Egypt';
 $metaKeywords = ($lang === 'ar') ? $keywordsAr : $keywordsEn;
 
 // OG Image (ensure this file exists in your public directory)
@@ -139,7 +141,9 @@ $urlAr = $baseUrl_withQuery . (strpos($baseUrl_withQuery, '?') !== false ? '&' :
     <!-- ========== CANONICAL & ALTERNATE LINKS ========== -->
     <link rel="canonical" href="<?php echo htmlspecialchars($canonicalUrl); ?>">
     <link rel="alternate" hreflang="en" href="<?php echo htmlspecialchars($urlEn); ?>">
+    <link rel="alternate" hreflang="en-EG" href="<?php echo htmlspecialchars($urlEn); ?>">
     <link rel="alternate" hreflang="ar" href="<?php echo htmlspecialchars($urlAr); ?>">
+    <link rel="alternate" hreflang="ar-EG" href="<?php echo htmlspecialchars($urlAr); ?>">
     <link rel="alternate" hreflang="x-default" href="<?php echo htmlspecialchars($urlEn); ?>">
 
     <!-- ========== OPEN GRAPH (SOCIAL MEDIA) ========== -->

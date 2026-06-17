@@ -226,7 +226,6 @@ foreach ($services as $service) {
         $pageTitle = $lang === 'ar' ? 'إنشاء حساب عميل لربط مع فنيين موثوقين' : 'Sign Up - Create Your Account';
         $pageDescription = $lang === 'ar' ? 'أنشئ حسابا مجانا من فليكس وابدأ بطلب خدمات منزلية وصلات' : 'Create a FLIX account and book trusted home services';
         include('../../core/seo.php');
-        include('../../core/seo.php');
     ?>
     <link rel="stylesheet" href="../../public/css/app.css">
     <style>
