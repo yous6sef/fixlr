@@ -51,8 +51,8 @@ if (!empty($queryString)) {
 // Remove language parameter from query for canonical calculation
 unset($queryParams['lang']);
 
-// Remove tracking parameters that don't affect content
-$trackingParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid', 'msclkid', '__s'];
+// Remove tracking and thin-content parameters from canonical URLs
+$trackingParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid', 'msclkid', '__s', 'service', 'city'];
 foreach ($trackingParams as $param) {
     unset($queryParams[$param]);
 }

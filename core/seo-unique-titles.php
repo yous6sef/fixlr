@@ -184,10 +184,18 @@ if (!function_exists('seoGenerateUniqueTitle')) {
                 : 'Worker Details' . $brandSuffix;
         }
         
+        // ========== HOMEPAGE ==========
+        $pathOnly = parse_url($path, PHP_URL_PATH) ?: $path;
+        if ($pathOnly === '/' || $pathOnly === '' || preg_match('#/index\.php$#i', $pathOnly)) {
+            return ($lang === 'ar')
+                ? 'فليكس | منصة صيانة منزلية - سباك وكهربائي في مصر'
+                : 'FLIX | Home Maintenance Services Egypt - Plumber & Electrician';
+        }
+
         // ========== FALLBACK ==========
         return ($lang === 'ar')
-            ? 'فليكس - منصة الخدمات المنزلية الموثوقة'
-            : 'FLIX - Trusted Home Services Platform';
+            ? 'فليكس | منصة صيانة منزلية - سباك وكهربائي في مصر'
+            : 'FLIX | Home Maintenance Services Egypt - Plumber & Electrician';
     }
 }
 

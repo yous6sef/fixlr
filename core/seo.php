@@ -1,6 +1,16 @@
 <?php
 // Centralized SEO include: outputs title, meta tags, hreflang, OG, Twitter, and JSON-LD
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (empty($seoSkipSession) && session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!headers_sent()) {
+    header_remove('X-Powered-By');
+    if (!empty($seoPublicCache)) {
+        header('Cache-Control: public, max-age=3600, s-maxage=86400');
+        header('Vary: Accept-Language');
+    }
+}
 
 // Initialize SEO variables (prevent undefined variable warnings)
 if (!isset($siteTitle)) $siteTitle = '';
@@ -48,8 +58,8 @@ if (!empty($requestQuery)) {
     parse_str($requestQuery, $allQueryParams);
 }
 
-// Remove tracking and duplicate parameters
-$trackingParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid', 'msclkid', '__s'];
+// Remove tracking and thin-content parameters that should not appear in canonical URLs
+$trackingParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid', 'msclkid', '__s', 'service', 'city'];
 foreach ($trackingParams as $param) {
     unset($allQueryParams[$param]);
 }
@@ -92,8 +102,8 @@ $defaultKeywordsEn = 'FLIX, home maintenance services Egypt, home services, plum
 // Page-specific fallbacks
 $pageTitle = $pageTitle ?? $siteTitle ?? ($lang === 'ar' ? $defaultTitleAr : $defaultTitleEn);
 
-// Use unique title generator if title is still generic or not explicitly set
-if (empty($pageTitle) || $pageTitle === $siteTitle || (strpos($pageTitle, 'Dashboard') !== false && empty($forcedPageTitle))) {
+// Respect explicitly set page titles; only auto-generate when needed
+if (empty($forcedPageTitle) && (empty($pageTitle) || strpos($pageTitle, 'Dashboard') !== false)) {
     $requestPath = $_SERVER['REQUEST_URI'] ?? '/';
     $currentQuery = parse_url($requestPath, PHP_URL_QUERY);
     $queryParams = [];
@@ -120,8 +130,11 @@ echo "    <meta name=\"keywords\" content=\"" . htmlspecialchars($pageKeywords) 
 echo "    <meta name=\"author\" content=\"FLIX\">\n";
 echo "    <meta name=\"application-name\" content=\"FLIX\">\n";
 echo "    <meta name=\"apple-mobile-web-app-title\" content=\"FLIX\">\n";
-echo "    <meta name=\"robots\" content=\"index,follow\">\n";
-echo "    <meta name=\"googlebot\" content=\"index,follow\">\n";
+echo "    <meta name=\"robots\" content=\"index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1\">\n";
+echo "    <meta name=\"googlebot\" content=\"index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1\">\n";
+echo "    <meta name=\"geo.region\" content=\"EG\">\n";
+echo "    <meta name=\"geo.placename\" content=\"Egypt\">\n";
+echo "    <meta name=\"content-language\" content=\"" . ($lang === 'ar' ? 'ar-EG' : 'en-EG') . "\">\n";
 echo "    <link rel=\"canonical\" href=\"" . htmlspecialchars($canonical) . "\">\n";
 echo "    <!-- Hreflang tags for bilingual support (symmetric links) -->\n";
 echo "    <link rel=\"alternate\" hreflang=\"en\" href=\"" . htmlspecialchars($alternateEnUrl) . "\">\n";
@@ -158,9 +171,14 @@ $org = [
     "@context" => "https://schema.org",
     "@type" => "Organization",
     "name" => "FLIX",
+    "alternateName" => ["فليكس", "FLIX Egypt"],
     "url" => $protocol . '://' . $host,
     "logo" => $previewImage,
-    "description" => $pageDescription
+    "description" => $pageDescription,
+    "areaServed" => [
+        "@type" => "Country",
+        "name" => "Egypt"
+    ]
 ];
 $webpage = [
     "@context" => "https://schema.org",
@@ -168,11 +186,53 @@ $webpage = [
     "name" => $pageTitle,
     "description" => $pageDescription,
     "url" => $canonical,
-    "inLanguage" => $lang
+    "inLanguage" => $lang === 'ar' ? 'ar-EG' : 'en-EG',
+    "isPartOf" => [
+        "@type" => "WebSite",
+        "name" => "FLIX",
+        "url" => $protocol . '://' . $host . '/'
+    ]
+];
+$website = [
+    "@context" => "https://schema.org",
+    "@type" => "WebSite",
+    "name" => "FLIX",
+    "alternateName" => ["فليكس", "FLIX Egypt Home Services"],
+    "url" => $protocol . '://' . $host . '/',
+    "description" => $pageDescription,
+    "inLanguage" => ["en-EG", "ar-EG"],
+    "potentialAction" => [
+        "@type" => "SearchAction",
+        "target" => $protocol . '://' . $host . '/?q={search_term_string}',
+        "query-input" => "required name=search_term_string"
+    ]
+];
+$localBusiness = [
+    "@context" => "https://schema.org",
+    "@type" => "LocalBusiness",
+    "name" => "FLIX",
+    "description" => $pageDescription,
+    "url" => $protocol . '://' . $host . '/',
+    "image" => $previewImage,
+    "address" => [
+        "@type" => "PostalAddress",
+        "addressCountry" => "EG",
+        "addressLocality" => "Cairo"
+    ],
+    "areaServed" => ["Cairo", "Giza", "Alexandria", "Mansoura"],
+    "priceRange" => "$$",
+    "contactPoint" => [
+        "@type" => "ContactPoint",
+        "contactType" => "customer service",
+        "availableLanguage" => ["English", "Arabic"],
+        "areaServed" => "EG"
+    ]
 ];
 
 echo "    <script type=\"application/ld+json\">\n" . json_encode($org, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n    </script>\n";
 echo "    <script type=\"application/ld+json\">\n" . json_encode($webpage, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n    </script>\n";
+echo "    <script type=\"application/ld+json\">\n" . json_encode($website, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n    </script>\n";
+echo "    <script type=\"application/ld+json\">\n" . json_encode($localBusiness, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n    </script>\n";
 
 // Output <title>
 echo "    <title>" . htmlspecialchars($pageTitle) . "</title>\n";

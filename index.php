@@ -1,8 +1,9 @@
 <?php
-session_start();
-include('core/lang.php');
-$lang = $_GET['lang'] ?? $_SESSION['lang'] ?? 'en';
-$_SESSION['lang'] = $lang;
+// Public homepage: avoid session cookies for crawlers; language from URL only
+$lang = isset($_GET['lang']) && $_GET['lang'] === 'ar' ? 'ar' : 'en';
+$logoAlt = $lang === 'ar'
+    ? 'فليكس - منصة صيانة منزلية في مصر | سباك وكهربائي'
+    : 'FLIX - Home Maintenance Services Egypt | Plumber & Electrician';
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
@@ -40,10 +41,12 @@ $_SESSION['lang'] = $lang;
         $ogLocale = $lang === 'ar' ? 'ar_AR' : 'en_US';
     ?>
         <?php
-                // Use centralized SEO include for consistent metadata across pages
                 $pageTitle = $siteTitle;
                 $pageDescription = $siteDescription;
                 $pageKeywords = $metaKeywords;
+                $forcedPageTitle = true;
+                $seoSkipSession = true;
+                $seoPublicCache = true;
                 include('core/seo.php');
         ?>
     <link rel="stylesheet" href="public/css/app.css">
@@ -797,7 +800,7 @@ $_SESSION['lang'] = $lang;
         <!-- ===== HEADER ===== -->
         <header>
             <div class="logo-section">
-                <img src="public/images/logoflix.png" alt="FLIX Logo" class="logo">
+                <img src="public/images/logoflix.png" alt="<?php echo htmlspecialchars($logoAlt); ?>" class="logo">
                 <span class="logo-badge">PRO</span>
             </div>
             <nav class="header-nav">
@@ -810,10 +813,11 @@ $_SESSION['lang'] = $lang;
             </nav>
         </header>
 
+        <main id="main-content">
         <!-- ===== HERO SECTION ===== -->
         <section class="hero">
             <div class="hero-content">
-                <img src="public/images/logoflix.png" alt="FLIX Logo" class="hero-logo">
+                <img src="public/images/logoflix.png" alt="<?php echo htmlspecialchars($logoAlt); ?>" class="hero-logo">
                 <h1><?php echo $lang === 'ar' ? 'خدماتك المنزلية، بسهولة وثقة' : 'Your Home Services, Made Simple'; ?></h1>
                 <div class="hero-slogan">
                     <span class="slogan-main">
@@ -999,11 +1003,13 @@ $_SESSION['lang'] = $lang;
             </div>
         </section>
 
+        </main>
+
         <!-- ===== FOOTER ===== -->
         <footer>
             <div class="footer-content">
                 <div class="footer-section">
-                    <img src="public/images/logoflix.png" alt="FLIX Logo" class="footer-logo">
+                    <img src="public/images/logoflix.png" alt="<?php echo htmlspecialchars($logoAlt); ?>" class="footer-logo">
                     <ul style="margin-top: 1rem;">
                         <li><?php echo $lang === 'ar' ? 'منصة خدمات منزلية موثوقة' : 'Trusted home services platform'; ?></li>
                         <li><?php echo $lang === 'ar' ? 'نخدم آلاف العملاء' : 'Serving thousands daily'; ?></li>
