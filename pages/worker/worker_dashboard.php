@@ -119,6 +119,8 @@ $ongoing_requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <a href="./worker_available_requests.php?lang=<?php echo $lang; ?>" class="btn btn-primary btn-block"><?php echo $lang === 'ar' ? 'عرض الفرص' : 'Browse Opportunities'; ?></a>
             <a href="./worker_orders.php?lang=<?php echo $lang; ?>" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'الطلبات المقبولة' : 'My Jobs'; ?></a>
             <a href="./worker_payments.php?lang=<?php echo $lang; ?>" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'الأرباح' : 'Earnings'; ?></a>
+            <a href="./chat.php?lang=<?php echo $lang; ?>" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'الدردشة' : 'Chat'; ?></a>
+            <a href="./task_fee.php?lang=<?php echo $lang; ?>" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'رسوم المهمة' : 'Task Fees'; ?></a>
             <a href="../user/logout.php" class="btn btn-secondary btn-block"><?php echo $lang === 'ar' ? 'تسجيل الخروج' : 'Sign Out'; ?></a>
         </div>
     </div>

@@ -415,7 +415,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <label class="label"><?php echo $lang === 'ar' ? 'كلمة المرور' : 'Password'; ?></label>
                     <input type="password" name="password" placeholder="<?php echo $lang === 'ar' ? 'أدخل كلمة المرور' : 'Enter your password'; ?>" required>
                 </div>
-
+                
+                <div style="text-align: <?php echo $lang === 'ar' ? 'right' : 'left'; ?>; margin-bottom: 1rem;">
+                    <a href="reset_password.php?lang=<?php echo $lang; ?>" style="color: var(--primary); font-weight:600; text-decoration:none; font-size:0.95rem;">
+                        <?php echo $lang === 'ar' ? 'نسيت كلمة المرور؟' : 'Forgot password?'; ?></a>
+                </div>
                 <div class="role-group">
                     <label class="role-label"><?php echo $lang === 'ar' ? 'اختر نوع الحساب' : 'Account Type'; ?></label>
                     <div class="role-options">

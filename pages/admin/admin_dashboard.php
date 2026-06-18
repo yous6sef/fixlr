@@ -495,14 +495,30 @@ $pendingWorkers = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php else: ?>
                 <div class="table-wrapper">
                     <?php foreach ($pendingWorkers as $worker): ?>
-                        <a href="worker_details.php?id=<?php echo $worker['id']; ?>&lang=<?php echo $lang; ?>" class="document-link">
-                        <div class="worker-card">
-                                <?php echo $lang === 'ar' ? 'عرض التفاصيل' : 'View Details'; ?>
-                            <h3><?php echo htmlspecialchars($worker['name']); ?></h3>
-                            <p><?php echo htmlspecialchars($worker['email'] ?? ''); ?></p>
-                            <p><?php echo htmlspecialchars($worker['phone']); ?></p>
+                        <div class="worker-card" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem;border-bottom:1px solid #F0F2EE;">
+                            <div style="flex:1;min-width:0;">
+                                <a href="worker_details.php?id=<?php echo $worker['id']; ?>&lang=<?php echo $lang; ?>" class="document-link" style="display:block;margin-bottom:0.5rem;">
+                                    <?php echo $lang === 'ar' ? 'عرض التفاصيل' : 'View Details'; ?>
+                                </a>
+                                <h3 style="margin:0 0 6px 0; font-size:1.05rem; color:#141714;"><?php echo htmlspecialchars($worker['name']); ?></h3>
+                                <p style="margin:0;font-size:0.95rem;color:#4A5249"><?php echo htmlspecialchars($worker['email'] ?? ''); ?></p>
+                                <p style="margin:0;font-size:0.95rem;color:#4A5249"><?php echo htmlspecialchars($worker['phone']); ?></p>
+                            </div>
+
+                            <div class="action-buttons" style="margin-left:1rem;">
+                                <form method="POST" style="display:inline;margin:0;">
+                                    <input type="hidden" name="action" value="approve_worker">
+                                    <input type="hidden" name="workerId" value="<?php echo $worker['id']; ?>">
+                                    <button type="submit" class="btn-small btn-approve">
+                                        <?php echo $lang === 'ar' ? 'قبول' : 'Accept'; ?>
+                                    </button>
+                                </form>
+
+                                <button class="btn-small btn-reject" onclick="openRejectModal(<?php echo $worker['id']; ?>, 'worker')">
+                                    <?php echo $lang === 'ar' ? 'رفض' : 'Reject'; ?>
+                                </button>
+                            </div>
                         </div>
-                    </a>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
