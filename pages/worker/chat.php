@@ -1,19 +1,50 @@
-<?php
+﻿<?php
 session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'worker') {
+    header('Location: ../user/login.php'); exit();
+}
 include('../../core/lang.php');
+include('../../core/db.php');
+
 $lang = $_GET['lang'] ?? $_SESSION['lang'] ?? 'en';
 $_SESSION['lang'] = $lang;
-$dir = $lang === 'ar' ? 'rtl' : 'ltr';
+$requestId = isset($_GET['request_id']) ? intval($_GET['request_id']) : 0;
+
+if (!$requestId) {
+    header('Location: ./worker_dashboard.php?lang=' . $lang); exit();
+}
+
+$requestStmt = $conn->prepare("SELECT * FROM service_requests WHERE id = ?");
+$requestStmt->execute([$requestId]);
+$request = $requestStmt->fetch(PDO::FETCH_ASSOC);
+
+$rootRequestId = $request ? (!empty($request['request_id']) ? intval($request['request_id']) : intval($request['id'])) : 0;
+$assignedStmt = $conn->prepare("SELECT sr.*, u.name AS user_name FROM service_requests sr LEFT JOIN users u ON u.id = sr.user_id WHERE (sr.request_id = :root OR sr.id = :root) AND sr.status = 'accepted' ORDER BY sr.created_at DESC LIMIT 1");
+$assignedStmt->bindParam(':root', $rootRequestId, PDO::PARAM_INT);
+$assignedStmt->execute();
+$assigned = $assignedStmt->fetch(PDO::FETCH_ASSOC);
+
+$messages = [];
+if ($assigned && intval($assigned['worker_id']) === intval($_SESSION['user_id'])) {
+    $messagesStmt = $conn->prepare("SELECT * FROM chat_messages WHERE request_id = :request_id ORDER BY created_at ASC");
+    $messagesStmt->bindParam(':request_id', $rootRequestId, PDO::PARAM_INT);
+    $messagesStmt->execute();
+    $messages = $messagesStmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    header('Location: ./worker_dashboard.php?lang=' . $lang); exit();
+}
+
+function safeEcho($v) { return htmlspecialchars($v ?? ''); }
 ?>
 <!DOCTYPE html>
-<html lang="<?php echo $lang; ?>" dir="<?php echo $dir; ?>">
+<html lang="<?php echo $lang; ?>" dir="<?php echo $lang === 'ar' ? 'rtl' : 'ltr'; ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <?php $pageTitle = $lang === 'ar' ? 'الدردشة - الفني' : 'Chat - Worker'; include('../../core/seo.php'); ?>
     <link rel="stylesheet" href="../../public/css/app.css">
     <style>
-        :root{--primary:#1A6B4A;--surface:#FFF;--surface-light:#F7F8F6}
+        :root{--primary:#1A6B4A;--surface:#FFF;--surface-light:#F7F8F6;--text:#141714}
         body{background:var(--surface-light);font-family:inherit;padding:2rem}
         .chat-container{max-width:900px;margin:0 auto;background:var(--surface);border-radius:12px;padding:1rem;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
         .messages{height:360px;overflow:auto;padding:1rem;border:1px solid #EEE;border-radius:8px;background:#FAFBFA}
@@ -23,71 +54,74 @@ $dir = $lang === 'ar' ? 'rtl' : 'ltr';
         .chat-input{display:flex;gap:0.5rem;margin-top:0.75rem}
         .chat-input input{flex:1;padding:0.8rem;border:1px solid #D4D3D0;border-radius:8px}
         .btn{padding:0.7rem 1rem;border-radius:8px;border:none;background:var(--primary);color:#fff;font-weight:700}
-        .rating{display:flex;gap:6px;margin-top:1rem}
-        .star{font-size:1.4rem;cursor:pointer;color:#D1D5DB}
-        .star.active{color:gold}
+        .notice{padding:1rem;background:#F7F8F6;border:1px solid #E6E6E6;border-radius:10px;margin-bottom:1rem;}
     </style>
 </head>
 <body>
     <div class="chat-container">
         <h2><?php echo $lang === 'ar' ? 'الدردشة مع العميل' : 'Chat with User'; ?></h2>
-        <div class="messages" id="messages"></div>
+        <div class="notice" style="margin-bottom:1rem;">
+            <?php echo $lang === 'ar' ? 'المحادثة مع' : 'Chatting with'; ?> <?php echo safeEcho($assigned['user_name']); ?>
+        </div>
+        <div class="messages" id="messages" aria-live="polite">
+            <?php if (empty($messages)): ?>
+                <div class="message other"><?php echo $lang === 'ar' ? 'ابدأ المحادثة مع العميل المعين.' : 'Start the conversation with the assigned user.'; ?></div>
+            <?php else: ?>
+                <?php foreach ($messages as $message): ?>
+                    <div class="message <?php echo intval($message['sender_id']) === intval($_SESSION['user_id']) ? 'me' : 'other'; ?>">
+                        <?php echo nl2br(safeEcho($message['message'])); ?>
+                        <div style="font-size:0.75rem;color:#6B7280;margin-top:0.35rem;text-align:right;">
+                            <?php echo safeEcho(date('Y-m-d H:i', strtotime($message['created_at']))); ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
 
         <form id="chatForm" class="chat-input" onsubmit="return false;">
             <input id="msgInput" placeholder="<?php echo $lang === 'ar' ? 'اكتب رسالة...' : 'Type a message...'; ?>">
             <button id="sendBtn" class="btn"><?php echo $lang === 'ar' ? 'إرسال' : 'Send'; ?></button>
         </form>
-
-        <div class="review">
-            <div><?php echo $lang === 'ar' ? 'قيّم المستخدم' : 'Rate the User'; ?></div>
-            <div class="rating" id="ratingWorker">
-                <span class="star" data-value="1">★</span>
-                <span class="star" data-value="2">★</span>
-                <span class="star" data-value="3">★</span>
-                <span class="star" data-value="4">★</span>
-                <span class="star" data-value="5">★</span>
-            </div>
-            <textarea id="reviewText" rows="3" style="width:100%;margin-top:0.5rem;border:1px solid #D4D3D0;padding:0.6rem;border-radius:8px" placeholder="<?php echo $lang === 'ar' ? 'اكتب وصفًا لتقييمك (اختياري)' : 'Write a description for your rating (optional)'; ?>"></textarea>
-            <div style="text-align:<?php echo $lang === 'ar' ? 'right' : 'left'; ?>; margin-top:0.5rem;">
-                <button id="submitReview" class="btn"><?php echo $lang === 'ar' ? 'إرسال التقييم' : 'Submit Rating'; ?></button>
-            </div>
-        </div>
     </div>
 
     <script>
-        (function(){
-            const messages = document.getElementById('messages');
-            const msgInput = document.getElementById('msgInput');
-            const sendBtn = document.getElementById('sendBtn');
+        const messagesEl = document.getElementById('messages');
+        const msgInput = document.getElementById('msgInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const requestId = <?php echo json_encode($rootRequestId, JSON_HEX_TAG); ?>;
 
-            function addMessage(text, who){
-                const div = document.createElement('div');
-                div.className = 'message ' + (who==='me'?'me':'other');
-                div.textContent = text;
-                messages.appendChild(div);
-                messages.scrollTop = messages.scrollHeight;
-            }
+        function addMessage(text, me) {
+            const msg = document.createElement('div');
+            msg.className = 'message ' + (me ? 'me' : 'other');
+            msg.innerHTML = text.replace(/\n/g, '<br>');
+            messagesEl.appendChild(msg);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
 
-            sendBtn.addEventListener('click', function(){
-                const v = msgInput.value.trim();
-                if(!v) return;
-                addMessage(v, 'me');
+        async function sendMessage() {
+            const value = msgInput.value.trim();
+            if (!value) return;
+            const response = await fetch('../../api/api.php?action=send_chat_message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'request_id=' + encodeURIComponent(requestId) + '&message=' + encodeURIComponent(value)
+            });
+            const result = await response.json();
+            if (result.success) {
+                addMessage(value, true);
                 msgInput.value = '';
-                setTimeout(()=> addMessage('<?php echo $lang === 'ar' ? 'حسناً — شكراً، سأقوم بالتحديث.' : 'Okay — thanks, I will update.'; ?>','other'),700);
-            });
+            } else {
+                alert(result.message || 'Unable to send message.');
+            }
+        }
 
-            document.getElementById('ratingWorker').addEventListener('click', function(e){
-                if(!e.target.classList.contains('star')) return;
-                const v = +e.target.dataset.value;
-                Array.from(this.children).forEach(s=> s.classList.toggle('active', +s.dataset.value <= v));
-            });
-
-            document.getElementById('submitReview').addEventListener('click', function(){
-                const active = document.querySelectorAll('#ratingWorker .star.active').length;
-                const text = document.getElementById('reviewText').value.trim();
-                alert('<?php echo $lang === 'ar' ? 'تقييم مرئي فقط (واجهة فقط).' : 'Rating is front-end only (UI demo).'; ?>\nStars: ' + active + '\n' + text);
-            });
-        })();
+        sendBtn.addEventListener('click', sendMessage);
+        msgInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
     </script>
 </body>
 </html>

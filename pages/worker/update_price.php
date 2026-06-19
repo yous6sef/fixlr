@@ -44,25 +44,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['price'])) {
     $price = $_POST['price'];
     
     if (is_numeric($price) && $price > 0) {
-        $ss = $conn->prepare("
-    INSERT INTO service_requests (user_id, worker_id, worker_price, worker_name, status, worker_rating, problem_description, address)
-    SELECT user_id, :worker_id, :price, :worker_name, status, :worker_average_rating, problem_description, address
-    FROM service_requests
-    WHERE id = :order_id
-");
-
-        $ss->bindParam(':worker_id', $id, PDO::PARAM_STR);
-        $ss->bindParam(':price', $price, PDO::PARAM_STR);
-        $ss->bindParam(':order_id', $order_id, PDO::PARAM_INT);
-        $ss->bindParam(':worker_name', $worker_name, PDO::PARAM_STR);
-        $ss->bindParam(':worker_average_rating', $worker_average_rating, PDO::PARAM_STR);
-
+        // First, get the original request_id to link worker submissions to it
+        $getOriginalRequest = $conn->prepare("SELECT id, request_id FROM service_requests WHERE id = :order_id");
+        $getOriginalRequest->bindParam(':order_id', $order_id, PDO::PARAM_INT);
+        $getOriginalRequest->execute();
+        $originalRequest = $getOriginalRequest->fetch(PDO::FETCH_ASSOC);
         
-        if ($ss->execute() && $ss->rowCount() > 0) {
-            header("Location: ../../pages/worker/worker_dashboard.php?success=1&");
-            exit();
+        if (!$originalRequest) {
+            $error = "الطلب الأصلي غير موجود";
+        } else {
+            $requestIdToLink = $originalRequest['request_id'] ?? $originalRequest['id'];
+            
+            $ss = $conn->prepare("
+        INSERT INTO service_requests (user_id, worker_id, worker_price, worker_name, status, worker_rating, problem_description, address, request_id)
+        SELECT user_id, :worker_id, :price, :worker_name, status, :worker_average_rating, problem_description, address, :request_id_link
+        FROM service_requests
+        WHERE id = :order_id
+        RETURNING id
+    ");
+
+            $ss->bindParam(':worker_id', $id, PDO::PARAM_STR);
+            $ss->bindParam(':price', $price, PDO::PARAM_STR);
+            $ss->bindParam(':order_id', $order_id, PDO::PARAM_INT);
+            $ss->bindParam(':worker_name', $worker_name, PDO::PARAM_STR);
+            $ss->bindParam(':worker_average_rating', $worker_average_rating, PDO::PARAM_STR);
+            $ss->bindParam(':request_id_link', $requestIdToLink, PDO::PARAM_INT);
+
+            
+            if ($ss->execute()) {
+                header("Location: ../../pages/worker/worker_dashboard.php?success=1&");
+                exit();
+            }
+            $error = "تعذر تحديث السعر. ربما تم قبول الطلب أو لم يعد متاحًا.";
         }
-        $error = "تعذر تحديث السعر. ربما تم قبول الطلب أو لم يعد متاحًا.";
     } else {
         $error = "الرجاء إدخال سعر صحيح.";
     }

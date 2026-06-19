@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           $error = $lang === 'ar' ? 'الأسم غير صحيح أو كلمة المرور غير مسجلة' : 'User not found or password not set';
       }
   } else {
-      $stmt = $conn->prepare("SELECT id, password, role FROM workers WHERE phone = :phone");
+      $stmt = $conn->prepare("SELECT id, password, role FROM workers WHERE phone = :phone and status = 'approved'");
       $stmt->bindParam(':phone', $phone);
       $stmt->execute();
       $worker = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -51,7 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               $error = $lang === 'ar' ? 'كلمة المرور غير صحيحة' : 'Incorrect password';
           }
       } else {
-          $error = $lang === 'ar' ? 'الأسم غير صحيح أو كلمة المرور غير مسجلة' : 'User not found or password not set';
+          $error = $lang === 'ar' ? 'الأسم غير صحيح أو كلمة المرور غير مسجلة او لم يتم القبول بعد' : 'User not found or password not set or didnt be approved yet';
       }
   }
 }

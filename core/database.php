@@ -349,6 +349,7 @@ function initializeSqliteSchema($conn) {
     -- Service Requests Table
     CREATE TABLE IF NOT EXISTS service_requests (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_id INTEGER,
         user_id INTEGER NOT NULL,
         worker_id INTEGER,
         service_type_id INTEGER NOT NULL,

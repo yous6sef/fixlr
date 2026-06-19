@@ -58,10 +58,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_request'])) {
                 INSERT INTO service_requests 
                 (user_id, service_type_id, device_id, city_id, google_maps_link, problem_description, checking_fee, status)
                 VALUES (?, ?, ?, ?, ?, ?, 300, 'pending')
+                RETURNING id
             ");
             
             $stmt->execute([$userId, $service_type_id, $device_id, $city_id, $google_maps_link, $problem_description]);
-            $requestId = $conn->lastInsertId();
+            $insertRow = $stmt->fetch(PDO::FETCH_ASSOC);
+            $requestId = $insertRow['id'] ?? $conn->lastInsertId();
+
+            if ($requestId) {
+                $updateRequestId = $conn->prepare("UPDATE service_requests SET request_id = id WHERE id = ?");
+                $updateRequestId->execute([$requestId]);
+            }
             
             // Get city info for worker matching
             $cityStmt = $conn->prepare("SELECT name_ar FROM cities WHERE id = ?");

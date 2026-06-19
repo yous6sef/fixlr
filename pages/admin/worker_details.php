@@ -52,6 +52,13 @@ function esc($s) { return htmlspecialchars($s ?? ''); }
         .topbar { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1rem; }
         .back-link { text-decoration:none; color:#1A6B4A; font-weight:600; }
         .card { background:#fff; padding:1.25rem; border-radius:12px; box-shadow:0 4px 18px rgba(0,0,0,0.06); }
+        .btn-action { padding:0.65rem 1.2rem; border-radius:8px; border:none; font-weight:600; cursor:pointer; font-size:0.95rem; transition:all 0.3s ease; }
+        .btn-accept { background:#10b981; color:#fff; margin-left:0.5rem; }
+        .btn-accept:hover { background:#059669; box-shadow:0 4px 12px rgba(16,185,129,0.3); }
+        .btn-reject { background:#ef4444; color:#fff; margin-left:0.5rem; }
+        .btn-reject:hover { background:#dc2626; box-shadow:0 4px 12px rgba(239,68,68,0.3); }
+        .action-buttons { display:flex; align-items:center; }
+        @media (max-width:600px) { .action-buttons { flex-wrap:wrap; } .btn-action { padding:0.5rem 0.9rem; font-size:0.85rem; } }
         .grid { display:grid; grid-template-columns: 320px 1fr; gap:1.25rem; }
         .profile-img { width:100%; height:320px; object-fit:cover; border-radius:10px; background:#f3f4f6; display:block; }
         .meta { margin-top:0.75rem; }
@@ -71,7 +78,7 @@ function esc($s) { return htmlspecialchars($s ?? ''); }
         <div class="topbar">
             <a class="back-link" href="admin_dashboard.php?lang=<?php echo $lang; ?>">← <?php echo $lang === 'ar' ? 'عودة' : 'Back to dashboard'; ?></a>
             <div>
-                <a class="btn-small" style="margin-right:.5rem;" href="admin_dashboard.php?lang=<?php echo $lang; ?>"><?php echo $lang === 'ar' ? 'قائمة العمال' : 'Workers'; ?></a>
+                <a class="btn-small" href="admin_dashboard.php?lang=<?php echo $lang; ?>"><?php echo $lang === 'ar' ? 'قائمة العمال' : 'Workers'; ?></a>
             </div>
         </div>
 
@@ -156,6 +163,54 @@ function esc($s) { return htmlspecialchars($s ?? ''); }
                 </div>
             </div>
         </div>
+
+        <div class="card" style="margin-top:2rem; display:flex; gap:1rem; justify-content:center;">
+            <button class="btn-action btn-reject" onclick="rejectWorker(<?php echo $workerId; ?>)"><?php echo $lang === 'ar' ? 'رفض' : 'Reject'; ?></button>
+            <button class="btn-action btn-accept" onclick="acceptWorker(<?php echo $workerId; ?>)"><?php echo $lang === 'ar' ? 'قبول' : 'Accept'; ?></button>
+        </div>
     </div>
+
+    <script>
+        function acceptWorker(workerId) {
+            if (confirm('<?php echo $lang === 'ar' ? 'هل أنت متأكد من قبول هذا الفني؟' : 'Are you sure you want to accept this worker?'; ?>')) {
+                sendApprovalRequest(workerId, 'accept');
+            }
+        }
+
+        function rejectWorker(workerId) {
+            if (confirm('<?php echo $lang === 'ar' ? 'هل أنت متأكد من رفض هذا الفني؟' : 'Are you sure you want to reject this worker?'; ?>')) {
+                sendApprovalRequest(workerId, 'reject');
+            }
+        }
+
+        function sendApprovalRequest(workerId, action) {
+            const formData = new FormData();
+            formData.append('worker_id', workerId);
+            formData.append('action', action);
+
+            fetch('../../api/api_worker_approval.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const message = action === 'accept' 
+                        ? '<?php echo $lang === 'ar' ? 'تم قبول الفني بنجاح' : 'Worker accepted successfully'; ?>'
+                        : '<?php echo $lang === 'ar' ? 'تم رفض الفني' : 'Worker rejected successfully'; ?>';
+                    alert(message);
+                    setTimeout(() => {
+                        window.location.href = 'admin_dashboard.php?lang=<?php echo $lang; ?>';
+                    }, 1000);
+                } else {
+                    alert(data.message || 'Error processing request');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('<?php echo $lang === 'ar' ? 'حدث خطأ في المعالجة' : 'An error occurred'; ?>');
+            });
+        }
+    </script>
 </body>
 </html>

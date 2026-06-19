@@ -64,6 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $taskId = $row['id'];
+            if ($taskId) {
+                $updateRequestId = $conn->prepare("UPDATE service_requests SET request_id = id WHERE id = ?");
+                $updateRequestId->execute([$taskId]);
+            }
             $success = true;
 
             $_SESSION['last_task'] = [
